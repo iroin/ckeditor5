@@ -10,7 +10,6 @@
 import View from '@ckeditor/ckeditor5-ui/src/view';
 
 import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview';
-import SplitButtonView from '@ckeditor/ckeditor5-ui/src/dropdown/button/splitbuttonview';
 import ImageInsertFormRowView from './imageinsertformrowview';
 import { createDropdown } from '@ckeditor/ckeditor5-ui/src/dropdown/utils';
 
@@ -235,20 +234,12 @@ export default class ImageInsertPanelView extends View {
 	 */
 	_createDropdownView( locale ) {
 		const t = locale.t;
-		const dropdownView = createDropdown( locale, SplitButtonView );
-		const splitButtonView = dropdownView.buttonView;
-		const panelView = dropdownView.panelView;
+		const dropdownView = createDropdown( locale );
 
-		splitButtonView.set( {
+		dropdownView.buttonView.set( {
 			label: t( 'Insert image' ),
 			icon: imageIcon,
 			tooltip: true
-		} );
-
-		panelView.extendTemplate( {
-			attributes: {
-				class: 'ck-image-insert__panel'
-			}
 		} );
 
 		return dropdownView;

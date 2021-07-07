@@ -22,7 +22,7 @@ export default class ImageTextAlternativeEditing extends Plugin {
 	 * @inheritDoc
 	 */
 	static get pluginName() {
-		return 'ImageTextAlternativeEditing';
+		return 'CaImageTextAlternativeEditing';
 	}
 
 	/**

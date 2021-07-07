@@ -15,11 +15,13 @@ import BlockQuote from '@ckeditor/ckeditor5-block-quote/src/blockquote';
 import CKFinder from '@ckeditor/ckeditor5-ckfinder/src/ckfinder';
 import EasyImage from '@ckeditor/ckeditor5-easy-image/src/easyimage';
 import Heading from '@ckeditor/ckeditor5-heading/src/heading';
-import Image from '@ckeditor/ckeditor5-image/src/image';
-import ImageCaption from '@ckeditor/ckeditor5-image/src/imagecaption';
-import ImageStyle from '@ckeditor/ckeditor5-image/src/imagestyle';
-import ImageToolbar from '@ckeditor/ckeditor5-image/src/imagetoolbar';
-import ImageUpload from '@ckeditor/ckeditor5-image/src/imageupload';
+import Image from '@crowdarchitects/ckeditor5-image/src/image';
+import ImageInsert from '@crowdarchitects/ckeditor5-image/src/imageinsert';
+import ImageResize from '@crowdarchitects/ckeditor5-image/src/imageresize';
+import ImageCaption from '@crowdarchitects/ckeditor5-image/src/imagecaption';
+import ImageStyle from '@crowdarchitects/ckeditor5-image/src/imagestyle';
+import ImageToolbar from '@crowdarchitects/ckeditor5-image/src/imagetoolbar';
+import ImageUpload from '@crowdarchitects/ckeditor5-image/src/imageupload';
 import Indent from '@ckeditor/ckeditor5-indent/src/indent';
 import Link from '@ckeditor/ckeditor5-link/src/link';
 import List from '@ckeditor/ckeditor5-list/src/list';
@@ -48,7 +50,9 @@ ClassicEditor.builtinPlugins = [
 	Font,
 	Heading,
 	Image,
+	ImageInsert,
 	ImageCaption,
+	ImageResize,
 	ImageStyle,
 	ImageToolbar,
 	ImageUpload,
@@ -57,6 +61,7 @@ ClassicEditor.builtinPlugins = [
 	List,
 	MediaEmbed,
 	Mention,
+	MentionCustomization,
 	Paragraph,
 	PasteFromOffice,
 	Table,
@@ -89,9 +94,36 @@ ClassicEditor.defaultConfig = {
 		]
 	},
 	image: {
+		// Configure the available styles.
+		styles: [
+			'alignLeft', 'alignCenter', 'alignRight'
+		],
+
+		// Configure the available image resize options.
+		resizeOptions: [
+			{
+				name: 'resizeImage:original',
+				label: 'Original',
+				value: null
+			},
+			{
+				name: 'resizeImage:50',
+				label: '50%',
+				value: '50'
+			},
+			{
+				name: 'resizeImage:75',
+				label: '75%',
+				value: '75'
+			}
+		],
+
+		// You need to configure the image toolbar, too, so it shows the new style
+		// buttons as well as the resize buttons.
 		toolbar: [
-			'imageStyle:full',
-			'imageStyle:side',
+			'imageStyle:alignLeft', 'imageStyle:alignCenter', 'imageStyle:alignRight',
+			'|',
+			'imageResize',
 			'|',
 			'imageTextAlternative'
 		]
@@ -106,3 +138,59 @@ ClassicEditor.defaultConfig = {
 	// This value must be kept in sync with the language defined in webpack.config.js.
 	language: 'en'
 };
+
+function MentionCustomization( editor ) {
+	// The upcast converter will convert view <a class="mention" href="" data-user-id="">
+	// elements to the model 'mention' text attribute.
+	editor.conversion.for( 'upcast' ).elementToAttribute( {
+		view: {
+			name: 'a',
+			key: 'data-mention',
+			classes: 'mention',
+			attributes: {
+				href: true,
+				'data-user-id': true
+			}
+		},
+		model: {
+			key: 'mention',
+			value: viewItem => {
+				// The mention feature expects that the mention attribute value
+				// in the model is a plain object with a set of additional attributes.
+				// In order to create a proper object use the toMentionAttribute() helper method:
+				const mentionAttribute = editor.plugins.get( 'Mention' ).toMentionAttribute( viewItem, {
+					// Add any other properties that you need.
+					userId: viewItem.getAttribute( 'data-user-id' )
+				} );
+
+				return mentionAttribute;
+			}
+		},
+		converterPriority: 'high'
+	} );
+
+	// Downcast the model 'mention' text attribute to a view <a> element.
+	editor.conversion.for( 'downcast' ).attributeToElement( {
+		model: 'mention',
+		view: ( modelAttributeValue, { writer } ) => {
+			// Do not convert empty attributes (lack of value means no mention).
+			// eslint-disable-next-line no-undef
+
+			if ( !modelAttributeValue ) {
+				return;
+			}
+
+			return writer.createAttributeElement( 'span', {
+				class: 'mention',
+				'data-mention': modelAttributeValue.id,
+				'data-user-id': modelAttributeValue.userId
+			}, {
+				// Make mention attribute to be wrapped by other attribute elements.
+				priority: 20,
+				// Prevent merging mentions together.
+				id: modelAttributeValue.userId
+			} );
+		},
+		converterPriority: 'high'
+	} );
+}

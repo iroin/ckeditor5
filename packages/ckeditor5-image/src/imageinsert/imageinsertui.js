@@ -56,18 +56,18 @@ export default class ImageInsertUI extends Plugin {
 		const command = editor.commands.get( 'imageUpload' );
 
 		const dropdownView = imageInsertView.dropdownView;
-		const splitButtonView = dropdownView.buttonView;
+		// const splitButtonView = dropdownView.buttonView;
 
-		splitButtonView.actionView = editor.ui.componentFactory.create( 'imageUpload' );
+		// splitButtonView.actionView = editor.ui.componentFactory.create( 'imageUpload' );
 		// After we replaced action button with `imageUpload` component,
 		// we have lost a proper styling and some minor visual quirks have appeared.
 		// Brining back original split button classes helps fix the button styling
 		// See https://github.com/ckeditor/ckeditor5/issues/7986.
-		splitButtonView.actionView.extendTemplate( {
-			attributes: {
-				class: 'ck ck-button ck-splitbutton__action'
-			}
-		} );
+		// splitButtonView.actionView.extendTemplate( {
+		// 	attributes: {
+		// 		class: 'ck ck-button ck-splitbutton__action'
+		// 	}
+		// } );
 
 		return this._setUpDropdown( dropdownView, imageInsertView, command );
 	}

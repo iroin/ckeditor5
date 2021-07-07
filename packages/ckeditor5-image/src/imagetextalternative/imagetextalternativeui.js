@@ -35,7 +35,7 @@ export default class ImageTextAlternativeUI extends Plugin {
 	 * @inheritDoc
 	 */
 	static get pluginName() {
-		return 'ImageTextAlternativeUI';
+		return 'CaImageTextAlternativeUI';
 	}
 
 	/**

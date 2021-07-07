@@ -36,7 +36,7 @@ export default class ImageEditing extends Plugin {
 	 * @inheritDoc
 	 */
 	static get pluginName() {
-		return 'ImageEditing';
+		return 'CaImageEditing';
 	}
 
 	/**
@@ -52,7 +52,7 @@ export default class ImageEditing extends Plugin {
 		editor.editing.view.addObserver( ImageLoadObserver );
 
 		// Configure schema.
-		schema.register( 'image', {
+		schema.register( 'caImage', {
 			isObject: true,
 			isBlock: true,
 			allowWhere: '$block',

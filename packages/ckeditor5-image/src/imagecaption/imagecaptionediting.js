@@ -24,7 +24,7 @@ export default class ImageCaptionEditing extends Plugin {
 	 * @inheritDoc
 	 */
 	static get pluginName() {
-		return 'ImageCaptionEditing';
+		return 'CaImageCaptionEditing';
 	}
 
 	/**
@@ -47,7 +47,7 @@ export default class ImageCaptionEditing extends Plugin {
 		 */
 
 		// Schema configuration.
-		schema.register( 'caption', {
+		schema.register( 'caCaption', {
 			allowIn: 'image',
 			allowContentOf: '$block',
 			isLimit: true
