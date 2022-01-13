@@ -140,15 +140,14 @@ ClassicEditor.defaultConfig = {
 };
 
 function MentionCustomization( editor ) {
-	// The upcast converter will convert view <a class="mention" href="" data-user-id="">
+	// The upcast converter will convert view <span class="mention" href="" data-user-id="">
 	// elements to the model 'mention' text attribute.
 	editor.conversion.for( 'upcast' ).elementToAttribute( {
 		view: {
-			name: 'a',
+			name: 'span',
 			key: 'data-mention',
 			classes: 'mention',
 			attributes: {
-				href: true,
 				'data-user-id': true
 			}
 		},
@@ -169,7 +168,7 @@ function MentionCustomization( editor ) {
 		converterPriority: 'high'
 	} );
 
-	// Downcast the model 'mention' text attribute to a view <a> element.
+	// Downcast the model 'mention' text attribute to a view <span> element.
 	editor.conversion.for( 'downcast' ).attributeToElement( {
 		model: 'mention',
 		view: ( modelAttributeValue, { writer } ) => {
@@ -188,7 +187,7 @@ function MentionCustomization( editor ) {
 				// Make mention attribute to be wrapped by other attribute elements.
 				priority: 20,
 				// Prevent merging mentions together.
-				id: modelAttributeValue.userId
+				id: modelAttributeValue.uid
 			} );
 		},
 		converterPriority: 'high'
