@@ -7,9 +7,8 @@
  * @module list/utils
  */
 
-import { getFillerOffset } from '@ckeditor/ckeditor5-engine/src/view/containerelement';
-import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview';
-import TreeWalker from '@ckeditor/ckeditor5-engine/src/model/treewalker';
+import { TreeWalker, getFillerOffset } from 'ckeditor5/src/engine';
+import { ButtonView } from 'ckeditor5/src/ui';
 
 /**
  * Creates a list item {@link module:engine/view/containerelement~ContainerElement}.
@@ -241,7 +240,7 @@ export function getSiblingListItem( modelItem, options ) {
  * @private
  * @param {module:core/editor/editor~Editor} editor The editor instance to which the UI component will be added.
  * @param {String} commandName The name of the command.
- * @param {Object} label The button label.
+ * @param {String} label The button label.
  * @param {String} icon The source of the icon.
  */
 export function createUIComponent( editor, commandName, label, icon ) {

@@ -9,6 +9,8 @@ import Element from '../../src/view/element';
 import Text from '../../src/view/text';
 import TextProxy from '../../src/view/textproxy';
 import Document from '../../src/view/document';
+import { addBorderRules } from '../../src/view/styles/border';
+import { addMarginRules } from '../../src/view/styles/margin';
 import { StylesProcessor } from '../../src/view/stylesmap';
 
 describe( 'Element', () => {
@@ -26,6 +28,7 @@ describe( 'Element', () => {
 			expect( el ).to.have.property( 'name' ).that.equals( 'p' );
 			expect( el ).to.have.property( 'parent' ).that.is.null;
 			expect( count( el.getAttributeKeys() ) ).to.equal( 0 );
+			expect( el.isAllowedInsideAttributeElement ).to.be.false;
 		} );
 
 		it( 'should create element with attributes as plain object', () => {
@@ -34,6 +37,7 @@ describe( 'Element', () => {
 			expect( el ).to.have.property( 'name' ).that.equals( 'p' );
 			expect( count( el.getAttributeKeys() ) ).to.equal( 1 );
 			expect( el.getAttribute( 'foo' ) ).to.equal( 'bar' );
+			expect( el.isAllowedInsideAttributeElement ).to.be.false;
 		} );
 
 		it( 'should create element with attributes as map', () => {
@@ -45,6 +49,7 @@ describe( 'Element', () => {
 			expect( el ).to.have.property( 'name' ).that.equals( 'p' );
 			expect( count( el.getAttributeKeys() ) ).to.equal( 1 );
 			expect( el.getAttribute( 'foo' ) ).to.equal( 'bar' );
+			expect( el.isAllowedInsideAttributeElement ).to.be.false;
 		} );
 
 		it( 'should stringify attributes', () => {
@@ -53,6 +58,7 @@ describe( 'Element', () => {
 			expect( el.getAttribute( 'foo' ) ).to.equal( 'true' );
 			expect( el.getAttribute( 'bar' ) ).to.be.undefined;
 			expect( el.getAttribute( 'object' ) ).to.equal( '[object Object]' );
+			expect( el.isAllowedInsideAttributeElement ).to.be.false;
 		} );
 
 		it( 'should create element with children', () => {
@@ -62,6 +68,7 @@ describe( 'Element', () => {
 			expect( parent ).to.have.property( 'name' ).that.equals( 'div' );
 			expect( parent.childCount ).to.equal( 1 );
 			expect( parent.getChild( 0 ) ).to.have.property( 'name' ).that.equals( 'p' );
+			expect( parent.isAllowedInsideAttributeElement ).to.be.false;
 		} );
 
 		it( 'should move class attribute to class set ', () => {
@@ -72,6 +79,7 @@ describe( 'Element', () => {
 			expect( el._classes.has( 'one' ) ).to.be.true;
 			expect( el._classes.has( 'two' ) ).to.be.true;
 			expect( el._classes.has( 'three' ) ).to.be.true;
+			expect( el.isAllowedInsideAttributeElement ).to.be.false;
 		} );
 
 		it( 'should move style attribute to style proxy', () => {
@@ -86,6 +94,7 @@ describe( 'Element', () => {
 			expect( el._styles.getAsString( 'two' ) ).to.equal( 'style2' );
 			expect( el._styles.has( 'three' ) ).to.be.true;
 			expect( el._styles.getAsString( 'three' ) ).to.equal( 'url(http://ckeditor.com)' );
+			expect( el.isAllowedInsideAttributeElement ).to.be.false;
 		} );
 	} );
 
@@ -235,6 +244,17 @@ describe( 'Element', () => {
 
 			expect( cloned.getFillerOffset ).to.equal( fm );
 		} );
+
+		it( 'should clone isAllowedInsideAttributeElement', () => {
+			const el = new Element( document, 'p' );
+
+			expect( el.isAllowedInsideAttributeElement ).to.be.false;
+			el._isAllowedInsideAttributeElement = true;
+
+			const cloned = el._clone();
+
+			expect( cloned.isAllowedInsideAttributeElement ).to.equal( true );
+		} );
 	} );
 
 	describe( 'isSimilar()', () => {
@@ -261,6 +281,13 @@ describe( 'Element', () => {
 		it( 'should return false when name is not the same', () => {
 			const other = el._clone();
 			other.name = 'div';
+
+			expect( el.isSimilar( other ) ).to.be.false;
+		} );
+
+		it( 'should return false when isAllowedInsideAttributeElement property is not the same', () => {
+			const other = el._clone();
+			other._isAllowedInsideAttributeElement = true;
 
 			expect( el.isSimilar( other ) ).to.be.false;
 		} );
@@ -882,6 +909,48 @@ describe( 'Element', () => {
 				for ( const name of iterator ) {
 					expect( name ).to.equal( names[ i++ ] );
 				}
+			} );
+		} );
+
+		describe( 'getStyleNames - expand = true', () => {
+			it( 'should return all styles in an expanded form', () => {
+				addBorderRules( el.document.stylesProcessor );
+				addMarginRules( el.document.stylesProcessor );
+
+				el._setStyle( {
+					margin: '1 em',
+					border: '2px dotted silver'
+				} );
+
+				const styles = Array.from( el.getStyleNames( true ) );
+
+				expect( styles ).to.deep.equal( [
+					'border',
+					'border-color',
+					'border-style',
+					'border-width',
+					'border-top',
+					'border-right',
+					'border-bottom',
+					'border-left',
+					'border-top-color',
+					'border-right-color',
+					'border-bottom-color',
+					'border-left-color',
+					'border-top-style',
+					'border-right-style',
+					'border-bottom-style',
+					'border-left-style',
+					'border-top-width',
+					'border-right-width',
+					'border-bottom-width',
+					'border-left-width',
+					'margin',
+					'margin-top',
+					'margin-right',
+					'margin-bottom',
+					'margin-left'
+				] );
 			} );
 		} );
 

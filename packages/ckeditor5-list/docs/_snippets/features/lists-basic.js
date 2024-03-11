@@ -15,32 +15,33 @@ ClassicEditor
 				'|',
 				'bold',
 				'italic',
-				'bulletedList',
+				'|',
 				'numberedList',
+				'bulletedList',
 				'|',
 				'outdent',
 				'indent',
 				'|',
 				'link',
-				'imageUpload',
+				'uploadImage',
 				'insertTable',
 				'|',
 				'undo',
 				'redo'
-			],
-			viewportTopOffset: window.getViewportTopOffsetConfig()
+			]
+		},
+		ui: {
+			viewportOffset: {
+				top: window.getViewportTopOffsetConfig()
+			}
 		},
 		image: {
-			styles: [
-				'full',
-				'alignLeft',
-				'alignRight'
-			],
 			toolbar: [
-				'imageStyle:alignLeft',
-				'imageStyle:full',
-				'imageStyle:alignRight',
+				'imageStyle:inline',
+				'imageStyle:wrapText',
+				'imageStyle:breakText',
 				'|',
+				'toggleImageCaption',
 				'imageTextAlternative'
 			]
 		},
@@ -51,6 +52,12 @@ ClassicEditor
 	} )
 	.then( editor => {
 		window.editorBasic = editor;
+
+		window.attachTourBalloon( {
+			target: window.findToolbarItem( editor.ui.view.toolbar, item => item.label && item.label === 'Numbered List' ),
+			text: 'Click to create an ordered or unordered list.',
+			editor
+		} );
 	} )
 	.catch( err => {
 		console.error( err.stack );

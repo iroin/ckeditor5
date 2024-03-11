@@ -22,12 +22,22 @@ ClassicEditor
 				'|',
 				'undo',
 				'redo'
-			],
-			viewportTopOffset: window.getViewportTopOffsetConfig()
+			]
+		},
+		ui: {
+			viewportOffset: {
+				top: window.getViewportTopOffsetConfig()
+			}
 		}
 	} )
 	.then( editor => {
 		window.editor = editor;
+
+		window.attachTourBalloon( {
+			target: window.findToolbarItem( editor.ui.view.toolbar, item => item.label && item.label === 'Increase indent' ),
+			text: 'Click to indent or outdent a block.',
+			editor
+		} );
 	} )
 	.catch( err => {
 		console.error( err.stack );

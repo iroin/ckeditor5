@@ -24,25 +24,25 @@ ClassicEditor
 				'|',
 				'specialCharacters',
 				'link',
-				'imageUpload',
+				'uploadImage',
 				'insertTable',
 				'|',
 				'undo',
 				'redo'
-			],
-			viewportTopOffset: window.getViewportTopOffsetConfig()
+			]
+		},
+		ui: {
+			viewportOffset: {
+				top: window.getViewportTopOffsetConfig()
+			}
 		},
 		image: {
-			styles: [
-				'full',
-				'alignLeft',
-				'alignRight'
-			],
 			toolbar: [
-				'imageStyle:alignLeft',
-				'imageStyle:full',
-				'imageStyle:alignRight',
+				'imageStyle:inline',
+				'imageStyle:wrapText',
+				'imageStyle:breakText',
 				'|',
+				'toggleImageCaption',
 				'imageTextAlternative'
 			]
 		},
@@ -53,6 +53,13 @@ ClassicEditor
 	} )
 	.then( editor => {
 		window.editor = editor;
+
+		window.attachTourBalloon( {
+			target: window.findToolbarItem( editor.ui.view.toolbar,
+				item => item.buttonView && item.buttonView.label && item.buttonView.label === 'Special characters' ),
+			text: 'Click to insert special characters.',
+			editor
+		} );
 	} )
 	.catch( err => {
 		console.error( err.stack );

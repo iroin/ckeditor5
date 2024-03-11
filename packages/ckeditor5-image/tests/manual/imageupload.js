@@ -25,14 +25,14 @@ ClassicEditor
 			'bulletedList',
 			'numberedList',
 			'blockQuote',
-			'imageUpload',
+			'uploadImage',
 			'insertTable',
 			'mediaEmbed',
 			'undo',
 			'redo'
 		],
 		image: {
-			toolbar: [ 'imageStyle:full', 'imageStyle:side', '|', 'imageTextAlternative' ]
+			toolbar: [ 'imageStyle:inline', 'imageStyle:block', 'imageStyle:side', '|', 'toggleImageCaption', 'imageTextAlternative' ]
 		}
 	} )
 	.then( editor => {

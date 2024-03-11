@@ -22,14 +22,26 @@ ClassicEditor
 				'alignment',
 				'undo',
 				'redo'
-			],
-			viewportTopOffset: window.getViewportTopOffsetConfig()
+			]
+		},
+		ui: {
+			viewportOffset: {
+				top: window.getViewportTopOffsetConfig()
+			}
 		},
 		cloudServices: CS_CONFIG
 	} )
 	.then( editor => {
 		window.editor = editor;
+
+		window.attachTourBalloon( {
+			target: window.findToolbarItem( editor.ui.view.toolbar,
+				item => item.buttonView && item.buttonView.label && item.buttonView.label === 'Text alignment' ),
+			text: 'Click to change text alignment.',
+			editor
+		} );
 	} )
 	.catch( err => {
 		console.error( err.stack );
 	} );
+

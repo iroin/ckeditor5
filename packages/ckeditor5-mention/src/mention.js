@@ -7,7 +7,7 @@
  * @module mention/mention
  */
 
-import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
+import { Plugin } from 'ckeditor5/src/core';
 
 import MentionEditing, { _toMentionAttribute } from './mentionediting';
 import MentionUI from './mentionui';
@@ -103,6 +103,32 @@ export default class Mention extends Plugin {
  * For example, you can use `'@'` to autocomplete people and `'#'` to autocomplete tags.
  *
  * @member {Array.<module:mention/mention~MentionFeed>} module:mention/mention~MentionConfig#feeds
+ */
+
+/**
+ * The configuration of the custom commit keys supported by the editor.
+ *
+ *		ClassicEditor
+ *			.create( editorElement, {
+ *				plugins: [ Mention, ... ],
+ *				mention: {
+ *					// [ Enter, Space ]
+ *	 				commitKeys: [ 13, 32 ]
+ *					feeds: [
+ *						{ ... }
+ *						...
+ * 					]
+ *				}
+ *			} )
+ *			.then( ... )
+ *			.catch( ... );
+ *
+ * Custom commit keys configuration allows you to customize how users will confirm the selection of mentions from the dropdown list.
+ * You can add as many mention commit keys as you need. For instance, in the snippet above new mentions will be committed by pressing
+ * either <kbd>Enter</kbd> or <kbd>Space</kbd> (13 and 32 key codes respectively).
+ *
+ * @member {Array.<Number>} module:mention/mention~MentionConfig#commitKeys
+ * @default [ 13, 9 ] // [ Enter, Tab ]
  */
 
 /**

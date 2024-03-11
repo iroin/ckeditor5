@@ -9,9 +9,13 @@ ClassicEditor
 	.create( document.querySelector( '#snippet-ckfinder' ), {
 		toolbar: {
 			items: [
-				'ckfinder', '|', 'heading', '|', 'bold', 'italic', '|', 'undo', 'redo'
-			],
-			viewportTopOffset: 100
+				'heading', '|', 'bold', 'italic', '|', 'undo', 'redo', '|', 'ckfinder'
+			]
+		},
+		ui: {
+			viewportOffset: {
+				top: window.getViewportTopOffsetConfig()
+			}
 		},
 		ckfinder: {
 			// eslint-disable-next-line max-len
@@ -24,6 +28,13 @@ ClassicEditor
 	} )
 	.then( editor => {
 		window.editor = editor;
+
+		window.attachTourBalloon( {
+			target: window.findToolbarItem( editor.ui.view.toolbar,
+				item => item.label && item.label === 'Insert image or file' ),
+			text: 'Click to open the file manager.',
+			editor
+		} );
 	} )
 	.catch( err => {
 		console.error( err.stack );

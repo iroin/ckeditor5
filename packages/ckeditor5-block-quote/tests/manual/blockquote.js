@@ -8,10 +8,9 @@
 import ClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
 import ArticlePluginSet from '@ckeditor/ckeditor5-core/tests/_utils/articlepluginset';
 
-import { getData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-
 ClassicEditor
 	.create( document.querySelector( '#editor' ), {
+		image: { toolbar: [ 'toggleImageCaption', 'imageTextAlternative' ] },
 		plugins: [
 			ArticlePluginSet
 		],
@@ -23,7 +22,3 @@ ClassicEditor
 	.catch( err => {
 		console.error( err.stack );
 	} );
-
-window.setInterval( function() {
-	console.log( getData( window.editor.model ) );
-}, 3000 );

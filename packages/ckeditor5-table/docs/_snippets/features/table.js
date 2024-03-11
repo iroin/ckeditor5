@@ -12,15 +12,27 @@ ClassicEditor
 		},
 		image: {
 			toolbar: [
-				'imageStyle:full',
+				'imageStyle:inline',
+				'imageStyle:block',
 				'imageStyle:side',
 				'|',
+				'toggleImageCaption',
 				'imageTextAlternative'
 			]
 		}
 	} )
 	.then( editor => {
 		window.editor = editor;
+
+		window.attachTourBalloon( {
+			target: window.findToolbarItem( editor.ui.view.toolbar,
+				item => item.buttonView && item.buttonView.label && item.buttonView.label === 'Insert table' ),
+			text: 'Click to create a table.',
+			editor,
+			tippyOptions: {
+				placement: 'bottom-start'
+			}
+		} );
 	} )
 	.catch( err => {
 		console.error( err.stack );

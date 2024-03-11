@@ -7,7 +7,7 @@
  * @module image/imageupload
  */
 
-import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
+import { Plugin } from 'ckeditor5/src/core';
 import ImageUploadUI from './imageupload/imageuploadui';
 import ImageUploadProgress from './imageupload/imageuploadprogress';
 import ImageUploadEditing from './imageupload/imageuploadediting';
@@ -15,7 +15,7 @@ import ImageUploadEditing from './imageupload/imageuploadediting';
 /**
  * The image upload plugin.
  *
- * For a detailed overview, check the {@glink features/image-upload/image-upload image upload feature} documentation.
+ * For a detailed overview, check the {@glink features/images/image-upload/image-upload image upload feature} documentation.
  *
  * This plugin does not do anything directly, but it loads a set of specific plugins to enable image uploading:
  *

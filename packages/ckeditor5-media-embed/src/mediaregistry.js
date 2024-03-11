@@ -7,12 +7,10 @@
  * @module media-embed/mediaregistry
  */
 
+import { TooltipView, IconView, Template } from 'ckeditor5/src/ui';
+import { logWarning, toArray } from 'ckeditor5/src/utils';
+
 import mediaPlaceholderIcon from '../theme/icons/media-placeholder.svg';
-import TooltipView from '@ckeditor/ckeditor5-ui/src/tooltip/tooltipview';
-import IconView from '@ckeditor/ckeditor5-ui/src/icon/iconview';
-import Template from '@ckeditor/ckeditor5-ui/src/template';
-import { logWarning } from '@ckeditor/ckeditor5-utils/src/ckeditorerror';
-import toArray from '@ckeditor/ckeditor5-utils/src/toarray';
 
 const mediaPlaceholderIconViewBox = '0 0 64 42';
 
@@ -90,8 +88,9 @@ export default class MediaRegistry {
 	 * @param {module:engine/view/downcastwriter~DowncastWriter} writer The view writer used to produce a view element.
 	 * @param {String} url The URL to be translated into a view element.
 	 * @param {Object} options
-	 * @param {String} [options.renderMediaPreview]
-	 * @param {String} [options.renderForEditingView]
+	 * @param {String} [options.elementName]
+	 * @param {Boolean} [options.renderMediaPreview]
+	 * @param {Boolean} [options.renderForEditingView]
 	 * @returns {module:engine/view/element~Element}
 	 */
 	getMediaViewElement( writer, url, options ) {
@@ -208,8 +207,9 @@ class Media {
 	 *
 	 * @param {module:engine/view/downcastwriter~DowncastWriter} writer The view writer used to produce a view element.
 	 * @param {Object} options
-	 * @param {String} [options.renderMediaPreview]
-	 * @param {String} [options.renderForEditingView]
+	 * @param {String} [options.elementName]
+	 * @param {Boolean} [options.renderMediaPreview]
+	 * @param {Boolean} [options.renderForEditingView]
 	 * @returns {module:engine/view/element~Element}
 	 */
 	getViewElement( writer, options ) {
@@ -235,7 +235,7 @@ class Media {
 				attributes.url = this.url;
 			}
 
-			viewElement = writer.createEmptyElement( 'oembed', attributes );
+			viewElement = writer.createEmptyElement( options.elementName, attributes );
 		}
 
 		writer.setCustomProperty( 'media-content', true, viewElement );
@@ -248,7 +248,7 @@ class Media {
 	 *
 	 * @param {module:engine/view/downcastwriter~DowncastWriter} writer The view writer used to produce a view element.
 	 * @param {Object} options
-	 * @param {String} [options.renderForEditingView]
+	 * @param {Boolean} [options.renderForEditingView]
 	 * @returns {String}
 	 */
 	_getPreviewHtml( options ) {

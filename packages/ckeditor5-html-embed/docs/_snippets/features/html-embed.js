@@ -92,7 +92,7 @@ ClassicEditor
 				'codeBlock',
 				'blockQuote',
 				'link',
-				'imageUpload',
+				'uploadImage',
 				'mediaEmbed',
 				'insertTable',
 				'|',
@@ -101,20 +101,20 @@ ClassicEditor
 				'|',
 				'undo',
 				'redo'
-			],
-			viewportTopOffset: window.getViewportTopOffsetConfig()
+			]
+		},
+		ui: {
+			viewportOffset: {
+				top: window.getViewportTopOffsetConfig()
+			}
 		},
 		image: {
-			styles: [
-				'full',
-				'alignLeft',
-				'alignRight'
-			],
 			toolbar: [
-				'imageStyle:alignLeft',
-				'imageStyle:full',
-				'imageStyle:alignRight',
+				'imageStyle:inline',
+				'imageStyle:wrapText',
+				'imageStyle:breakText',
 				'|',
+				'toggleImageCaption',
 				'imageTextAlternative'
 			]
 		},
@@ -166,7 +166,8 @@ ClassicEditor
 
 		window.attachTourBalloon( {
 			target: window.findToolbarItem( editor.ui.view.toolbar, item => item.label && item.label === 'Insert HTML' ),
-			text: 'Click here to insert new HTML snippet.'
+			text: 'Click to embed a new HTML snippet.',
+			editor
 		} );
 	} )
 	.catch( err => {

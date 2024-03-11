@@ -34,6 +34,7 @@ import TextTransformation from '@ckeditor/ckeditor5-typing/src/texttransformatio
 import Underline from '@ckeditor/ckeditor5-basic-styles/src/underline';
 import Font from '@ckeditor/ckeditor5-font/src/font';
 import Mention from '@ckeditor/ckeditor5-mention/src/mention';
+import CloudServices from '@ckeditor/ckeditor5-cloud-services/src/cloudservices';
 
 export default class ClassicEditor extends ClassicEditorBase {}
 
@@ -46,6 +47,7 @@ ClassicEditor.builtinPlugins = [
 	Italic,
 	BlockQuote,
 	CKFinder,
+	CloudServices,
 	EasyImage,
 	Font,
 	Heading,
@@ -82,8 +84,8 @@ ClassicEditor.defaultConfig = {
 			'bulletedList',
 			'numberedList',
 			'|',
-			'indent',
 			'outdent',
+			'indent',
 			'|',
 			'imageUpload',
 			'blockQuote',

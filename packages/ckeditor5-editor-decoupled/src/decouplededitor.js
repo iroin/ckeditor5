@@ -7,16 +7,13 @@
  * @module editor-decoupled/decouplededitor
  */
 
-import Editor from '@ckeditor/ckeditor5-core/src/editor/editor';
-import DataApiMixin from '@ckeditor/ckeditor5-core/src/editor/utils/dataapimixin';
+import { Editor, DataApiMixin, secureSourceElement } from 'ckeditor5/src/core';
+import { CKEditorError, getDataFromElement, setDataInElement, mix } from 'ckeditor5/src/utils';
+
+import { isElement } from 'lodash-es';
+
 import DecoupledEditorUI from './decouplededitorui';
 import DecoupledEditorUIView from './decouplededitoruiview';
-import getDataFromElement from '@ckeditor/ckeditor5-utils/src/dom/getdatafromelement';
-import setDataInElement from '@ckeditor/ckeditor5-utils/src/dom/setdatainelement';
-import mix from '@ckeditor/ckeditor5-utils/src/mix';
-import { isElement } from 'lodash-es';
-import CKEditorError from '@ckeditor/ckeditor5-utils/src/ckeditorerror';
-import secureSourceElement from '@ckeditor/ckeditor5-core/src/editor/utils/securesourceelement';
 
 /**
  * The {@glink builds/guides/overview#document-editor decoupled editor} implementation.
@@ -241,7 +238,7 @@ export default class DecoupledEditor extends Editor {
 							throw new CKEditorError( 'editor-create-initial-data', null );
 						}
 
-						const initialData = config.initialData || getInitialData( sourceElementOrData );
+						const initialData = config.initialData !== undefined ? config.initialData : getInitialData( sourceElementOrData );
 
 						return editor.data.init( initialData );
 					} )

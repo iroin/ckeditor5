@@ -18,6 +18,8 @@ import FontBackgroundColor from '@ckeditor/ckeditor5-font/src/fontbackgroundcolo
 import PageBreak from '@ckeditor/ckeditor5-page-break/src/pagebreak';
 import TableProperties from '@ckeditor/ckeditor5-table/src/tableproperties';
 import TableCellProperties from '@ckeditor/ckeditor5-table/src/tablecellproperties';
+import ImageUpload from '@ckeditor/ckeditor5-image/src/imageupload';
+import CloudServices from '@ckeditor/ckeditor5-cloud-services/src/cloudservices';
 
 import PasteFromOffice from '../../src/pastefromoffice';
 
@@ -31,8 +33,23 @@ const dataDiv = document.querySelector( '#data' );
 
 ClassicEditor
 	.create( document.querySelector( '#editor' ), {
-		plugins: [ ArticlePluginSet, Strikethrough, Underline, Table, TableToolbar, PageBreak,
-			TableProperties, TableCellProperties, EasyImage, PasteFromOffice, FontColor, FontBackgroundColor ],
+		image: { toolbar: [ 'toggleImageCaption', 'imageTextAlternative' ] },
+		plugins: [
+			ArticlePluginSet,
+			Strikethrough,
+			Underline,
+			Table,
+			TableToolbar,
+			PageBreak,
+			TableProperties,
+			TableCellProperties,
+			ImageUpload,
+			CloudServices,
+			EasyImage,
+			PasteFromOffice,
+			FontColor,
+			FontBackgroundColor
+		],
 		toolbar: [ 'heading', '|', 'bold', 'italic', 'strikethrough', 'underline', 'link',
 			'bulletedList', 'numberedList', 'blockQuote', 'insertTable', 'pageBreak', 'undo', 'redo' ],
 		table: {
@@ -43,7 +60,7 @@ ClassicEditor
 	.then( editor => {
 		window.editor = editor;
 
-		const clipboard = editor.plugins.get( 'Clipboard' );
+		const clipboard = editor.plugins.get( 'ClipboardPipeline' );
 
 		editor.editing.view.document.on( 'paste', ( evt, data ) => {
 			console.clear();

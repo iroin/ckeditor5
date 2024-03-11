@@ -17,13 +17,17 @@ ClassicEditor
 				'bulletedList', 'numberedList', 'todoList', '|',
 				'code', 'codeBlock', '|',
 				'outdent', 'indent', '|',
-				'imageUpload', 'blockQuote', '|',
+				'uploadImage', 'blockQuote', '|',
 				'undo', 'redo'
-			],
-			viewportTopOffset: window.getViewportTopOffsetConfig()
+			]
+		},
+		ui: {
+			viewportOffset: {
+				top: window.getViewportTopOffsetConfig()
+			}
 		},
 		image: {
-			toolbar: [ 'imageStyle:full', 'imageStyle:side', '|', 'imageTextAlternative' ]
+			toolbar: [ 'imageStyle:inline', 'imageStyle:block', 'imageStyle:side', '|', 'toggleImageCaption', 'imageTextAlternative' ]
 		},
 		codeBlock: {
 			languages: [

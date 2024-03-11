@@ -8,12 +8,20 @@
 ClassicEditor
 	.create( document.querySelector( '#snippet-link' ), {
 		cloudServices: CS_CONFIG,
-		toolbar: {
-			viewportTopOffset: window.getViewportTopOffsetConfig()
+		ui: {
+			viewportOffset: {
+				top: window.getViewportTopOffsetConfig()
+			}
 		}
 	} )
 	.then( editor => {
 		window.editor = editor;
+
+		window.attachTourBalloon( {
+			target: window.findToolbarItem( editor.ui.view.toolbar, item => item.label && item.label === 'Link' ),
+			text: 'Click to create a link.',
+			editor
+		} );
 	} )
 	.catch( err => {
 		console.error( err.stack );

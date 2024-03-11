@@ -24,6 +24,7 @@ import Essentials from '@ckeditor/ckeditor5-essentials/src/essentials';
 import Heading from '@ckeditor/ckeditor5-heading/src/heading';
 import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
 import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold';
+import FindAndReplace from '@ckeditor/ckeditor5-find-and-replace/src/findandreplace';
 import Italic from '@ckeditor/ckeditor5-basic-styles/src/italic';
 import List from '@ckeditor/ckeditor5-list/src/list';
 import Link from '@ckeditor/ckeditor5-link/src/link';
@@ -37,6 +38,7 @@ import Table from '@ckeditor/ckeditor5-table/src/table';
 import TableToolbar from '@ckeditor/ckeditor5-table/src/tabletoolbar';
 import MediaEmbed from '@ckeditor/ckeditor5-media-embed/src/mediaembed';
 import EasyImage from '@ckeditor/ckeditor5-easy-image/src/easyimage';
+import CloudServices from '@ckeditor/ckeditor5-cloud-services/src/cloudservices';
 import { CS_CONFIG } from '@ckeditor/ckeditor5-cloud-services/tests/_utils/cloud-services-config';
 
 /**
@@ -304,7 +306,8 @@ class MultirootEditorUI extends EditorUI {
 					view: editingView,
 					element: editingRoot,
 					text: placeholderText,
-					isDirectHost: false
+					isDirectHost: false,
+					keepOnFocus: true
 				} );
 			}
 		}
@@ -387,14 +390,17 @@ MultirootEditor
 		footerleft: document.querySelector( '#footer-left' ),
 		footerright: document.querySelector( '#footer-right' )
 	}, {
-		plugins: [ Essentials, Paragraph, Heading, Bold, Italic, List, Link, BlockQuote, Image, ImageCaption,
-			ImageStyle, ImageToolbar, ImageUpload, Table, TableToolbar, MediaEmbed, EasyImage ],
-		toolbar: [ 'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'imageUpload', 'blockQuote',
-			'insertTable', 'mediaEmbed', 'undo', 'redo' ],
+		plugins: [
+			Essentials, Paragraph, Heading, Bold, Italic, List, Link, BlockQuote, Image, ImageCaption,
+			ImageStyle, ImageToolbar, ImageUpload, Table, TableToolbar, MediaEmbed, EasyImage, CloudServices, FindAndReplace
+		],
+		toolbar: [
+			'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'uploadImage', 'blockQuote',
+			'insertTable', 'mediaEmbed', 'findAndReplace', 'undo', 'redo' ],
 		image: {
-			toolbar: [ 'imageTextAlternative', '|', 'imageStyle:full',
-				'imageStyle:side' ],
-			styles: [ 'full', 'side' ]
+			toolbar: [
+				'imageStyle:inline', 'imageStyle:block', 'imageStyle:side', '|', 'toggleImageCaption', 'imageTextAlternative'
+			]
 		},
 		table: {
 			contentToolbar: [

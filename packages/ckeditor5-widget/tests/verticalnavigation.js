@@ -11,6 +11,7 @@ import HorizontalLine from '@ckeditor/ckeditor5-horizontal-line/src/horizontalli
 import Image from '@ckeditor/ckeditor5-image/src/image';
 import ImageCaption from '@ckeditor/ckeditor5-image/src/imagecaption';
 import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
+import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold';
 
 import { getCode } from '@ckeditor/ckeditor5-utils/src/keyboard';
 import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
@@ -30,7 +31,7 @@ describe( 'Widget - vertical keyboard navigation near widgets', () => {
 		global.document.body.appendChild( editorElement );
 
 		editor = await ClassicTestEditor.create( editorElement, {
-			plugins: [ Paragraph, Image, ImageCaption, HorizontalLine, BlockQuote, BlockWidgetWithNestedEditable ]
+			plugins: [ Paragraph, Image, ImageCaption, HorizontalLine, BlockQuote, Bold, BlockWidgetWithNestedEditable ]
 		} );
 
 		model = editor.model;
@@ -528,6 +529,73 @@ describe( 'Widget - vertical keyboard navigation near widgets', () => {
 				} );
 			} );
 
+			describe( 'with selection at the edge of limit element', () => {
+				it( 'should do nothing if caret is at the beginning of the nested editable content', () => {
+					setModelData( model, '<widget><nested><paragraph>[]foobar</paragraph></nested></widget>' );
+
+					editor.editing.view.document.fire( 'keydown', upArrowDomEvtDataStub );
+
+					sinon.assert.notCalled( upArrowDomEvtDataStub.preventDefault );
+					sinon.assert.notCalled( upArrowDomEvtDataStub.stopPropagation );
+				} );
+
+				it( 'should do nothing if caret is at the end of the nested editable content', () => {
+					setModelData( model, '<widget><nested><paragraph>foobar[]</paragraph></nested></widget>' );
+
+					editor.editing.view.document.fire( 'keydown', downArrowDomEvtDataStub );
+
+					sinon.assert.notCalled( downArrowDomEvtDataStub.preventDefault );
+					sinon.assert.notCalled( downArrowDomEvtDataStub.stopPropagation );
+				} );
+
+				it( 'should collapse selection if selection is at the beginning of the nested editable content', () => {
+					setModelData( model, '<widget><nested><paragraph>[foo]bar</paragraph></nested></widget>' );
+
+					editor.editing.view.document.fire( 'keydown', upArrowDomEvtDataStub );
+
+					sinon.assert.calledOnce( upArrowDomEvtDataStub.preventDefault );
+					sinon.assert.calledOnce( upArrowDomEvtDataStub.stopPropagation );
+
+					assertEqualMarkup( getModelData( model ), '<widget><nested><paragraph>[]foobar</paragraph></nested></widget>' );
+				} );
+
+				it( 'should collapse selection if selection is at the end of the nested editable content', () => {
+					setModelData( model, '<widget><nested><paragraph>foo[bar]</paragraph></nested></widget>' );
+
+					editor.editing.view.document.fire( 'keydown', downArrowDomEvtDataStub );
+
+					sinon.assert.calledOnce( downArrowDomEvtDataStub.preventDefault );
+					sinon.assert.calledOnce( downArrowDomEvtDataStub.stopPropagation );
+
+					assertEqualMarkup( getModelData( model ), '<widget><nested><paragraph>foobar[]</paragraph></nested></widget>' );
+				} );
+
+				describe( 'when shift key is pressed', () => {
+					beforeEach( () => {
+						upArrowDomEvtDataStub.shiftKey = true;
+						downArrowDomEvtDataStub.shiftKey = true;
+					} );
+
+					it( 'should expand selection to the beginning of the nested editable content', () => {
+						setModelData( model, '<widget><nested><paragraph>[foo]bar</paragraph></nested></widget>' );
+
+						editor.editing.view.document.fire( 'keydown', upArrowDomEvtDataStub );
+
+						sinon.assert.notCalled( upArrowDomEvtDataStub.preventDefault );
+						sinon.assert.notCalled( upArrowDomEvtDataStub.stopPropagation );
+					} );
+
+					it( 'should expand selection to the end of the nested editable content', () => {
+						setModelData( model, '<widget><nested><paragraph>foo[bar]</paragraph></nested></widget>' );
+
+						editor.editing.view.document.fire( 'keydown', downArrowDomEvtDataStub );
+
+						sinon.assert.notCalled( downArrowDomEvtDataStub.preventDefault );
+						sinon.assert.notCalled( downArrowDomEvtDataStub.stopPropagation );
+					} );
+				} );
+			} );
+
 			describe( 'with non-collapsed forward selection', () => {
 				beforeEach( () => {
 					setModelData( model, '<widget><nested><paragraph>fo[ob]ar</paragraph></nested></widget>' );
@@ -637,6 +705,19 @@ describe( 'Widget - vertical keyboard navigation near widgets', () => {
 
 				sinon.assert.notCalled( upArrowDomEvtDataStub.preventDefault );
 				sinon.assert.notCalled( upArrowDomEvtDataStub.stopPropagation );
+			} );
+
+			it( 'should not prevent default browser behavior if caret is in the middle line of a text with formatting', () => {
+				setModelData( model,
+					'<widget><nested><paragraph>' +
+					'word word word[] word <$text bold="true">bolded</$text> word ' + text +
+					'</paragraph></nested></widget>'
+				);
+
+				editor.editing.view.document.fire( 'keydown', downArrowDomEvtDataStub );
+
+				sinon.assert.notCalled( downArrowDomEvtDataStub.preventDefault );
+				sinon.assert.notCalled( downArrowDomEvtDataStub.stopPropagation );
 			} );
 
 			it( 'should move caret to beginning of nested editable content if caret is in the first line of a text', () => {
@@ -801,10 +882,10 @@ describe( 'Widget - vertical keyboard navigation near widgets', () => {
 					);
 				} );
 
-				it( 'should not move the caret if it\'s just before the last space in the line next to last one', () => {
+				it( 'should not move the caret if it\'s 2 characters before the last space in the line next to last one', () => {
 					setModelData( model,
 						'<widget><nested><paragraph>' +
-							text.substring( 0, text.length - 1 ) + '[]d word word word' +
+							text.substring( 0, text.length - 2 ) + '[]rd word word word' +
 						'</paragraph></nested></widget>'
 					);
 
@@ -1129,7 +1210,7 @@ describe( 'Widget - vertical keyboard navigation near widgets', () => {
 				setModelData( model,
 					'<widget><nested>' +
 						'<paragraph>foo</paragraph>' +
-						`<image src="${ imageUrl }"><caption>bar[]baz</caption></image>` +
+						`<imageBlock src="${ imageUrl }"><caption>bar[]baz</caption></imageBlock>` +
 					'</nested></widget>'
 				);
 
@@ -1140,7 +1221,7 @@ describe( 'Widget - vertical keyboard navigation near widgets', () => {
 
 				assertEqualMarkup( getModelData( model ), '<widget><nested>' +
 					'<paragraph>foo</paragraph>' +
-					`<image src="${ imageUrl }"><caption>[]barbaz</caption></image>` +
+					`<imageBlock src="${ imageUrl }"><caption>[]barbaz</caption></imageBlock>` +
 					'</nested></widget>'
 				);
 			} );
@@ -1149,7 +1230,7 @@ describe( 'Widget - vertical keyboard navigation near widgets', () => {
 				setModelData( model,
 					'<widget><nested>' +
 						'<paragraph>foo</paragraph>' +
-						`<image src="${ imageUrl }"><caption>[]barbaz</caption></image>` +
+						`<imageBlock src="${ imageUrl }"><caption>[]barbaz</caption></imageBlock>` +
 					'</nested></widget>'
 				);
 
@@ -1162,7 +1243,7 @@ describe( 'Widget - vertical keyboard navigation near widgets', () => {
 			it( 'should move the caret to the first position of the image caption', () => {
 				setModelData( model,
 					'<widget><nested>' +
-						`<image src="${ imageUrl }"><caption>bar[]baz</caption></image>` +
+						`<imageBlock src="${ imageUrl }"><caption>bar[]baz</caption></imageBlock>` +
 						'<paragraph>foo</paragraph>' +
 					'</nested></widget>'
 				);
@@ -1174,7 +1255,7 @@ describe( 'Widget - vertical keyboard navigation near widgets', () => {
 
 				assertEqualMarkup( getModelData( model ),
 					'<widget><nested>' +
-						`<image src="${ imageUrl }"><caption>[]barbaz</caption></image>` +
+						`<imageBlock src="${ imageUrl }"><caption>[]barbaz</caption></imageBlock>` +
 						'<paragraph>foo</paragraph>' +
 					'</nested></widget>'
 				);
@@ -1183,7 +1264,7 @@ describe( 'Widget - vertical keyboard navigation near widgets', () => {
 			it( 'should move caret to the end of image caption', () => {
 				setModelData( model,
 					'<widget><nested>' +
-						`<image src="${ imageUrl }"><caption>bar[]baz</caption></image>` +
+						`<imageBlock src="${ imageUrl }"><caption>bar[]baz</caption></imageBlock>` +
 						'<paragraph>foo</paragraph>' +
 					'</nested></widget>'
 				);
@@ -1195,7 +1276,7 @@ describe( 'Widget - vertical keyboard navigation near widgets', () => {
 
 				assertEqualMarkup( getModelData( model ),
 					'<widget><nested>' +
-					`<image src="${ imageUrl }"><caption>barbaz[]</caption></image>` +
+					`<imageBlock src="${ imageUrl }"><caption>barbaz[]</caption></imageBlock>` +
 					'<paragraph>foo</paragraph>' +
 					'</nested></widget>'
 				);
@@ -1204,7 +1285,7 @@ describe( 'Widget - vertical keyboard navigation near widgets', () => {
 			it( 'should move caret to the end of image caption when caret is on the position next to the last one', () => {
 				setModelData( model,
 					'<widget><nested>' +
-						`<image src="${ imageUrl }"><caption>barba[]z</caption></image>` +
+						`<imageBlock src="${ imageUrl }"><caption>barba[]z</caption></imageBlock>` +
 						'<paragraph>foo</paragraph>' +
 					'</nested></widget>'
 				);
@@ -1216,7 +1297,7 @@ describe( 'Widget - vertical keyboard navigation near widgets', () => {
 
 				assertEqualMarkup( getModelData( model ),
 					'<widget><nested>' +
-					`<image src="${ imageUrl }"><caption>barbaz[]</caption></image>` +
+					`<imageBlock src="${ imageUrl }"><caption>barbaz[]</caption></imageBlock>` +
 					'<paragraph>foo</paragraph>' +
 					'</nested></widget>'
 				);
@@ -1225,7 +1306,7 @@ describe( 'Widget - vertical keyboard navigation near widgets', () => {
 			it( 'should not prevent default browser behavior when caret inside image caption when followed by a paragraph', () => {
 				setModelData( model,
 					'<widget><nested>' +
-						`<image src="${ imageUrl }"><caption>barbaz[]</caption></image>` +
+						`<imageBlock src="${ imageUrl }"><caption>barbaz[]</caption></imageBlock>` +
 						'<paragraph>foo</paragraph>' +
 					'</nested></widget>'
 				);
@@ -1238,17 +1319,79 @@ describe( 'Widget - vertical keyboard navigation near widgets', () => {
 		} );
 	} );
 
+	describe( 'with selection on nested editable', () => {
+		it( 'should not move the selection if there is no selectable in the limit (up arrow)', () => {
+			setModelData( model,
+				'<widget>' +
+					'<nested>' +
+						'<paragraph>foo</paragraph>' +
+					'</nested>' +
+					'[<nested>' +
+						'<paragraph>bar</paragraph>' +
+					'</nested>]' +
+				'</widget>'
+			);
+
+			editor.editing.view.document.fire( 'keydown', upArrowDomEvtDataStub );
+
+			assertEqualMarkup( getModelData( model ),
+				'<widget>' +
+					'<nested>' +
+						'<paragraph>foo</paragraph>' +
+					'</nested>' +
+					'[<nested>' +
+						'<paragraph>bar</paragraph>' +
+					'</nested>]' +
+				'</widget>'
+			);
+
+			sinon.assert.notCalled( upArrowDomEvtDataStub.preventDefault );
+			sinon.assert.notCalled( upArrowDomEvtDataStub.stopPropagation );
+		} );
+
+		it( 'should not move the selection if there is no selectable in the limit (down arrow)', () => {
+			setModelData( model,
+				'<widget>' +
+					'[<nested>' +
+						'<paragraph>foo</paragraph>' +
+					'</nested>]' +
+					'<nested>' +
+						'<paragraph>bar</paragraph>' +
+					'</nested>' +
+				'</widget>'
+			);
+
+			editor.editing.view.document.fire( 'keydown', downArrowDomEvtDataStub );
+
+			assertEqualMarkup( getModelData( model ),
+				'<widget>' +
+					'[<nested>' +
+						'<paragraph>foo</paragraph>' +
+					'</nested>]' +
+					'<nested>' +
+						'<paragraph>bar</paragraph>' +
+					'</nested>' +
+				'</widget>'
+			);
+
+			sinon.assert.notCalled( downArrowDomEvtDataStub.preventDefault );
+			sinon.assert.notCalled( downArrowDomEvtDataStub.stopPropagation );
+		} );
+	} );
+
 	function BlockWidgetWithNestedEditable( editor ) {
 		const model = editor.model;
 
 		model.schema.register( 'widget', {
-			inheritAllFrom: '$block',
-			isObject: true
+			allowWhere: '$block',
+			isObject: true,
+			isBlock: true
 		} );
 
 		model.schema.register( 'nested', {
 			allowIn: 'widget',
-			isLimit: true
+			isLimit: true,
+			isSelectable: true
 		} );
 
 		model.schema.extend( '$block', {

@@ -7,15 +7,16 @@
  * @module image/imagecaption
  */
 
-import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
+import { Plugin } from 'ckeditor5/src/core';
 import ImageCaptionEditing from './imagecaption/imagecaptionediting';
+import ImageCaptionUI from './imagecaption/imagecaptionui';
 
 import '../theme/imagecaption.css';
 
 /**
  * The image caption plugin.
  *
- * For a detailed overview, check the {@glink features/image#image-captions image caption} documentation.
+ * For a detailed overview, check the {@glink features/images/images-captions image caption} documentation.
  *
  * @extends module:core/plugin~Plugin
  */
@@ -24,7 +25,7 @@ export default class ImageCaption extends Plugin {
 	 * @inheritDoc
 	 */
 	static get requires() {
-		return [ ImageCaptionEditing ];
+		return [ ImageCaptionEditing, ImageCaptionUI ];
 	}
 
 	/**

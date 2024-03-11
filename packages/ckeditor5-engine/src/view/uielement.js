@@ -50,6 +50,9 @@ export default class UIElement extends Element {
 	constructor( document, name, attributes, children ) {
 		super( document, name, attributes, children );
 
+		// Override the default of the base class.
+		this._isAllowedInsideAttributeElement = true;
+
 		/**
 		 * Returns `null` because filler is not needed for UIElements.
 		 *
@@ -169,7 +172,7 @@ export default class UIElement extends Element {
  * @param {module:engine/view/view~View} view View controller to which the quirks handling will be injected.
  */
 export function injectUiElementHandling( view ) {
-	view.document.on( 'keydown', ( evt, data ) => jumpOverUiElement( evt, data, view.domConverter ) );
+	view.document.on( 'arrowKey', ( evt, data ) => jumpOverUiElement( evt, data, view.domConverter ), { priority: 'low' } );
 }
 
 // Returns `null` because block filler is not needed for UIElements.

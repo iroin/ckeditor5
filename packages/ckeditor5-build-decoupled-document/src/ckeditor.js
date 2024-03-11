@@ -24,6 +24,7 @@ import EasyImage from '@ckeditor/ckeditor5-easy-image/src/easyimage';
 import Heading from '@ckeditor/ckeditor5-heading/src/heading';
 import Image from '@ckeditor/ckeditor5-image/src/image';
 import ImageCaption from '@ckeditor/ckeditor5-image/src/imagecaption';
+import ImageResize from '@ckeditor/ckeditor5-image/src/imageresize';
 import ImageStyle from '@ckeditor/ckeditor5-image/src/imagestyle';
 import ImageToolbar from '@ckeditor/ckeditor5-image/src/imagetoolbar';
 import ImageUpload from '@ckeditor/ckeditor5-image/src/imageupload';
@@ -38,6 +39,7 @@ import PasteFromOffice from '@ckeditor/ckeditor5-paste-from-office/src/pastefrom
 import Table from '@ckeditor/ckeditor5-table/src/table';
 import TableToolbar from '@ckeditor/ckeditor5-table/src/tabletoolbar';
 import TextTransformation from '@ckeditor/ckeditor5-typing/src/texttransformation';
+import CloudServices from '@ckeditor/ckeditor5-cloud-services/src/cloudservices';
 
 export default class DecoupledEditor extends DecoupledEditorBase {}
 
@@ -57,10 +59,12 @@ DecoupledEditor.builtinPlugins = [
 	Underline,
 	BlockQuote,
 	CKFinder,
+	CloudServices,
 	EasyImage,
 	Heading,
 	Image,
 	ImageCaption,
+	ImageResize,
 	ImageStyle,
 	ImageToolbar,
 	ImageUpload,
@@ -98,12 +102,12 @@ DecoupledEditor.defaultConfig = {
 			'numberedList',
 			'bulletedList',
 			'|',
-			'indent',
 			'outdent',
+			'indent',
 			'|',
 			'link',
 			'blockquote',
-			'imageUpload',
+			'uploadImage',
 			'insertTable',
 			'mediaEmbed',
 			'|',
@@ -112,16 +116,13 @@ DecoupledEditor.defaultConfig = {
 		]
 	},
 	image: {
-		styles: [
-			'full',
-			'alignLeft',
-			'alignRight'
-		],
+		resizeUnit: 'px',
 		toolbar: [
-			'imageStyle:alignLeft',
-			'imageStyle:full',
-			'imageStyle:alignRight',
+			'imageStyle:inline',
+			'imageStyle:wrapText',
+			'imageStyle:breakText',
 			'|',
+			'toggleImageCaption',
 			'imageTextAlternative'
 		]
 	},

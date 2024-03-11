@@ -7,7 +7,7 @@
  * @module table/commands/insertrowcommand
  */
 
-import Command from '@ckeditor/ckeditor5-core/src/command';
+import { Command } from 'ckeditor5/src/core';
 import { getRowIndexes, getSelectionAffectedTableCells } from '../utils/selection';
 
 /**
@@ -52,10 +52,9 @@ export default class InsertRowCommand extends Command {
 	 */
 	refresh() {
 		const selection = this.editor.model.document.selection;
+		const isAnyCellSelected = !!getSelectionAffectedTableCells( selection ).length;
 
-		const tableParent = selection.getFirstPosition().findAncestor( 'table' );
-
-		this.isEnabled = !!tableParent;
+		this.isEnabled = isAnyCellSelected;
 	}
 
 	/**

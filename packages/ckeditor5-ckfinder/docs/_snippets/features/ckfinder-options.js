@@ -9,9 +9,13 @@ ClassicEditor
 	.create( document.querySelector( '#snippet-ckfinder-options' ), {
 		toolbar: {
 			items: [
-				'ckfinder', '|', 'heading', '|', 'bold', 'italic', '|', 'undo', 'redo'
-			],
-			viewportTopOffset: 100
+				'heading', '|', 'bold', 'italic', '|', 'undo', 'redo', '|', 'ckfinder'
+			]
+		},
+		ui: {
+			viewportOffset: {
+				top: window.getViewportTopOffsetConfig()
+			}
 		},
 		ckfinder: {
 			// eslint-disable-next-line max-len
