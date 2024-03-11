@@ -36,7 +36,7 @@ export default class ImageStyleUI extends Plugin {
 	 * @inheritDoc
 	 */
 	static get pluginName() {
-		return 'CaImageStyleUI';
+		return 'ImageStyleUI';
 	}
 
 	/**

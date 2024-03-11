@@ -30,7 +30,7 @@ export default class ImageInsert extends Plugin {
 	 * @inheritDoc
 	 */
 	static get pluginName() {
-		return 'CaImageInsert';
+		return 'ImageInsert';
 	}
 
 	/**

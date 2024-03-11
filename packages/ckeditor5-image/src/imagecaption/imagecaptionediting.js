@@ -37,7 +37,7 @@ export default class ImageCaptionEditing extends Plugin {
 	 * @inheritDoc
 	 */
 	static get pluginName() {
-		return 'CaImageCaptionEditing';
+		return 'ImageCaptionEditing';
 	}
 
 	/**
@@ -65,14 +65,14 @@ export default class ImageCaptionEditing extends Plugin {
 		const schema = editor.model.schema;
 
 		// Schema configuration.
-		if ( !schema.isRegistered( 'caCaption' ) ) {
-			schema.register( 'caCaption', {
+		if ( !schema.isRegistered( 'caption' ) ) {
+			schema.register( 'caption', {
 				allowIn: 'imageBlock',
 				allowContentOf: '$block',
 				isLimit: true
 			} );
 		} else {
-			schema.extend( 'caCaption', {
+			schema.extend( 'caption', {
 				allowIn: 'imageBlock'
 			} );
 		}

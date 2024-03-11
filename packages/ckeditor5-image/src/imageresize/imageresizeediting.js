@@ -31,7 +31,7 @@ export default class ImageResizeEditing extends Plugin {
 	 * @inheritDoc
 	 */
 	static get pluginName() {
-		return 'CaImageResizeEditing';
+		return 'ImageResizeEditing';
 	}
 
 	/**

@@ -24,7 +24,7 @@ export default class ImageStyleEditing extends Plugin {
 	 * @inheritDoc
 	 */
 	static get pluginName() {
-		return 'CaImageStyleEditing';
+		return 'ImageStyleEditing';
 	}
 
 	/**

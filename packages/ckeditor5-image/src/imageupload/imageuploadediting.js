@@ -39,7 +39,7 @@ export default class ImageUploadEditing extends Plugin {
 	}
 
 	static get pluginName() {
-		return 'CaImageUploadEditing';
+		return 'ImageUploadEditing';
 	}
 
 	/**

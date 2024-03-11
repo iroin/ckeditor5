@@ -13,7 +13,6 @@ import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold';
 import Italic from '@ckeditor/ckeditor5-basic-styles/src/italic';
 import BlockQuote from '@ckeditor/ckeditor5-block-quote/src/blockquote';
 import CKFinder from '@ckeditor/ckeditor5-ckfinder/src/ckfinder';
-import EasyImage from '@ckeditor/ckeditor5-easy-image/src/easyimage';
 import Heading from '@ckeditor/ckeditor5-heading/src/heading';
 import Image from '@crowdarchitects/ckeditor5-image/src/image';
 import ImageInsert from '@crowdarchitects/ckeditor5-image/src/imageinsert';
@@ -31,10 +30,11 @@ import PasteFromOffice from '@ckeditor/ckeditor5-paste-from-office/src/pastefrom
 import Table from '@ckeditor/ckeditor5-table/src/table';
 import TableToolbar from '@ckeditor/ckeditor5-table/src/tabletoolbar';
 import TextTransformation from '@ckeditor/ckeditor5-typing/src/texttransformation';
+import CloudServices from '@ckeditor/ckeditor5-cloud-services/src/cloudservices';
 import Underline from '@ckeditor/ckeditor5-basic-styles/src/underline';
 import Font from '@ckeditor/ckeditor5-font/src/font';
 import Mention from '@ckeditor/ckeditor5-mention/src/mention';
-import CloudServices from '@ckeditor/ckeditor5-cloud-services/src/cloudservices';
+import SourceEditing from '@ckeditor/ckeditor5-source-editing/src/sourceediting';
 
 export default class ClassicEditor extends ClassicEditorBase {}
 
@@ -48,7 +48,6 @@ ClassicEditor.builtinPlugins = [
 	BlockQuote,
 	CKFinder,
 	CloudServices,
-	EasyImage,
 	Font,
 	Heading,
 	Image,
@@ -66,6 +65,7 @@ ClassicEditor.builtinPlugins = [
 	MentionCustomization,
 	Paragraph,
 	PasteFromOffice,
+	SourceEditing,
 	Table,
 	TableToolbar,
 	TextTransformation,
@@ -84,8 +84,8 @@ ClassicEditor.defaultConfig = {
 			'bulletedList',
 			'numberedList',
 			'|',
-			'outdent',
 			'indent',
+			'outdent',
 			'|',
 			'imageUpload',
 			'blockQuote',

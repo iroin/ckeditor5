@@ -4,7 +4,6 @@
  */
 
 .ck.ck-image-insert-form {
-	padding: var(--ck-spacing-large);
 	&:focus {
 		/* See: https://github.com/ckeditor/ckeditor5/issues/4773 */
 		outline: none;

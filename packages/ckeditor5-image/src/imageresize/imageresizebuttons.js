@@ -39,7 +39,7 @@ export default class ImageResizeButtons extends Plugin {
 	 * @inheritDoc
 	 */
 	static get pluginName() {
-		return 'CaImageResizeButtons';
+		return 'ImageResizeButtons';
 	}
 
 	/**

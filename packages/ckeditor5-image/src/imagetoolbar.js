@@ -37,7 +37,7 @@ export default class ImageToolbar extends Plugin {
 	 * @inheritDoc
 	 */
 	static get pluginName() {
-		return 'CaImageToolbar';
+		return 'ImageToolbar';
 	}
 
 	/**
@@ -49,7 +49,7 @@ export default class ImageToolbar extends Plugin {
 		const widgetToolbarRepository = editor.plugins.get( WidgetToolbarRepository );
 		const imageUtils = editor.plugins.get( 'ImageUtils' );
 
-		widgetToolbarRepository.register( 'caImage', {
+		widgetToolbarRepository.register( 'image', {
 			ariaLabel: t( 'Image toolbar' ),
 			items: normalizeDeclarativeConfig( editor.config.get( 'image.toolbar' ) || [] ),
 			getRelatedElement: selection => imageUtils.getClosestSelectedImageWidget( selection )

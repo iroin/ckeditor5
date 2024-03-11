@@ -33,7 +33,7 @@ export default class ImageEditing extends Plugin {
 	 * @inheritDoc
 	 */
 	static get pluginName() {
-		return 'CaImageEditing';
+		return 'ImageEditing';
 	}
 
 	/**
