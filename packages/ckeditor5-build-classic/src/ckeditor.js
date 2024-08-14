@@ -23,6 +23,7 @@ import ImageToolbar from '@crowdarchitects/ckeditor5-image/src/imagetoolbar';
 import ImageUpload from '@crowdarchitects/ckeditor5-image/src/imageupload';
 import Indent from '@ckeditor/ckeditor5-indent/src/indent';
 import Link from '@ckeditor/ckeditor5-link/src/link';
+import LinkImage from '@ckeditor/ckeditor5-link/src/linkimage';
 import List from '@ckeditor/ckeditor5-list/src/list';
 import MediaEmbed from '@ckeditor/ckeditor5-media-embed/src/mediaembed';
 import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
@@ -35,6 +36,7 @@ import Underline from '@ckeditor/ckeditor5-basic-styles/src/underline';
 import Font from '@ckeditor/ckeditor5-font/src/font';
 import Mention from '@ckeditor/ckeditor5-mention/src/mention';
 import SourceEditing from '@ckeditor/ckeditor5-source-editing/src/sourceediting';
+import GeneralHtmlSupport from '@ckeditor/ckeditor5-html-support/src/generalhtmlsupport';
 
 export default class ClassicEditor extends ClassicEditorBase {}
 
@@ -49,6 +51,7 @@ ClassicEditor.builtinPlugins = [
 	CKFinder,
 	CloudServices,
 	Font,
+	GeneralHtmlSupport,
 	Heading,
 	Image,
 	ImageInsert,
@@ -59,6 +62,7 @@ ClassicEditor.builtinPlugins = [
 	ImageUpload,
 	Indent,
 	Link,
+	LinkImage,
 	List,
 	MediaEmbed,
 	Mention,
