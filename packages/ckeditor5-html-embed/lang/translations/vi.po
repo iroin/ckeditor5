@@ -1,4 +1,4 @@
-# Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+# Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
 #
 #                                     !!! IMPORTANT !!!
 #
@@ -12,9 +12,10 @@
 #
 msgid ""
 msgstr ""
-"Language-Team: Vietnamese (https://www.transifex.com/ckeditor/teams/11143/vi/)\n"
+"Language-Team: Vietnamese (https://app.transifex.com/ckeditor/teams/11143/vi/)\n"
 "Language: vi\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 
 msgctxt "Toolbar button tooltip for the HTML embed feature."
 msgid "Insert HTML"
@@ -38,8 +39,8 @@ msgstr "Lưu thay đổi"
 
 msgctxt "An information displayed in the HTML embed preview if the content is not previewable."
 msgid "No preview available"
-msgstr ""
+msgstr "Không có sẵn bản xem trước"
 
 msgctxt "An information displayed in the HTML embed preview if the HTML snippet has no content."
 msgid "Empty snippet content"
-msgstr ""
+msgstr "Nội dung đoạn mã trống"

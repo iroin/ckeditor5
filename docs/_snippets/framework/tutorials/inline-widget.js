@@ -1,25 +1,22 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
+
 /* globals console, window, document */
 
-import ClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
-import Essentials from '@ckeditor/ckeditor5-essentials/src/essentials';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import Heading from '@ckeditor/ckeditor5-heading/src/heading';
-import List from '@ckeditor/ckeditor5-list/src/list';
-import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold';
-import Italic from '@ckeditor/ckeditor5-basic-styles/src/italic';
+import { ClassicEditor } from '@ckeditor/ckeditor5-editor-classic';
+import { Bold, Italic } from '@ckeditor/ckeditor5-basic-styles';
+import { Essentials } from '@ckeditor/ckeditor5-essentials';
+import { Heading } from '@ckeditor/ckeditor5-heading';
+import { List } from '@ckeditor/ckeditor5-list';
+import { Paragraph } from '@ckeditor/ckeditor5-paragraph';
 
-import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
-import { toWidget, viewToModelPositionOutsideModelElement } from '@ckeditor/ckeditor5-widget/src/utils';
-import Widget from '@ckeditor/ckeditor5-widget/src/widget';
-import Command from '@ckeditor/ckeditor5-core/src/command';
+import { Command, Plugin } from '@ckeditor/ckeditor5-core';
+import { Widget, toWidget, viewToModelPositionOutsideModelElement } from '@ckeditor/ckeditor5-widget';
 
-import { addListToDropdown, createDropdown } from '@ckeditor/ckeditor5-ui/src/dropdown/utils';
-import Collection from '@ckeditor/ckeditor5-utils/src/collection';
-import Model from '@ckeditor/ckeditor5-ui/src/model';
+import { ViewModel, addListToDropdown, createDropdown } from '@ckeditor/ckeditor5-ui';
+import { Collection } from '@ckeditor/ckeditor5-utils';
 
 class PlaceholderCommand extends Command {
 	execute( { value } ) {
@@ -100,7 +97,7 @@ function getDropdownItemsDefinitions( placeholderNames ) {
 	for ( const name of placeholderNames ) {
 		const definition = {
 			type: 'button',
-			model: new Model( {
+			model: new ViewModel( {
 				commandParam: name,
 				label: name,
 				withText: true
@@ -194,8 +191,6 @@ class PlaceholderEditing extends Plugin {
 
 			const placeholderView = viewWriter.createContainerElement( 'span', {
 				class: 'placeholder'
-			}, {
-				isAllowedInsideAttributeElement: true
 			} );
 
 			// Insert the placeholder name (as a text).
@@ -210,9 +205,22 @@ class PlaceholderEditing extends Plugin {
 ClassicEditor
 	.create( document.querySelector( '#snippet-inline-widget' ), {
 		plugins: [ Essentials, Paragraph, Heading, List, Bold, Italic, Placeholder ],
-		toolbar: [ 'heading', '|', 'bold', 'italic', 'numberedList', 'bulletedList', '|', 'placeholder' ],
+		toolbar: {
+			items: [
+				'undo', 'redo',
+				'|', 'placeholder',
+				'|', 'heading',
+				'|', 'bold', 'italic',
+				'|', 'bulletedList', 'numberedList'
+			]
+		},
 		placeholderConfig: {
 			types: [ 'date', 'color', 'first name', 'surname' ]
+		},
+		ui: {
+			viewportOffset: {
+				top: window.getViewportTopOffsetConfig()
+			}
 		}
 	} )
 	.then( editor => {
@@ -220,6 +228,17 @@ ClassicEditor
 
 		// Expose for playing in the console.
 		window.editor = editor;
+
+		window.attachTourBalloon( {
+			target: window.findToolbarItem( editor.ui.view.toolbar,
+				item => item.buttonView && item.buttonView.label && item.buttonView.label.startsWith( 'Placeholder' )
+			),
+			text: 'Click to add a placeholder.',
+			tippyOptions: {
+				placement: 'bottom-start'
+			},
+			editor
+		} );
 	} )
 	.catch( error => {
 		console.error( error.stack );

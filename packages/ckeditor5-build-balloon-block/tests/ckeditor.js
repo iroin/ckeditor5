@@ -1,13 +1,13 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals document */
 
-import BalloonEditor from '../src/ckeditor';
-import BaseBalloonEditor from '@ckeditor/ckeditor5-editor-balloon/src/ballooneditor';
-import { describeMemoryUsage, testMemoryUsage } from '@ckeditor/ckeditor5-core/tests/_utils/memory';
+import BalloonEditor from '../src/ckeditor.js';
+import BaseBalloonEditor from '@ckeditor/ckeditor5-editor-balloon/src/ballooneditor.js';
+import { describeMemoryUsage, testMemoryUsage } from '@ckeditor/ckeditor5-core/tests/_utils/memory.js';
 
 describe( 'BalloonEditor (block) build', () => {
 	let editor, editorElement;
@@ -67,8 +67,18 @@ describe( 'BalloonEditor (block) build', () => {
 				} );
 		} );
 
-		it( 'sets the data back to the editor element', () => {
+		it( 'clears editor element if config.updateSourceElementOnDestroy flag is not set', () => {
 			editor.setData( '<p>foo</p>' );
+
+			return editor.destroy()
+				.then( () => {
+					expect( editorElement.innerHTML ).to.equal( '' );
+				} );
+		} );
+
+		it( 'sets the data back to the editor element if config.updateSourceElementOnDestroy flag is set', () => {
+			editor.setData( '<p>foo</p>' );
+			editor.config.set( 'updateSourceElementOnDestroy', true );
 
 			return editor.destroy()
 				.then( () => {

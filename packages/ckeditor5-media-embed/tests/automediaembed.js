@@ -1,24 +1,24 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* global setTimeout */
 
-import MediaEmbed from '../src/mediaembed';
-import AutoMediaEmbed from '../src/automediaembed';
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
-import Clipboard from '@ckeditor/ckeditor5-clipboard/src/clipboard';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import Link from '@ckeditor/ckeditor5-link/src/link';
-import Undo from '@ckeditor/ckeditor5-undo/src/undo';
-import Typing from '@ckeditor/ckeditor5-typing/src/typing';
-import Image from '@ckeditor/ckeditor5-image/src/image';
-import ImageCaption from '@ckeditor/ckeditor5-image/src/imagecaption';
-import Table from '@ckeditor/ckeditor5-table/src/table';
-import global from '@ckeditor/ckeditor5-utils/src/dom/global';
-import DomEventData from '@ckeditor/ckeditor5-engine/src/view/observer/domeventdata';
-import { getData, setData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
+import MediaEmbed from '../src/mediaembed.js';
+import AutoMediaEmbed from '../src/automediaembed.js';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+import Clipboard from '@ckeditor/ckeditor5-clipboard/src/clipboard.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import Link from '@ckeditor/ckeditor5-link/src/link.js';
+import Undo from '@ckeditor/ckeditor5-undo/src/undo.js';
+import Typing from '@ckeditor/ckeditor5-typing/src/typing.js';
+import Image from '@ckeditor/ckeditor5-image/src/image.js';
+import ImageCaption from '@ckeditor/ckeditor5-image/src/imagecaption.js';
+import Table from '@ckeditor/ckeditor5-table/src/table.js';
+import global from '@ckeditor/ckeditor5-utils/src/dom/global.js';
+import DomEventData from '@ckeditor/ckeditor5-engine/src/view/observer/domeventdata.js';
+import { getData, setData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
 
 describe( 'AutoMediaEmbed - integration', () => {
 	let editorElement, editor;
@@ -504,7 +504,7 @@ describe( 'AutoMediaEmbed - integration', () => {
 				const rootEl = editor.model.document.getRoot();
 
 				setTimeout( () => {
-					editor.model.enqueueChange( 'transparent', writer => {
+					editor.model.enqueueChange( { isUndoable: false }, writer => {
 						writer.insertText( characters[ i ], writer.createPositionFromPath( rootEl, [ 0, i ] ) );
 					} );
 				}, i * 5 );
@@ -526,7 +526,7 @@ describe( 'AutoMediaEmbed - integration', () => {
 
 			for ( let i = 0; i < 10; ++i ) {
 				setTimeout( () => {
-					editor.model.enqueueChange( 'transparent', writer => {
+					editor.model.enqueueChange( { isUndoable: false }, writer => {
 						writer.insertText( characters[ i ], editor.model.document.selection.getFirstPosition() );
 					} );
 				}, i * 5 );
@@ -546,7 +546,7 @@ describe( 'AutoMediaEmbed - integration', () => {
 
 			pasteHtml( editor, 'https://www.youtube.com/watch?v=H08tGjXNHO4' );
 
-			editor.model.enqueueChange( 'transparent', writer => {
+			editor.model.enqueueChange( { isUndoable: false }, writer => {
 				writer.remove( writer.createRangeOn( editor.model.document.getRoot().getChild( 1 ) ) );
 			} );
 
@@ -564,7 +564,7 @@ describe( 'AutoMediaEmbed - integration', () => {
 
 			pasteHtml( editor, 'https://www.youtube.com/watch?v=H08tGjXNHO4' );
 
-			editor.model.enqueueChange( 'transparent', writer => {
+			editor.model.enqueueChange( { isUndoable: false }, writer => {
 				const paragraph = writer.createElement( 'paragraph' );
 				writer.insert( paragraph, writer.createPositionAfter( editor.model.document.getRoot().getChild( 0 ) ) );
 				writer.setSelection( paragraph, 'in' );
@@ -572,7 +572,7 @@ describe( 'AutoMediaEmbed - integration', () => {
 
 			for ( let i = 0; i < 10; ++i ) {
 				setTimeout( () => {
-					editor.model.enqueueChange( 'transparent', writer => {
+					editor.model.enqueueChange( { isUndoable: false }, writer => {
 						writer.insertText( characters[ i ], editor.model.document.selection.getFirstPosition() );
 					} );
 				}, i * 5 );
@@ -595,7 +595,7 @@ describe( 'AutoMediaEmbed - integration', () => {
 
 			pasteHtml( editor, 'https://www.youtube.com/watch?v=H08tGjXNHO4' );
 
-			editor.model.enqueueChange( 'transparent', writer => {
+			editor.model.enqueueChange( { isUndoable: false }, writer => {
 				const paragraph = writer.createElement( 'paragraph' );
 				writer.insert( paragraph, writer.createPositionAfter( editor.model.document.getRoot().getChild( 1 ) ) );
 				writer.setSelection( paragraph, 'in' );
@@ -603,7 +603,7 @@ describe( 'AutoMediaEmbed - integration', () => {
 
 			for ( let i = 0; i < 10; ++i ) {
 				setTimeout( () => {
-					editor.model.enqueueChange( 'transparent', writer => {
+					editor.model.enqueueChange( { isUndoable: false }, writer => {
 						writer.insertText( characters[ i ], editor.model.document.selection.getFirstPosition() );
 					} );
 				}, i * 5 );
@@ -658,7 +658,7 @@ describe( 'AutoMediaEmbed - integration', () => {
 	function simulateTyping( text ) {
 		// While typing, every character is an atomic change.
 		text.split( '' ).forEach( character => {
-			editor.execute( 'input', {
+			editor.execute( 'insertText', {
 				text: character
 			} );
 		} );

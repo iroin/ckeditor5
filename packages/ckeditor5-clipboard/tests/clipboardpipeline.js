@@ -1,27 +1,27 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import ClipboardPipeline from '../src/clipboardpipeline';
-import ClipboardObserver from '../src/clipboardobserver';
-import DataTransfer from '../src/datatransfer';
+import ClipboardPipeline from '../src/clipboardpipeline.js';
+import ClipboardObserver from '../src/clipboardobserver.js';
+import DataTransfer from '@ckeditor/ckeditor5-engine/src/view/datatransfer.js';
 
-import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import ViewDocumentFragment from '@ckeditor/ckeditor5-engine/src/view/documentfragment';
-import ModelDocumentFragment from '@ckeditor/ckeditor5-engine/src/model/documentfragment';
-import ViewText from '@ckeditor/ckeditor5-engine/src/view/text';
+import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import ViewDocumentFragment from '@ckeditor/ckeditor5-engine/src/view/documentfragment.js';
+import ModelDocumentFragment from '@ckeditor/ckeditor5-engine/src/model/documentfragment.js';
+import ViewText from '@ckeditor/ckeditor5-engine/src/view/text.js';
 import {
 	stringify as stringifyView,
 	parse as parseView
-} from '@ckeditor/ckeditor5-engine/src/dev-utils/view';
+} from '@ckeditor/ckeditor5-engine/src/dev-utils/view.js';
 import {
 	stringify as stringifyModel,
 	setData as setModelData,
 	getData as getModelData
-} from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
+} from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
 
 describe( 'ClipboardPipeline feature', () => {
 	let editor, view, viewDocument, clipboardPlugin, scrollSpy;
@@ -290,7 +290,7 @@ describe( 'ClipboardPipeline feature', () => {
 			const dataTransferMock = createDataTransfer( { 'text/html': '<p>x</p>', 'text/plain': 'y' } );
 			const spy = sinon.stub( editor.model, 'insertContent' );
 
-			editor.isReadOnly = true;
+			editor.enableReadOnlyMode( 'unit-test' );
 
 			viewDocument.fire( 'paste', {
 				dataTransfer: dataTransferMock,
@@ -307,15 +307,16 @@ describe( 'ClipboardPipeline feature', () => {
 
 			viewDocument.on( 'clipboardInput', spy, { priority: 'high' } );
 
-			editor.isReadOnly = true;
+			editor.enableReadOnlyMode( 'unit-test' );
 
 			viewDocument.fire( 'clipboardInput', {
-				dataTransfer: dataTransferMock
+				dataTransfer: dataTransferMock,
+				method: 'paste'
 			} );
 
 			sinon.assert.notCalled( spy );
 
-			editor.isReadOnly = false;
+			editor.disableReadOnlyMode( 'unit-test' );
 
 			viewDocument.fire( 'clipboardInput', {
 				dataTransfer: dataTransferMock
@@ -459,6 +460,29 @@ describe( 'ClipboardPipeline feature', () => {
 	} );
 
 	describe( 'clipboard copy/cut pipeline', () => {
+		it( 'fires the outputTransformation event on the clipboardPlugin', done => {
+			const dataTransferMock = createDataTransfer();
+			const preventDefaultSpy = sinon.spy();
+
+			setModelData( editor.model, '<paragraph>a[bc</paragraph><paragraph>de]f</paragraph>' );
+
+			clipboardPlugin.on( 'outputTransformation', ( evt, data ) => {
+				expect( preventDefaultSpy.calledOnce ).to.be.true;
+
+				expect( data.method ).to.equal( 'copy' );
+				expect( data.dataTransfer ).to.equal( dataTransferMock );
+				expect( data.content ).is.instanceOf( ModelDocumentFragment );
+				expect( stringifyModel( data.content ) ).to.equal( '<paragraph>bc</paragraph><paragraph>de</paragraph>' );
+
+				done();
+			} );
+
+			viewDocument.fire( 'copy', {
+				dataTransfer: dataTransferMock,
+				preventDefault: preventDefaultSpy
+			} );
+		} );
+
 		it( 'fires clipboardOutput for copy with the selected content and correct method', done => {
 			const dataTransferMock = createDataTransfer();
 			const preventDefaultSpy = sinon.spy();
@@ -507,7 +531,7 @@ describe( 'ClipboardPipeline feature', () => {
 			const spy = sinon.spy();
 
 			setModelData( editor.model, '<paragraph>a[bc</paragraph><paragraph>de]f</paragraph>' );
-			editor.isReadOnly = true;
+			editor.enableReadOnlyMode( 'unit-test' );
 
 			viewDocument.on( 'clipboardOutput', spy );
 
@@ -575,7 +599,7 @@ describe( 'ClipboardPipeline feature', () => {
 					'<li>ol item</li>' +
 				'</ol>' +
 				'<figure>' +
-					'<img alt="image foo" src="foo.jpg">' + // Weird attributes ordering behavior + no closing "/>".
+					'<img src="foo.jpg" alt="image foo">' +
 					'<figcaption>caption</figcaption>' +
 				'</figure>';
 

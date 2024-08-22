@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -9,8 +9,44 @@ ClassicEditor
 	.create( document.querySelector( '#snippet-ckfinder' ), {
 		toolbar: {
 			items: [
-				'heading', '|', 'bold', 'italic', '|', 'undo', 'redo', '|', 'ckfinder'
+				'undo', 'redo',
+				'|', 'heading',
+				'|', 'bold', 'italic',
+				'|', 'link', 'insertImage', 'ckfinder', 'insertTable', 'mediaEmbed',
+				'|', 'bulletedList', 'numberedList', 'outdent', 'indent'
 			]
+		},
+		image: {
+			toolbar: [
+				'toggleImageCaption',
+				'imageTextAlternative',
+				'|',
+				'imageStyle:inline',
+				'imageStyle:block',
+				'imageStyle:wrapText',
+				'|',
+				'resizeImage:100',
+				'resizeImage:200',
+				'resizeImage:original'
+			],
+			resizeOptions: [
+				{
+					name: 'resizeImage:original',
+					value: null,
+					icon: 'original'
+				},
+				{
+					name: 'resizeImage:100',
+					value: '100',
+					icon: 'medium'
+				},
+				{
+					name: 'resizeImage:200',
+					value: '200',
+					icon: 'large'
+				}
+			],
+			resizeUnit: 'px'
 		},
 		ui: {
 			viewportOffset: {

@@ -1,17 +1,17 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals document */
 
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
-import Paragraph from '../src/paragraph';
-import Heading from '@ckeditor/ckeditor5-heading/src/heading';
-import ParagraphButtonUI from '../src/paragraphbuttonui';
-import { setData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview';
-import icon from '../theme/icons/paragraph.svg';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+import Paragraph from '../src/paragraph.js';
+import Heading from '@ckeditor/ckeditor5-heading/src/heading.js';
+import ParagraphButtonUI from '../src/paragraphbuttonui.js';
+import { setData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview.js';
+import icon from '@ckeditor/ckeditor5-core/theme/icons/paragraph.svg';
 
 describe( 'HeadingButtonUI', () => {
 	let editorElement, editor;

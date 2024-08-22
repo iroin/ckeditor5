@@ -1,12 +1,12 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import ModelTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/modeltesteditor';
-import { setData, stringify } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import FindAndReplaceEditing from '../src/findandreplaceediting';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
+import ModelTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/modeltesteditor.js';
+import { setData, stringify } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import FindAndReplaceEditing from '../src/findandreplaceediting.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
 
 describe( 'FindPreviousCommand', () => {
 	let editor, model, command;
@@ -24,6 +24,17 @@ describe( 'FindPreviousCommand', () => {
 
 	afterEach( () => {
 		return editor.destroy();
+	} );
+
+	describe( 'constructor()', () => {
+		it( 'sets public properties', () => {
+			expect( command ).to.have.property( 'isEnabled', false );
+			expect( command ).to.have.property( 'affectsData', false );
+		} );
+
+		it( 'sets state property', () => {
+			expect( command ).to.have.property( '_state', editor.plugins.get( 'FindAndReplaceEditing' ).state );
+		} );
 	} );
 
 	describe( 'isEnabled', () => {
@@ -60,7 +71,7 @@ describe( 'FindPreviousCommand', () => {
 			command._state.results.add( {} );
 			command._state.results.add( {} );
 
-			editor.isReadOnly = true;
+			editor.enableReadOnlyMode( 'unit-test' );
 
 			expect( command.isEnabled ).to.be.true;
 		} );
@@ -72,8 +83,8 @@ describe( 'FindPreviousCommand', () => {
 			command._state.results.add( {} );
 			command._state.results.add( {} );
 
-			editor.isReadOnly = true;
-			editor.isReadOnly = false;
+			editor.enableReadOnlyMode( 'unit-test' );
+			editor.disableReadOnlyMode( 'unit-test' );
 
 			expect( command.isEnabled ).to.be.true;
 		} );
@@ -86,12 +97,6 @@ describe( 'FindPreviousCommand', () => {
 			expect( multiRootEditor.commands.get( 'findPrevious' ).isEnabled ).to.be.true;
 
 			multiRootEditor.destroy();
-		} );
-	} );
-
-	describe( 'state', () => {
-		it( 'is set to plugin\'s state', () => {
-			expect( command._state ).to.equal( editor.plugins.get( 'FindAndReplaceEditing' ).state );
 		} );
 	} );
 

@@ -1,37 +1,37 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import UpcastDispatcher from '../../src/conversion/upcastdispatcher';
+import UpcastDispatcher from '../../src/conversion/upcastdispatcher.js';
 
-import ViewContainerElement from '../../src/view/containerelement';
-import ViewDocumentFragment from '../../src/view/documentfragment';
-import ViewText from '../../src/view/text';
-import ViewUIElement from '../../src/view/uielement';
-import ViewAttributeElement from '../../src/view/attributeelement';
-import ViewDocument from '../../src/view/document';
+import ViewContainerElement from '../../src/view/containerelement.js';
+import ViewDocumentFragment from '../../src/view/documentfragment.js';
+import ViewText from '../../src/view/text.js';
+import ViewUIElement from '../../src/view/uielement.js';
+import ViewAttributeElement from '../../src/view/attributeelement.js';
+import ViewDocument from '../../src/view/document.js';
 
-import Model from '../../src/model/model';
-import ModelDocumentFragment from '../../src/model/documentfragment';
-import ModelElement from '../../src/model/element';
-import ModelText from '../../src/model/text';
-import ModelRange from '../../src/model/range';
-import ModelPosition from '../../src/model/position';
+import Model from '../../src/model/model.js';
+import ModelDocumentFragment from '../../src/model/documentfragment.js';
+import ModelElement from '../../src/model/element.js';
+import ModelText from '../../src/model/text.js';
+import ModelRange from '../../src/model/range.js';
+import ModelPosition from '../../src/model/position.js';
 
-import UpcastHelpers, { convertToModelFragment, convertText, convertSelectionChange } from '../../src/conversion/upcasthelpers';
+import UpcastHelpers, { convertToModelFragment, convertText, convertSelectionChange } from '../../src/conversion/upcasthelpers.js';
 
-import { getData as modelGetData, setData as modelSetData, stringify } from '../../src/dev-utils/model';
-import View from '../../src/view/view';
-import createViewRoot from '../view/_utils/createroot';
-import { setData as viewSetData, parse as viewParse } from '../../src/dev-utils/view';
-import Mapper from '../../src/conversion/mapper';
-import ViewSelection from '../../src/view/selection';
-import ViewRange from '../../src/view/range';
-import { StylesProcessor } from '../../src/view/stylesmap';
-import Writer from '../../src/model/writer';
+import { getData as modelGetData, setData as modelSetData, stringify } from '../../src/dev-utils/model.js';
+import View from '../../src/view/view.js';
+import createViewRoot from '../view/_utils/createroot.js';
+import { setData as viewSetData, parse as viewParse } from '../../src/dev-utils/view.js';
+import Mapper from '../../src/conversion/mapper.js';
+import ViewSelection from '../../src/view/selection.js';
+import ViewRange from '../../src/view/range.js';
+import { StylesProcessor } from '../../src/view/stylesmap.js';
+import Writer from '../../src/model/writer.js';
 
-import toArray from '@ckeditor/ckeditor5-utils/src/toarray';
+import toArray from '@ckeditor/ckeditor5-utils/src/toarray.js';
 
 describe( 'UpcastHelpers', () => {
 	let upcastDispatcher, model, schema, upcastHelpers, viewDocument;
@@ -333,7 +333,7 @@ describe( 'UpcastHelpers', () => {
 			);
 		} );
 
-		it( 'should consume element only when only is name specified', () => {
+		it( 'should allow to convert an attribute if an element was already consumed', () => {
 			upcastHelpers.elementToAttribute( {
 				model: 'bold',
 				view: { name: 'strong' }
@@ -352,6 +352,29 @@ describe( 'UpcastHelpers', () => {
 			expectResult(
 				new ViewAttributeElement( viewDocument, 'strong', { class: 'foo' }, new ViewText( viewDocument, 'foo' ) ),
 				'<$text attribB="true" bold="true">foo</$text>'
+			);
+		} );
+
+		it( 'should consume an element even if only attributes were converted', () => {
+			upcastHelpers.elementToAttribute( {
+				model: 'attribA',
+				view: { name: 'strong', classes: 'foo' }
+			} );
+
+			upcastHelpers.elementToAttribute( {
+				model: 'attribB',
+				view: { name: 'strong', classes: 'bar' }
+			} );
+
+			// This one should not get converted because element itself is already consumed.
+			upcastHelpers.elementToAttribute( {
+				model: 'bold',
+				view: { name: 'strong' }
+			} );
+
+			expectResult(
+				new ViewAttributeElement( viewDocument, 'strong', { class: 'foo bar' }, new ViewText( viewDocument, 'foo' ) ),
+				'<$text attribA="true" attribB="true">foo</$text>'
 			);
 		} );
 
@@ -580,6 +603,64 @@ describe( 'UpcastHelpers', () => {
 			);
 		} );
 
+		it( 'config.view does not have value set for style key', () => {
+			schema.extend( 'imageBlock', {
+				allowAttributes: [ 'styled' ]
+			} );
+
+			upcastHelpers.attributeToAttribute( {
+				view: 'style',
+				model: 'styled'
+			} );
+
+			// Ensure that proper consumables are consumed.
+			upcastDispatcher.on( 'element', ( evt, data, { consumable } ) => {
+				expect( consumable.test( data.viewItem, { styles: [ 'border', 'padding' ] } ) ).to.be.true;
+				expect( consumable.test( data.viewItem, { styles: [ 'border' ] } ) ).to.be.true;
+				expect( consumable.test( data.viewItem, { styles: [ 'padding' ] } ) ).to.be.true;
+			}, { priority: 'highest' } );
+
+			upcastDispatcher.on( 'element', ( evt, data, { consumable } ) => {
+				expect( consumable.test( data.viewItem, { styles: [ 'border', 'padding' ] } ) ).to.be.false;
+				expect( consumable.test( data.viewItem, { styles: [ 'border' ] } ) ).to.be.false;
+				expect( consumable.test( data.viewItem, { styles: [ 'padding' ] } ) ).to.be.false;
+			}, { priority: 'lowest' } );
+
+			expectResult(
+				new ViewAttributeElement( viewDocument, 'img', { 'style': 'border: 2px solid red; padding: 6px 3px;' } ),
+				'<imageBlock styled="border:2px solid red;padding:6px 3px;"></imageBlock>'
+			);
+		} );
+
+		it( 'config.view does not have value set for class key', () => {
+			schema.extend( 'imageBlock', {
+				allowAttributes: [ 'classNames' ]
+			} );
+
+			upcastHelpers.attributeToAttribute( {
+				view: 'class',
+				model: 'classNames'
+			} );
+
+			// Ensure that proper consumables are consumed.
+			upcastDispatcher.on( 'element', ( evt, data, { consumable } ) => {
+				expect( consumable.test( data.viewItem, { classes: [ 'foo', 'bar' ] } ) ).to.be.true;
+				expect( consumable.test( data.viewItem, { classes: [ 'foo' ] } ) ).to.be.true;
+				expect( consumable.test( data.viewItem, { classes: [ 'bar' ] } ) ).to.be.true;
+			}, { priority: 'highest' } );
+
+			upcastDispatcher.on( 'element', ( evt, data, { consumable } ) => {
+				expect( consumable.test( data.viewItem, { classes: [ 'foo', 'bar' ] } ) ).to.be.false;
+				expect( consumable.test( data.viewItem, { classes: [ 'foo' ] } ) ).to.be.false;
+				expect( consumable.test( data.viewItem, { classes: [ 'bar' ] } ) ).to.be.false;
+			}, { priority: 'lowest' } );
+
+			expectResult(
+				new ViewAttributeElement( viewDocument, 'img', { 'class': 'foo bar' } ),
+				'<imageBlock classNames="foo bar"></imageBlock>'
+			);
+		} );
+
 		it( 'model attribute value is a string', () => {
 			schema.extend( 'imageBlock', {
 				allowAttributes: [ 'styled' ]
@@ -709,6 +790,30 @@ describe( 'UpcastHelpers', () => {
 					new ViewContainerElement( viewDocument, 'div', { class: 'shade' } )
 				),
 				'<div border="border"><div shade="shade"></div></div>'
+			);
+		} );
+
+		// https://github.com/ckeditor/ckeditor5/issues/11000
+		it( 'should not set an attribute on child nodes if parent was not converted', () => {
+			upcastHelpers.elementToElement( { view: 'p', model: 'paragraph' } );
+			upcastHelpers.attributeToAttribute( { view: { key: 'foo' }, model: 'foo' } );
+
+			schema.extend( 'paragraph', {
+				allowAttributes: [ 'foo' ]
+			} );
+
+			schema.extend( '$text', {
+				allowAttributes: [ 'foo' ]
+			} );
+
+			const viewElement = viewParse(
+				'<div foo="foo-value">abc</div>' +
+				'<p foo="foo-value">def</p>'
+			);
+
+			expectResult(
+				viewElement,
+				'abc<paragraph foo="foo-value">def</paragraph>'
 			);
 		} );
 

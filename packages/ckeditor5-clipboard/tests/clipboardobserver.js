@@ -1,19 +1,22 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals document */
 
-import ClipboardObserver from '../src/clipboardobserver';
-import DataTransfer from '../src/datatransfer';
+import ClipboardObserver from '../src/clipboardobserver.js';
 
-import View from '@ckeditor/ckeditor5-engine/src/view/view';
-import DowncastWriter from '@ckeditor/ckeditor5-engine/src/view/downcastwriter';
-import createViewRoot from '@ckeditor/ckeditor5-engine/tests/view/_utils/createroot';
+import View from '@ckeditor/ckeditor5-engine/src/view/view.js';
+import DataTransfer from '@ckeditor/ckeditor5-engine/src/view/datatransfer.js';
+import DowncastWriter from '@ckeditor/ckeditor5-engine/src/view/downcastwriter.js';
+import createViewRoot from '@ckeditor/ckeditor5-engine/tests/view/_utils/createroot.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
 
 describe( 'ClipboardObserver', () => {
-	let view, doc, writer, observer, root, el, range, eventSpy, preventDefaultSpy, stopPropagationSpy;
+	let view, doc, writer, observer, root, el, range, eventSpy, preventDefaultSpy, stopPropagationSpy, mockedDomDataTransferFilesSpy;
+
+	testUtils.createSinonSandbox();
 
 	beforeEach( () => {
 		view = new View();
@@ -24,7 +27,7 @@ describe( 'ClipboardObserver', () => {
 		// Create view and DOM structures.
 		el = writer.createContainerElement( 'p' );
 		writer.insert( writer.createPositionAt( root, 0 ), el );
-		view.domConverter.viewToDom( root, document, { withChildren: true, bind: true } );
+		view.domConverter.viewToDom( root, { withChildren: true, bind: true } );
 
 		doc.selection._setTo( el, 0 );
 		range = writer.createRange( writer.createPositionAt( root, 1 ) );
@@ -68,6 +71,7 @@ describe( 'ClipboardObserver', () => {
 			expect( data.dataTransfer.getData( 'x/y' ) ).to.equal( 'foo:x/y' );
 
 			expect( preventDefaultSpy.calledOnce ).to.be.true;
+			expect( mockedDomDataTransferFilesSpy.calledOnce ).to.be.true;
 		} );
 	} );
 
@@ -97,6 +101,7 @@ describe( 'ClipboardObserver', () => {
 			expect( data.dropRange ).to.be.null;
 
 			expect( preventDefaultSpy.calledOnce ).to.be.true;
+			expect( mockedDomDataTransferFilesSpy.calledOnce ).to.be.true;
 		} );
 
 		it( 'should be fired with the right event data – dropRange (when no info about it in the drop event)', () => {
@@ -309,21 +314,55 @@ describe( 'ClipboardObserver', () => {
 			expect( data.domEvent.type ).to.equal( 'dragover' );
 			expect( data.dataTransfer.files ).to.deep.equal( dataTransfer.files );
 		} );
+
+		// https://github.com/ckeditor/ckeditor5/issues/13366
+		it( 'should not access native DataTransfer files if not needed', () => {
+			const dataTransfer = mockDomDataTransfer();
+			const targetElement = mockDomTargetElement( {} );
+
+			doc.on( 'dragover', eventSpy );
+
+			observer.onDomEvent( {
+				type: 'dragover',
+				target: targetElement,
+				dataTransfer,
+				preventDefault: preventDefaultSpy
+			} );
+
+			expect( eventSpy.calledOnce ).to.be.true;
+
+			const data = eventSpy.args[ 0 ][ 1 ];
+
+			expect( data.domTarget ).to.equal( targetElement );
+
+			expect( data.dataTransfer ).to.be.instanceOf( DataTransfer );
+			expect( data.dataTransfer.getData( 'x/y' ) ).to.equal( 'foo:x/y' );
+
+			expect( data.dropRange ).to.be.null;
+
+			expect( preventDefaultSpy.calledOnce ).to.be.true;
+			expect( mockedDomDataTransferFilesSpy.notCalled ).to.be.true;
+		} );
 	} );
+
+	// Returns a super simple mock of HTMLElement (we use only ownerDocument from it).
+	function mockDomTargetElement( documentMock ) {
+		return {
+			ownerDocument: documentMock
+		};
+	}
+
+	function mockDomDataTransfer() {
+		mockedDomDataTransferFilesSpy = sinon.spy();
+
+		return {
+			get files() {
+				mockedDomDataTransferFilesSpy();
+				return [];
+			},
+			getData( type ) {
+				return 'foo:' + type;
+			}
+		};
+	}
 } );
-
-// Returns a super simple mock of HTMLElement (we use only ownerDocument from it).
-function mockDomTargetElement( documentMock ) {
-	return {
-		ownerDocument: documentMock
-	};
-}
-
-function mockDomDataTransfer() {
-	return {
-		files: [],
-		getData( type ) {
-			return 'foo:' + type;
-		}
-	};
-}

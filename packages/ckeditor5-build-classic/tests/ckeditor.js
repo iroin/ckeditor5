@@ -1,13 +1,13 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals document */
 
-import ClassicEditor from '../src/ckeditor';
-import BaseClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
-import { describeMemoryUsage, testMemoryUsage } from '@ckeditor/ckeditor5-core/tests/_utils/memory';
+import ClassicEditor from '../src/ckeditor.js';
+import BaseClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor.js';
+import { describeMemoryUsage, testMemoryUsage } from '@ckeditor/ckeditor5-core/tests/_utils/memory.js';
 
 describe( 'ClassicEditor build', () => {
 	let editor, editorElement;
@@ -64,8 +64,18 @@ describe( 'ClassicEditor build', () => {
 				} );
 		} );
 
-		it( 'sets the data back to the editor element', () => {
+		it( 'clears editor element if config.updateSourceElementOnDestroy flag is not set', () => {
 			editor.setData( '<p>foo</p>' );
+
+			return editor.destroy()
+				.then( () => {
+					expect( editorElement.innerHTML ).to.equal( '' );
+				} );
+		} );
+
+		it( 'sets the data back to the editor element if config.updateSourceElementOnDestroy flag is set', () => {
+			editor.setData( '<p>foo</p>' );
+			editor.config.set( 'updateSourceElementOnDestroy', true );
 
 			return editor.destroy()
 				.then( () => {
@@ -198,7 +208,7 @@ describe( 'ClassicEditor build', () => {
 				.then( newEditor => {
 					editor = newEditor;
 
-					expect( editor.ui.view.toolbar.items.length ).to.equal( 17 );
+					expect( editor.ui.view.toolbar.items.length ).to.equal( 18 );
 					expect( editor.ui.view.stickyPanel.viewportTopOffset ).to.equal( 42 );
 				} );
 		} );
@@ -213,7 +223,7 @@ describe( 'ClassicEditor build', () => {
 				.then( newEditor => {
 					editor = newEditor;
 
-					expect( editor.ui.view.toolbar.items.length ).to.equal( 16 );
+					expect( editor.ui.view.toolbar.items.length ).to.equal( 17 );
 					expect( editor.ui.view.toolbar.items.find( item => item.label === 'Italic' ) ).to.be.undefined;
 				} );
 		} );

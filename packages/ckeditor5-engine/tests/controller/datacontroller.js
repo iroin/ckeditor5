@@ -1,27 +1,29 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import Model from '../../src/model/model';
-import ModelRange from '../../src/model/range';
-import ViewRange from '../../src/view/range';
-import DataController from '../../src/controller/datacontroller';
-import HtmlDataProcessor from '../../src/dataprocessor/htmldataprocessor';
+import Model from '../../src/model/model.js';
+import ModelRange from '../../src/model/range.js';
+import ViewRange from '../../src/view/range.js';
+import DataController from '../../src/controller/datacontroller.js';
+import HtmlDataProcessor from '../../src/dataprocessor/htmldataprocessor.js';
 
-import ModelDocumentFragment from '../../src/model/documentfragment';
-import ViewDocumentFragment from '../../src/view/documentfragment';
-import ViewDocument from '../../src/view/document';
+import ModelDocumentFragment from '../../src/model/documentfragment.js';
+import ViewDocumentFragment from '../../src/view/documentfragment.js';
+import ViewDocument from '../../src/view/document.js';
 
-import { getData, setData, stringify, parse as parseModel } from '../../src/dev-utils/model';
-import { parse as parseView, stringify as stringifyView } from '../../src/dev-utils/view';
+import { getData, setData, stringify, parse as parseModel } from '../../src/dev-utils/model.js';
+import { parse as parseView, stringify as stringifyView } from '../../src/dev-utils/view.js';
 
-import count from '@ckeditor/ckeditor5-utils/src/count';
+import count from '@ckeditor/ckeditor5-utils/src/count.js';
 
-import UpcastHelpers from '../../src/conversion/upcasthelpers';
-import DowncastHelpers from '../../src/conversion/downcasthelpers';
-import { expectToThrowCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
-import { StylesProcessor } from '../../src/view/stylesmap';
+import UpcastHelpers from '../../src/conversion/upcasthelpers.js';
+import DowncastHelpers from '../../src/conversion/downcasthelpers.js';
+import { expectToThrowCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils.js';
+import { StylesProcessor } from '../../src/view/stylesmap.js';
+
+/* global console */
 
 describe( 'DataController', () => {
 	let model, modelDocument, data, schema, upcastHelpers, downcastHelpers, viewDocument;
@@ -132,6 +134,20 @@ describe( 'DataController', () => {
 
 			expect( stringify( output ) ).to.equal( 'foo' );
 		} );
+
+		it( 'should parse template with children', () => {
+			schema.register( 'container', { inheritAllFrom: '$block' } );
+			schema.register( 'paragraph', { inheritAllFrom: '$block' } );
+			schema.extend( 'paragraph', { allowIn: [ 'container' ] } );
+
+			upcastHelpers.elementToElement( { view: 'template', model: 'container' } );
+			upcastHelpers.elementToElement( { view: 'p', model: 'paragraph' } );
+
+			const output = data.parse( '<template><p>foo</p></template>' );
+
+			expect( output ).to.instanceof( ModelDocumentFragment );
+			expect( stringify( output ) ).to.equal( '<container><paragraph>foo</paragraph></container>' );
+		} );
 	} );
 
 	describe( 'toModel()', () => {
@@ -139,6 +155,16 @@ describe( 'DataController', () => {
 			schema.register( 'paragraph', { inheritAllFrom: '$block' } );
 
 			upcastHelpers.elementToElement( { view: 'p', model: 'paragraph' } );
+		} );
+
+		it( 'should be decorated', () => {
+			const viewElement = parseView( '<p>foo</p>' );
+			const spy = sinon.spy();
+
+			data.on( 'toModel', spy );
+			data.toModel( viewElement );
+
+			sinon.assert.calledWithExactly( spy, sinon.match.any, [ viewElement ] );
 		} );
 
 		it( 'should convert content of an element #1', () => {
@@ -291,22 +317,26 @@ describe( 'DataController', () => {
 			expect( modelDocument.history.getOperations().length ).to.equal( 1 );
 		} );
 
-		it( 'should create a `default` batch by default', () => {
+		it( 'should create a batch with default type if `batchType` option is not given', () => {
 			schema.extend( '$text', { allowIn: '$root' } );
 			data.set( 'foo' );
 
 			const operation = modelDocument.history.getOperations()[ 0 ];
+			const batch = operation.batch;
 
-			expect( operation.batch.type ).to.equal( 'default' );
+			expect( batch.isUndoable ).to.be.true;
+			expect( batch.isLocal ).to.be.true;
+			expect( batch.isUndo ).to.be.false;
+			expect( batch.isTyping ).to.be.false;
 		} );
 
 		it( 'should create a batch specified by the `options.batch` option when provided', () => {
 			schema.extend( '$text', { allowIn: '$root' } );
-			data.set( 'foo', { batchType: 'transparent' } );
+			data.set( 'foo', { batchType: { isUndoable: true } } );
 
 			const operation = modelDocument.history.getOperations()[ 0 ];
 
-			expect( operation.batch.type ).to.equal( 'transparent' );
+			expect( operation.batch.isUndoable ).to.be.true;
 		} );
 
 		it( 'should cause firing change event', () => {
@@ -332,7 +362,7 @@ describe( 'DataController', () => {
 		} );
 
 		it( 'should parse given data before set in a context of correct root', () => {
-			schema.extend( '$text', { allowIn: '$title', disallowIn: '$root' } );
+			schema.extend( '$text', { allowIn: '$title' } );
 			data.set( 'foo', 'main' );
 			data.set( { title: 'Bar' } );
 
@@ -396,6 +426,16 @@ describe( 'DataController', () => {
 		beforeEach( () => {
 			schema.register( 'paragraph', { inheritAllFrom: '$block' } );
 			downcastHelpers.elementToElement( { model: 'paragraph', view: 'p' } );
+		} );
+
+		it( 'should be decorated', () => {
+			const spy = sinon.spy();
+
+			data.on( 'get', spy );
+
+			data.get();
+
+			sinon.assert.calledWithExactly( spy, sinon.match.any, [] );
 		} );
 
 		it( 'should get paragraph with text', () => {
@@ -547,6 +587,36 @@ describe( 'DataController', () => {
 			setData( model, '<paragraph>foo</paragraph>' );
 			data.get();
 		} );
+
+		it( 'should return empty string and log a warning when asked for data from a detached root', () => {
+			setData( model, '<paragraph>foo</paragraph>' );
+
+			model.change( writer => {
+				writer.detachRoot( 'main' );
+			} );
+
+			const stub = sinon.stub( console, 'warn' );
+
+			const result = data.get( { rootName: 'main' } );
+
+			expect( result ).to.equal( '' );
+			sinon.assert.calledWithMatch( stub, 'datacontroller-get-detached-root' );
+
+			console.warn.restore();
+		} );
+
+		it( 'should get template with children', () => {
+			schema.register( 'container', { inheritAllFrom: '$block' } );
+			schema.extend( 'paragraph', { allowIn: [ 'container' ] } );
+			setData( model, '<container><paragraph>foo</paragraph></container>' );
+
+			downcastHelpers.elementToElement( {
+				model: 'container',
+				view: 'template'
+			} );
+
+			expect( data.get() ).to.equal( '<template><p>foo</p></template>' );
+		} );
 	} );
 
 	describe( 'stringify()', () => {
@@ -606,6 +676,16 @@ describe( 'DataController', () => {
 
 			downcastHelpers.elementToElement( { model: 'paragraph', view: 'p' } );
 			downcastHelpers.elementToElement( { model: 'div', view: 'div' } );
+		} );
+
+		it( 'should be decorated', () => {
+			const modelElement = parseModel( '<div><paragraph>foo</paragraph></div>', schema );
+			const spy = sinon.spy();
+
+			data.on( 'toView', spy );
+			data.toView( modelElement );
+
+			sinon.assert.calledWithExactly( spy, sinon.match.any, [ modelElement ] );
 		} );
 
 		it( 'should use #viewDocument as a parent for returned document fragments', () => {
@@ -672,8 +752,102 @@ describe( 'DataController', () => {
 			expect( stringifyView( viewDocumentFragment ) ).to.equal( 'f<span class="a">oo</span>' );
 		} );
 
+		it( 'adjacent markers do not overlap regardless of creation order', () => {
+			const modelElement = parseModel( '<div><paragraph>foobar</paragraph></div>', schema );
+			const modelRoot = model.document.getRoot();
+
+			downcastHelpers.markerToData( { model: 'marker' } );
+			upcastHelpers.dataToMarker( { view: 'marker' } );
+
+			const modelP = modelElement.getChild( 0 );
+
+			model.change( writer => {
+				writer.insert( modelElement, modelRoot, 0 );
+			} );
+
+			const rangeA = model.createRange( model.createPositionAt( modelP, 0 ), model.createPositionAt( modelP, 3 ) );
+			const rangeB = model.createRange( model.createPositionAt( modelP, 3 ), model.createPositionAt( modelP, 6 ) );
+
+			model.change( writer => {
+				writer.addMarker( 'marker:a', { range: rangeA, usingOperation: true } );
+				writer.addMarker( 'marker:b', { range: rangeB, usingOperation: true } );
+			} );
+
+			const viewDocumentFragment1 = data.toView( modelP );
+			expect( stringifyView( viewDocumentFragment1 ) ).to.equal(
+				'<marker-start name="a"></marker-start>foo<marker-end name="a"></marker-end>' +
+				'<marker-start name="b"></marker-start>bar<marker-end name="b"></marker-end>'
+			);
+
+			model.change( writer => {
+				writer.removeMarker( 'marker:a' );
+				writer.removeMarker( 'marker:b' );
+
+				writer.addMarker( 'marker:b', { range: rangeB, usingOperation: true } );
+				writer.addMarker( 'marker:a', { range: rangeA, usingOperation: true } );
+			} );
+
+			const viewDocumentFragment2 = data.toView( modelP );
+			expect( stringifyView( viewDocumentFragment2 ) ).to.equal(
+				'<marker-start name="a"></marker-start>foo<marker-end name="a"></marker-end>' +
+				'<marker-start name="b"></marker-start>bar<marker-end name="b"></marker-end>'
+			);
+		} );
+
+		it( 'intersecting markers downcast consistently regardless of creation order', () => {
+			const modelElement = parseModel( '<div><paragraph>1234567890</paragraph></div>', schema );
+			const modelRoot = model.document.getRoot();
+
+			downcastHelpers.markerToData( { model: 'marker' } );
+			upcastHelpers.dataToMarker( { view: 'marker' } );
+
+			const modelP = modelElement.getChild( 0 );
+
+			model.change( writer => {
+				writer.insert( modelElement, modelRoot, 0 );
+			} );
+
+			function range( start, end ) {
+				return model.createRange( model.createPositionAt( modelP, start ), model.createPositionAt( modelP, end ) );
+			}
+
+			const markerRanges = {
+				base: range( 2, 8 ),
+				equal: range( 2, 8 ),
+				outsideStart: range( 0, 2 ),
+				overlapStart: range( 1, 3 ),
+				insideStart: range( 2, 4 ),
+				inside: range( 3, 6 ),
+				insideEnd: range( 6, 8 ),
+				overlapEnd: range( 7, 9 ),
+				outsideEnd: range( 8, 10 )
+			};
+
+			model.change( writer => {
+				for ( const [ name, range ] of Object.entries( markerRanges ) ) {
+					writer.addMarker( `marker:${ name }`, { range, usingOperation: true } );
+				}
+			} );
+
+			const result = stringifyView( data.toView( modelP ) );
+
+			model.change( writer => {
+				for ( const name of Object.keys( markerRanges ) ) {
+					writer.removeMarker( `marker:${ name }` );
+				}
+
+				for ( const [ name, range ] of Object.entries( markerRanges ).reverse() ) {
+					writer.addMarker( `marker:${ name }`, { range, usingOperation: true } );
+				}
+			} );
+
+			const viewDocumentFragment2 = data.toView( modelP );
+			expect( stringifyView( viewDocumentFragment2 ) ).to.equal( result );
+		} );
+
 		it( 'should convert a document fragment and its markers', () => {
 			downcastHelpers.markerToData( { model: 'foo' } );
+
 			const modelDocumentFragment = parseModel( '<paragraph>foo</paragraph><paragraph>bar</paragraph>', schema );
 
 			const range = model.createRange(
@@ -917,12 +1091,17 @@ describe( 'DataController', () => {
 			model.schema.extend( '$text', {
 				allowAttributes: [ 'bold' ]
 			} );
+			model.schema.register( 'softBreak', {
+				allowWhere: '$text',
+				isInline: true
+			} );
 		} );
 
 		it( 'should allow nesting upcast conversion', () => {
 			const dataProcessor = data.processor;
 
 			upcastHelpers.elementToAttribute( { view: 'strong', model: 'bold' } );
+			upcastHelpers.elementToElement( { view: 'br', model: 'softBreak' } );
 
 			data.upcastDispatcher.on( 'element:div', ( evt, data, conversionApi ) => {
 				const viewItem = data.viewItem;
@@ -936,20 +1115,17 @@ describe( 'DataController', () => {
 
 				// Create `caption` model element. Thanks to that element the rest of the `ckeditor5-plugin` converters can
 				// recognize this image as a block image with a caption.
+				//
+				// Caption element is also used as a conversion target so Schema can be properly checked for allowed children.
+				// https://github.com/ckeditor/ckeditor5/issues/12797.
 				const caption = conversionApi.writer.createElement( 'caption' );
 
 				// Parse HTML from data-caption attribute and upcast it to model fragment.
 				const viewFragment = dataProcessor.toView( viewItem.getAttribute( 'data-caption' ) );
-				const modelFragment = conversionApi.writer.createDocumentFragment();
 
 				// Consumable must know about those newly parsed view elements.
 				conversionApi.consumable.constructor.createFrom( viewFragment, conversionApi.consumable );
-				conversionApi.convertChildren( viewFragment, modelFragment );
-
-				// Insert caption model nodes into the caption.
-				for ( const child of Array.from( modelFragment.getChildren() ) ) {
-					conversionApi.writer.append( child, caption );
-				}
+				conversionApi.convertChildren( viewFragment, caption );
 
 				// Insert the caption element into image, as a last child.
 				conversionApi.writer.append( caption, container );
@@ -966,10 +1142,10 @@ describe( 'DataController', () => {
 				conversionApi.updateConversionResult( container, data );
 			} );
 
-			data.set( '<div data-caption="foo<strong>baz</strong>">&nbsp;</div>' );
+			data.set( '<div data-caption="foo<br><strong>baz</strong>">&nbsp;</div>' );
 
 			expect( getData( model, { withoutSelection: true } ) ).to.equal(
-				'<container><caption>foo<$text bold="true">baz</$text></caption></container>'
+				'<container><caption>foo<softBreak></softBreak><$text bold="true">baz</$text></caption></container>'
 			);
 		} );
 
@@ -977,8 +1153,16 @@ describe( 'DataController', () => {
 			const downcastDispatcher = data.downcastDispatcher;
 			const dataProcessor = data.processor;
 
+			// Test whether list modelViewSplitOnInsert is not breaking conversion (see #11490).
+			downcastDispatcher.on( 'insert', ( evt, data, conversionApi ) => {
+				if ( conversionApi.consumable.test( data.item, evt.name ) ) {
+					conversionApi.mapper.toViewPosition( data.range.start );
+				}
+			}, { priority: 'high' } );
+
 			downcastHelpers.elementToElement( { model: 'container', view: 'div' } );
 			downcastHelpers.attributeToElement( { model: 'bold', view: 'strong' } );
+			downcastHelpers.elementToElement( { model: 'softBreak', view: ( element, { writer } ) => writer.createEmptyElement( 'br' ) } );
 
 			data.downcastDispatcher.on( 'insert:caption', ( evt, data, conversionApi ) => {
 				if ( !conversionApi.consumable.consume( data.item, 'insert' ) ) {
@@ -1032,9 +1216,9 @@ describe( 'DataController', () => {
 				}
 			} );
 
-			setData( model, '<container><caption>foo<$text bold="true">baz</$text></caption></container>' );
+			setData( model, '<container><caption>foo<softBreak></softBreak><$text bold="true">baz</$text></caption></container>' );
 
-			expect( data.get() ).to.equal( '<div data-caption="foo<strong>baz</strong>">&nbsp;</div>' );
+			expect( data.get() ).to.equal( '<div data-caption="foo<br><strong>baz</strong>">&nbsp;</div>' );
 		} );
 	} );
 } );

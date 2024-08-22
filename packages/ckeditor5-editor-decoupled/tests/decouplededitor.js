@@ -1,28 +1,30 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals document, setTimeout, console */
 
-import DecoupledEditorUI from '../src/decouplededitorui';
-import DecoupledEditorUIView from '../src/decouplededitoruiview';
+import DecoupledEditor from '../src/decouplededitor.js';
+import DecoupledEditorUI from '../src/decouplededitorui.js';
+import DecoupledEditorUIView from '../src/decouplededitoruiview.js';
 
-import HtmlDataProcessor from '@ckeditor/ckeditor5-engine/src/dataprocessor/htmldataprocessor';
+import HtmlDataProcessor from '@ckeditor/ckeditor5-engine/src/dataprocessor/htmldataprocessor.js';
 
-import DecoupledEditor from '../src/decouplededitor';
-import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold';
-import DataApiMixin from '@ckeditor/ckeditor5-core/src/editor/utils/dataapimixin';
-import RootElement from '@ckeditor/ckeditor5-engine/src/model/rootelement';
+import Context from '@ckeditor/ckeditor5-core/src/context.js';
+import EditorWatchdog from '@ckeditor/ckeditor5-watchdog/src/editorwatchdog.js';
+import ContextWatchdog from '@ckeditor/ckeditor5-watchdog/src/contextwatchdog.js';
+import Plugin from '@ckeditor/ckeditor5-core/src/plugin.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold.js';
+import RootElement from '@ckeditor/ckeditor5-engine/src/model/rootelement.js';
+import CKEditorError from '@ckeditor/ckeditor5-utils/src/ckeditorerror.js';
 
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
 
-import { describeMemoryUsage, testMemoryUsage } from '@ckeditor/ckeditor5-core/tests/_utils/memory';
-import ArticlePluginSet from '@ckeditor/ckeditor5-core/tests/_utils/articlepluginset';
-import { assertCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
-import { removeEditorBodyOrphans } from '@ckeditor/ckeditor5-core/tests/_utils/cleanup';
+import { describeMemoryUsage, testMemoryUsage } from '@ckeditor/ckeditor5-core/tests/_utils/memory.js';
+import ArticlePluginSet from '@ckeditor/ckeditor5-core/tests/_utils/articlepluginset.js';
+import { assertCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils.js';
 
 const editorData = '<p><strong>foo</strong> bar</p>';
 
@@ -45,7 +47,8 @@ describe( 'DecoupledEditor', () => {
 		} );
 
 		it( 'has a Data Interface', () => {
-			expect( testUtils.isMixed( DecoupledEditor, DataApiMixin ) ).to.be.true;
+			expect( DecoupledEditor.prototype ).have.property( 'setData' ).to.be.a( 'function' );
+			expect( DecoupledEditor.prototype ).have.property( 'getData' ).to.be.a( 'function' );
 		} );
 
 		it( 'creates main root element', () => {
@@ -84,6 +87,149 @@ describe( 'DecoupledEditor', () => {
 
 					editorElement.remove();
 				} );
+			} );
+
+			describe( 'configurable editor label (aria-label)', () => {
+				let editorElement;
+
+				beforeEach( () => {
+					editorElement = document.createElement( 'div' );
+
+					document.body.appendChild( editorElement );
+				} );
+
+				afterEach( () => {
+					editorElement.remove();
+				} );
+
+				it( 'should be set to the defaut value if not configured', async () => {
+					const editor = await DecoupledEditor.create( editorElement, {
+						plugins: [ Paragraph, Bold ]
+					} );
+
+					expect( editor.editing.view.getDomRoot().getAttribute( 'aria-label' ) ).to.equal(
+						'Rich Text Editor. Editing area: main'
+					);
+
+					await editor.destroy();
+				} );
+
+				it( 'should support the string format', async () => {
+					const editor = await DecoupledEditor.create( editorElement, {
+						plugins: [ Paragraph, Bold ],
+						label: 'Custom label'
+					} );
+
+					expect( editor.editing.view.getDomRoot().getAttribute( 'aria-label' ) ).to.equal(
+						'Custom label'
+					);
+
+					await editor.destroy();
+				} );
+
+				it( 'should support object format', async () => {
+					const editor = await DecoupledEditor.create( editorElement, {
+						plugins: [ Paragraph, Bold ],
+						label: {
+							main: 'Custom label'
+						}
+					} );
+
+					expect( editor.editing.view.getDomRoot().getAttribute( 'aria-label' ) ).to.equal(
+						'Custom label'
+					);
+
+					await editor.destroy();
+				} );
+
+				it( 'should keep an existing value from the source DOM element', async () => {
+					editorElement.setAttribute( 'aria-label', 'Pre-existing value' );
+					const editor = await DecoupledEditor.create( editorElement, {
+						plugins: [ Paragraph, Bold ]
+					} );
+
+					expect( editor.editing.view.getDomRoot().getAttribute( 'aria-label' ), 'Keep value' ).to.equal(
+						'Pre-existing value'
+					);
+
+					await editor.destroy();
+
+					expect( editorElement.getAttribute( 'aria-label' ), 'Restore value' ).to.equal( 'Pre-existing value' );
+				} );
+
+				it( 'should override the existing value from the source DOM element', async () => {
+					editorElement.setAttribute( 'aria-label', 'Pre-existing value' );
+					const editor = await DecoupledEditor.create( editorElement, {
+						plugins: [ Paragraph, Bold ],
+						label: 'Custom label'
+					} );
+
+					expect( editor.editing.view.getDomRoot().getAttribute( 'aria-label' ), 'Override value' ).to.equal(
+						'Custom label'
+					);
+
+					await editor.destroy();
+
+					expect( editorElement.getAttribute( 'aria-label' ), 'Restore value' ).to.equal( 'Pre-existing value' );
+				} );
+
+				it( 'should use default label when creating an editor from initial data rather than a DOM element', async () => {
+					const editor = await DecoupledEditor.create( '<p>Initial data</p>', {
+						plugins: [ Paragraph, Bold ]
+					} );
+
+					expect( editor.editing.view.getDomRoot().getAttribute( 'aria-label' ), 'Override value' ).to.equal(
+						'Rich Text Editor. Editing area: main'
+					);
+
+					await editor.destroy();
+				} );
+
+				it( 'should set custom label when creating an editor from initial data rather than a DOM element', async () => {
+					const editor = await DecoupledEditor.create( '<p>Initial data</p>', {
+						plugins: [ Paragraph, Bold ],
+						label: 'Custom label'
+					} );
+
+					expect( editor.editing.view.getDomRoot().getAttribute( 'aria-label' ), 'Override value' ).to.equal(
+						'Custom label'
+					);
+
+					await editor.destroy();
+				} );
+			} );
+		} );
+
+		describe( 'config.initialData', () => {
+			it( 'if not set, is set using DOM element data', () => {
+				const editorElement = document.createElement( 'div' );
+				editorElement.innerHTML = '<p>Foo</p>';
+
+				const editor = new DecoupledEditor( editorElement );
+
+				expect( editor.config.get( 'initialData' ) ).to.equal( '<p>Foo</p>' );
+			} );
+
+			it( 'if not set, is set using data passed in constructor', () => {
+				const editor = new DecoupledEditor( '<p>Foo</p>' );
+
+				expect( editor.config.get( 'initialData' ) ).to.equal( '<p>Foo</p>' );
+			} );
+
+			it( 'if set, is not overwritten with DOM element data', () => {
+				const editorElement = document.createElement( 'div' );
+				editorElement.innerHTML = '<p>Foo</p>';
+
+				const editor = new DecoupledEditor( editorElement, { initialData: '<p>Bar</p>' } );
+
+				expect( editor.config.get( 'initialData' ) ).to.equal( '<p>Bar</p>' );
+			} );
+
+			it( 'it should throw if config.initialData is set and initial data is passed in constructor', () => {
+				expect( () => {
+					// eslint-disable-next-line no-new
+					new DecoupledEditor( '<p>Foo</p>', { initialData: '<p>Bar</p>' } );
+				} ).to.throw( CKEditorError, 'editor-create-initial-data' );
 			} );
 		} );
 	} );
@@ -178,26 +324,6 @@ describe( 'DecoupledEditor', () => {
 						assertCKEditorError( err, 'editor-source-element-already-used' );
 					}
 				)
-				.then( done )
-				.catch( done );
-		} );
-
-		it( 'throws if initial data is passed in Editor#create and config.initialData is also used', done => {
-			DecoupledEditor.create( '<p>Hello world!</p>', {
-				initialData: '<p>I am evil!</p>',
-				plugins: [ Paragraph ]
-			} )
-				.then(
-					() => {
-						expect.fail( 'Decoupled editor should throw an error when both initial data are passed' );
-					},
-					err => {
-						assertCKEditorError( err, 'editor-create-initial-data' );
-					}
-				)
-				.then( () => {
-					removeEditorBodyOrphans();
-				} )
 				.then( done )
 				.catch( done );
 		} );
@@ -382,7 +508,20 @@ describe( 'DecoupledEditor', () => {
 					} );
 			} );
 
+			// We don't update the source element by default, so after destroy, it should become empty.
+			it( 'don\'t set data back to the element', () => {
+				editor.setData( '<p>foo</p><p>bar</p>' );
+
+				return editor.destroy()
+					.then( () => {
+						expect( editableElement.innerHTML ).to.equal( '' );
+					} );
+			} );
+
+			// Adding `updateSourceElementOnDestroy` config to the editor allows setting the data
+			// back to the source element after destroy.
 			it( 'sets data back to the element', () => {
+				editor.config.set( 'updateSourceElementOnDestroy', true );
 				editor.setData( '<p>foo</p>' );
 
 				return editor.destroy()
@@ -406,6 +545,20 @@ describe( 'DecoupledEditor', () => {
 		}
 	} );
 
+	describe( 'static fields', () => {
+		it( 'DecoupledEditor.Context', () => {
+			expect( DecoupledEditor.Context ).to.equal( Context );
+		} );
+
+		it( 'DecoupledEditor.EditorWatchdog', () => {
+			expect( DecoupledEditor.EditorWatchdog ).to.equal( EditorWatchdog );
+		} );
+
+		it( 'DecoupledEditor.ContextWatchdog', () => {
+			expect( DecoupledEditor.ContextWatchdog ).to.equal( ContextWatchdog );
+		} );
+	} );
+
 	describeMemoryUsage( () => {
 		testMemoryUsage(
 			'should not grow on multiple create/destroy',
@@ -414,7 +567,7 @@ describe( 'DecoupledEditor', () => {
 					plugins: [ ArticlePluginSet ],
 					toolbar: [ 'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote' ],
 					image: {
-						toolbar: [ 'imageStyle:block', 'imageStyle:side', '|', 'imageTextAlternative' ]
+						toolbar: [ 'imageStyle:block', 'imageStyle:wrapText', '|', 'imageTextAlternative' ]
 					}
 				} ) );
 	} );

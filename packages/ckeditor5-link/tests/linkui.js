@@ -1,31 +1,35 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals document, Event */
 
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
 
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
-import indexOf from '@ckeditor/ckeditor5-utils/src/dom/indexof';
-import isRange from '@ckeditor/ckeditor5-utils/src/dom/isrange';
-import { keyCodes } from '@ckeditor/ckeditor5-utils/src/keyboard';
-import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import { getData as getViewData } from '@ckeditor/ckeditor5-engine/src/dev-utils/view';
-import env from '@ckeditor/ckeditor5-utils/src/env';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import BlockQuote from '@ckeditor/ckeditor5-block-quote/src/blockquote';
-import ClickObserver from '@ckeditor/ckeditor5-engine/src/view/observer/clickobserver';
-import ContextualBalloon from '@ckeditor/ckeditor5-ui/src/panel/balloon/contextualballoon';
-import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview';
-import View from '@ckeditor/ckeditor5-ui/src/view';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
+import indexOf from '@ckeditor/ckeditor5-utils/src/dom/indexof.js';
+import isRange from '@ckeditor/ckeditor5-utils/src/dom/isrange.js';
+import { keyCodes } from '@ckeditor/ckeditor5-utils/src/keyboard.js';
+import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import { getData as getViewData } from '@ckeditor/ckeditor5-engine/src/dev-utils/view.js';
+import env from '@ckeditor/ckeditor5-utils/src/env.js';
+import Essentials from '@ckeditor/ckeditor5-essentials/src/essentials.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import BlockQuote from '@ckeditor/ckeditor5-block-quote/src/blockquote.js';
+import ClickObserver from '@ckeditor/ckeditor5-engine/src/view/observer/clickobserver.js';
+import ContextualBalloon from '@ckeditor/ckeditor5-ui/src/panel/balloon/contextualballoon.js';
+import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview.js';
+import View from '@ckeditor/ckeditor5-ui/src/view.js';
 import { toWidget } from '@ckeditor/ckeditor5-widget';
 
-import LinkEditing from '../src/linkediting';
-import LinkUI from '../src/linkui';
-import LinkFormView from '../src/ui/linkformview';
-import LinkActionsView from '../src/ui/linkactionsview';
+import LinkEditing from '../src/linkediting.js';
+import LinkUI from '../src/linkui.js';
+import LinkFormView from '../src/ui/linkformview.js';
+import LinkActionsView from '../src/ui/linkactionsview.js';
+import { MenuBarMenuListItemButtonView } from '@ckeditor/ckeditor5-ui';
+
+import linkIcon from '../theme/icons/link.svg';
 
 describe( 'LinkUI', () => {
 	let editor, linkUIFeature, linkButton, balloon, formView, actionsView, editorElement;
@@ -38,7 +42,7 @@ describe( 'LinkUI', () => {
 
 		return ClassicTestEditor
 			.create( editorElement, {
-				plugins: [ LinkEditing, LinkUI, Paragraph, BlockQuote ]
+				plugins: [ Essentials, LinkEditing, LinkUI, Paragraph, BlockQuote ]
 			} )
 			.then( newEditor => {
 				editor = newEditor;
@@ -46,14 +50,10 @@ describe( 'LinkUI', () => {
 				linkUIFeature = editor.plugins.get( LinkUI );
 				linkButton = editor.ui.componentFactory.create( 'link' );
 				balloon = editor.plugins.get( ContextualBalloon );
-				formView = linkUIFeature.formView;
-				actionsView = linkUIFeature.actionsView;
 
 				// There is no point to execute BalloonPanelView attachTo and pin methods so lets override it.
 				testUtils.sinon.stub( balloon.view, 'attachTo' ).returns( {} );
 				testUtils.sinon.stub( balloon.view, 'pin' ).returns( {} );
-
-				formView.render();
 			} );
 	} );
 
@@ -71,51 +71,90 @@ describe( 'LinkUI', () => {
 		expect( editor.plugins.get( ContextualBalloon ) ).to.be.instanceOf( ContextualBalloon );
 	} );
 
+	it( 'should add keystroke accessibility info', () => {
+		expect( editor.accessibility.keystrokeInfos.get( 'contentEditing' ).groups.get( 'common' ).keystrokes ).to.deep.include( {
+			label: 'Create link',
+			keystroke: 'Ctrl+K'
+		} );
+
+		expect( editor.accessibility.keystrokeInfos.get( 'contentEditing' ).groups.get( 'common' ).keystrokes ).to.deep.include( {
+			label: 'Move out of a link',
+			keystroke: [
+				[ 'arrowleft', 'arrowleft' ],
+				[ 'arrowright', 'arrowright' ]
+			]
+		} );
+	} );
+
 	describe( 'init', () => {
 		it( 'should register click observer', () => {
 			expect( editor.editing.view.getObserver( ClickObserver ) ).to.be.instanceOf( ClickObserver );
 		} );
 
-		it( 'should create #actionsView', () => {
-			expect( actionsView ).to.be.instanceOf( LinkActionsView );
+		it( 'should not create #actionsView', () => {
+			expect( linkUIFeature.actionsView ).to.be.null;
 		} );
 
-		it( 'should create #formView', () => {
-			expect( formView ).to.be.instanceOf( LinkFormView );
+		it( 'should not create #formView', () => {
+			expect( linkUIFeature.formView ).to.be.null;
 		} );
 
-		describe( 'link toolbar button', () => {
-			it( 'should be registered', () => {
-				expect( linkButton ).to.be.instanceOf( ButtonView );
+		describe( 'the "link" toolbar button', () => {
+			beforeEach( () => {
+				linkButton = editor.ui.componentFactory.create( 'link' );
 			} );
 
-			it( 'should be toggleable button', () => {
+			testButton( 'link', 'Link', ButtonView );
+
+			it( 'should have #tooltip', () => {
+				expect( linkButton.tooltip ).to.be.true;
+			} );
+
+			it( 'should have #isToggleable', () => {
 				expect( linkButton.isToggleable ).to.be.true;
 			} );
+		} );
 
-			it( 'should be bound to the link command', () => {
-				const command = editor.commands.get( 'link' );
-
-				command.isEnabled = true;
-				command.value = 'http://ckeditor.com';
-
-				expect( linkButton.isOn ).to.be.true;
-				expect( linkButton.isEnabled ).to.be.true;
-
-				command.isEnabled = false;
-				command.value = undefined;
-
-				expect( linkButton.isOn ).to.be.false;
-				expect( linkButton.isEnabled ).to.be.false;
+		describe( 'the "menuBar:link" menu bar button', () => {
+			beforeEach( () => {
+				linkButton = editor.ui.componentFactory.create( 'menuBar:link' );
 			} );
 
-			it( 'should call #_showUI upon #execute', () => {
+			testButton( 'link', 'Link', MenuBarMenuListItemButtonView );
+		} );
+
+		function testButton( featureName, label, Component ) {
+			it( 'should register feature component', () => {
+				expect( linkButton ).to.be.instanceOf( Component );
+			} );
+
+			it( 'should create UI component with correct attribute values', () => {
+				expect( linkButton.isOn ).to.be.false;
+				expect( linkButton.label ).to.equal( label );
+				expect( linkButton.icon ).to.equal( linkIcon );
+				expect( linkButton.keystroke ).to.equal( 'Ctrl+K' );
+			} );
+
+			it( 'should display the link UI when executed', () => {
 				const spy = testUtils.sinon.stub( linkUIFeature, '_showUI' ).returns( {} );
 
 				linkButton.fire( 'execute' );
+
 				sinon.assert.calledWithExactly( spy, true );
 			} );
-		} );
+
+			it( `should bind #isEnabled to ${ featureName } command`, () => {
+				const command = editor.commands.get( featureName );
+
+				expect( linkButton.isOn ).to.be.false;
+
+				const initState = command.isEnabled;
+				expect( linkButton.isEnabled ).to.equal( initState );
+
+				command.isEnabled = !initState;
+				expect( linkButton.isEnabled ).to.equal( !initState );
+			} );
+		}
 	} );
 
 	describe( '_showUI()', () => {
@@ -124,6 +163,22 @@ describe( 'LinkUI', () => {
 		beforeEach( () => {
 			balloonAddSpy = testUtils.sinon.spy( balloon, 'add' );
 			editor.editing.view.document.isFocused = true;
+		} );
+
+		it( 'should create #actionsView', () => {
+			setModelData( editor.model, '<paragraph>f[o]o</paragraph>' );
+
+			linkUIFeature._showUI();
+
+			expect( linkUIFeature.actionsView ).to.be.instanceOf( LinkActionsView );
+		} );
+
+		it( 'should create #formView', () => {
+			setModelData( editor.model, '<paragraph>f[o]o</paragraph>' );
+
+			linkUIFeature._showUI();
+
+			expect( linkUIFeature.formView ).to.be.instanceOf( LinkFormView );
 		} );
 
 		it( 'should not throw if the UI is already visible', () => {
@@ -140,6 +195,7 @@ describe( 'LinkUI', () => {
 			setModelData( editor.model, '<paragraph>f[o]o</paragraph>' );
 
 			linkUIFeature._showUI();
+			formView = linkUIFeature.formView;
 
 			const expectedRange = getMarkersRange( editor );
 
@@ -158,6 +214,8 @@ describe( 'LinkUI', () => {
 			// (#7926)
 			setModelData( editor.model, '<paragraph>f[]oo</paragraph>' );
 			linkUIFeature._showUI();
+			formView = linkUIFeature.formView;
+			actionsView = linkUIFeature.actionsView;
 
 			const expectedRange = getMarkersRange( editor );
 
@@ -178,6 +236,8 @@ describe( 'LinkUI', () => {
 			const linkElement = editor.editing.view.getDomRoot().querySelector( 'a' );
 
 			linkUIFeature._showUI();
+			formView = linkUIFeature.formView;
+			actionsView = linkUIFeature.actionsView;
 
 			expect( balloon.visibleView ).to.equal( actionsView );
 
@@ -194,6 +254,8 @@ describe( 'LinkUI', () => {
 			const linkElement = editor.editing.view.getDomRoot().querySelector( 'a' );
 
 			linkUIFeature._showUI();
+			formView = linkUIFeature.formView;
+			actionsView = linkUIFeature.actionsView;
 
 			expect( balloon.visibleView ).to.equal( actionsView );
 
@@ -216,11 +278,16 @@ describe( 'LinkUI', () => {
 			setModelData( editor.model, '<paragraph>f[o]o</paragraph>' );
 
 			linkUIFeature._showUI();
+			formView = linkUIFeature.formView;
+			actionsView = linkUIFeature.actionsView;
+
+			formView.urlInputView.fieldView.value = 'ckeditor.com';
 
 			editor.commands.get( 'link' ).isEnabled = true;
 			editor.commands.get( 'unlink' ).isEnabled = true;
 
-			expect( formView.urlInputView.isReadOnly ).to.be.false;
+			expect( formView.urlInputView.isEnabled ).to.be.true;
+			expect( formView.urlInputView.fieldView.isReadOnly ).to.be.false;
 			expect( formView.saveButtonView.isEnabled ).to.be.true;
 			expect( formView.cancelButtonView.isEnabled ).to.be.true;
 
@@ -230,7 +297,8 @@ describe( 'LinkUI', () => {
 			editor.commands.get( 'link' ).isEnabled = false;
 			editor.commands.get( 'unlink' ).isEnabled = false;
 
-			expect( formView.urlInputView.isReadOnly ).to.be.true;
+			expect( formView.urlInputView.isEnabled ).to.be.false;
+			expect( formView.urlInputView.fieldView.isReadOnly ).to.be.true;
 			expect( formView.saveButtonView.isEnabled ).to.be.false;
 			expect( formView.cancelButtonView.isEnabled ).to.be.true;
 
@@ -240,19 +308,46 @@ describe( 'LinkUI', () => {
 
 		// https://github.com/ckeditor/ckeditor5-link/issues/78
 		it( 'should make sure the URL input in the #formView always stays in sync with the value of the command (selected link)', () => {
+			linkUIFeature._createViews();
+			formView = linkUIFeature.formView;
+			actionsView = linkUIFeature.actionsView;
+			formView.render();
+
 			setModelData( editor.model, '<paragraph><$text linkHref="url">f[]oo</$text></paragraph>' );
 
-			// Mock some leftover value **in DOM**, e.g. after previous editing.
-			formView.urlInputView.fieldView.element.value = 'leftover';
-
+			// Open the link balloon.
 			linkUIFeature._showUI();
+
+			// Simulate clicking the "edit" button.
 			actionsView.fire( 'edit' );
 
+			// Change text in the URL field.
+			formView.urlInputView.fieldView.element.value = 'to-be-discarded';
+
+			// Cancel link editing.
+			formView.fire( 'cancel' );
+
+			// Open the editing panel again.
+			actionsView.fire( 'edit' );
+
+			// Expect original value in the URL field.
 			expect( formView.urlInputView.fieldView.element.value ).to.equal( 'url' );
+
+			// Expect "save" button to be enabled, despite not making any changes.
+			expect( formView.saveButtonView.isEnabled ).to.equal( true );
+
+			// Expect entire content of the URL field to be selected.
+			const elem = formView.urlInputView.fieldView.element;
+			expect( elem.value.substring( elem.selectionStart, elem.selectionEnd ) ).to.equal( 'url' );
 		} );
 
 		// https://github.com/ckeditor/ckeditor5-link/issues/123
 		it( 'should make sure the URL input in the #formView always stays in sync with the value of the command (no link selected)', () => {
+			linkUIFeature._createViews();
+			formView = linkUIFeature.formView;
+			actionsView = linkUIFeature.actionsView;
+			formView.render();
+
 			setModelData( editor.model, '<paragraph>f[]oo</paragraph>' );
 
 			linkUIFeature._showUI();
@@ -260,6 +355,11 @@ describe( 'LinkUI', () => {
 		} );
 
 		it( 'should optionally force `main` stack to be visible', () => {
+			linkUIFeature._createViews();
+			formView = linkUIFeature.formView;
+			actionsView = linkUIFeature.actionsView;
+			formView.render();
+
 			setModelData( editor.model, '<paragraph>f[o]o</paragraph>' );
 
 			balloon.add( {
@@ -274,6 +374,11 @@ describe( 'LinkUI', () => {
 
 		// https://github.com/ckeditor/ckeditor5-link/issues/242.
 		it( 'should update balloon position when is switched in rotator to a visible panel', () => {
+			linkUIFeature._createViews();
+			formView = linkUIFeature.formView;
+			actionsView = linkUIFeature.actionsView;
+			formView.render();
+
 			setModelData( editor.model, '<paragraph>fo<$text linkHref="foo">o[] b</$text>ar</paragraph>' );
 			linkUIFeature._showUI();
 
@@ -306,6 +411,75 @@ describe( 'LinkUI', () => {
 			const newLinkDomElement = editor.editing.view.domConverter.mapViewToDom( newLinkViewElement );
 
 			expect( balloon.view.pin.lastCall.args[ 0 ].target() ).to.equal( newLinkDomElement );
+		} );
+
+		describe( 'form status', () => {
+			it( 'should update ui on error due to change ballon position', () => {
+				const updateSpy = sinon.spy( editor.ui, 'update' );
+
+				linkUIFeature._createViews();
+				formView = linkUIFeature.formView;
+				actionsView = linkUIFeature.actionsView;
+				formView.render();
+
+				setModelData( editor.model, '<paragraph>[foo]</paragraph>' );
+
+				linkUIFeature._showUI();
+
+				expect( updateSpy ).not.to.be.called;
+				formView.fire( 'submit' );
+				expect( updateSpy ).to.be.calledOnce;
+			} );
+
+			it( 'should show error form status if passed empty link', () => {
+				linkUIFeature._createViews();
+				formView = linkUIFeature.formView;
+				actionsView = linkUIFeature.actionsView;
+				formView.render();
+
+				setModelData( editor.model, '<paragraph>[foo]</paragraph>' );
+				linkUIFeature._showUI();
+
+				formView.fire( 'submit' );
+
+				expect( formView.urlInputView.errorText ).to.be.equal( 'Link URL must not be empty.' );
+			} );
+
+			it( 'should reset error form status after filling empty link', () => {
+				linkUIFeature._createViews();
+				formView = linkUIFeature.formView;
+				actionsView = linkUIFeature.actionsView;
+				formView.render();
+
+				setModelData( editor.model, '<paragraph>[foo]</paragraph>' );
+
+				linkUIFeature._showUI();
+
+				formView.fire( 'submit' );
+				expect( formView.urlInputView.errorText ).to.be.equal( 'Link URL must not be empty.' );
+
+				formView.urlInputView.fieldView.value = 'http://cksource.com';
+				formView.fire( 'submit' );
+
+				expect( formView.urlInputView.errorText ).to.be.null;
+			} );
+
+			it( 'should reset form status on show', () => {
+				linkUIFeature._createViews();
+				formView = linkUIFeature.formView;
+				actionsView = linkUIFeature.actionsView;
+				formView.render();
+
+				setModelData( editor.model, '<paragraph>[foo]</paragraph>' );
+				linkUIFeature._showUI();
+
+				formView.fire( 'submit' );
+				expect( formView.urlInputView.errorText ).to.be.equal( 'Link URL must not be empty.' );
+
+				linkUIFeature._hideUI();
+				linkUIFeature._showUI();
+				expect( formView.urlInputView.errorText ).to.be.null;
+			} );
 		} );
 
 		describe( 'response to ui#update', () => {
@@ -380,6 +554,11 @@ describe( 'LinkUI', () => {
 			} );
 
 			it( 'not update the position when is in not visible stack', () => {
+				linkUIFeature._createViews();
+				formView = linkUIFeature.formView;
+				actionsView = linkUIFeature.actionsView;
+				formView.render();
+
 				setModelData( editor.model, '<paragraph><$text linkHref="url">f[]oo</$text></paragraph>' );
 
 				linkUIFeature._showUI();
@@ -720,9 +899,68 @@ describe( 'LinkUI', () => {
 		}
 	} );
 
+	describe( '_addActionsView()', () => {
+		beforeEach( () => {
+			editor.editing.view.document.isFocused = true;
+		} );
+
+		it( 'should create #actionsView', () => {
+			setModelData( editor.model, '<paragraph>f[o]o</paragraph>' );
+
+			linkUIFeature._addActionsView();
+
+			expect( linkUIFeature.actionsView ).to.be.instanceOf( LinkActionsView );
+		} );
+
+		it( 'should add #actionsView to the balloon and attach the balloon to the link element when collapsed selection is inside ' +
+			'that link',
+		() => {
+			setModelData( editor.model, '<paragraph><$text linkHref="url">f[]oo</$text></paragraph>' );
+
+			linkUIFeature._addActionsView();
+			actionsView = linkUIFeature.actionsView;
+
+			expect( balloon.visibleView ).to.equal( actionsView );
+		} );
+	} );
+
+	describe( '_addFormView()', () => {
+		beforeEach( () => {
+			editor.editing.view.document.isFocused = true;
+		} );
+
+		it( 'should create #formView', () => {
+			setModelData( editor.model, '<paragraph>f[o]o</paragraph>' );
+
+			linkUIFeature._addFormView();
+
+			expect( linkUIFeature.formView ).to.be.instanceOf( LinkFormView );
+		} );
+
+		it( 'should add #formView to the balloon and attach the balloon to the selection when text fragment is selected', () => {
+			setModelData( editor.model, '<paragraph>f[o]o</paragraph>' );
+
+			linkUIFeature._addFormView();
+			formView = linkUIFeature.formView;
+
+			expect( balloon.visibleView ).to.equal( formView );
+		} );
+
+		it( 'should implement the CSS transition disabling feature', () => {
+			setModelData( editor.model, '<paragraph>f[o]o</paragraph>' );
+
+			linkUIFeature._addFormView();
+
+			expect( linkUIFeature.formView.disableCssTransitions ).to.be.a( 'function' );
+		} );
+	} );
+
 	describe( '_hideUI()', () => {
 		beforeEach( () => {
 			linkUIFeature._showUI();
+
+			formView = linkUIFeature.formView;
+			actionsView = linkUIFeature.actionsView;
 		} );
 
 		it( 'should remove the UI from the balloon', () => {
@@ -779,9 +1017,33 @@ describe( 'LinkUI', () => {
 
 			expect( editor.model.markers.has( 'link-ui' ) ).to.be.false;
 		} );
+
+		it( 'should not throw if selection includes soft break before text item', () => {
+			linkUIFeature._hideUI();
+
+			setModelData( editor.model, '<paragraph>[<softBreak></softBreak>fo]</paragraph>' );
+
+			linkUIFeature._showUI();
+
+			expect( () => {
+				linkUIFeature._hideUI();
+			} ).to.not.throw();
+		} );
 	} );
 
 	describe( 'keyboard support', () => {
+		beforeEach( () => {
+			// Make sure that forms are lazy initiated.
+			expect( linkUIFeature.formView ).to.be.null;
+			expect( linkUIFeature.actionsView ).to.be.null;
+
+			linkUIFeature._createViews();
+			formView = linkUIFeature.formView;
+			actionsView = linkUIFeature.actionsView;
+
+			formView.render();
+		} );
+
 		it( 'should show the UI on Ctrl+K keystroke', () => {
 			const spy = testUtils.sinon.stub( linkUIFeature, '_showUI' ).returns( {} );
 
@@ -969,6 +1231,18 @@ describe( 'LinkUI', () => {
 	} );
 
 	describe( 'mouse support', () => {
+		beforeEach( () => {
+			// Make sure that forms are lazy initiated.
+			expect( linkUIFeature.formView ).to.be.null;
+			expect( linkUIFeature.actionsView ).to.be.null;
+
+			linkUIFeature._createViews();
+			formView = linkUIFeature.formView;
+			actionsView = linkUIFeature.actionsView;
+
+			formView.render();
+		} );
+
 		it( 'should hide the UI and not focus editable upon clicking outside the UI', () => {
 			const spy = testUtils.sinon.spy( linkUIFeature, '_hideUI' );
 
@@ -1050,9 +1324,7 @@ describe( 'LinkUI', () => {
 					.elementToElement( {
 						model: 'inlineWidget',
 						view: ( modelItem, { writer } ) => toWidget(
-							writer.createContainerElement( 'inlineWidget', {}, {
-								isAllowedInsideAttributeElement: true
-							} ),
+							writer.createContainerElement( 'inlineWidget' ),
 							writer,
 							{ label: 'inline widget' }
 						)
@@ -1115,12 +1387,10 @@ describe( 'LinkUI', () => {
 					allowAttributesOf: '$text'
 				} );
 
-				editor.conversion.for( 'downcast' ).elementToElement( {
+				editor.conversion.for( 'downcast' ).elementToStructure( {
 					model: 'inlineWidget',
 					view: ( modelItem, { writer } ) => {
-						const spanView = writer.createContainerElement( 'span', {}, {
-							isAllowedInsideAttributeElement: true
-						} );
+						const spanView = writer.createContainerElement( 'span' );
 
 						const innerText = writer.createText( '{' + modelItem.name + '}' );
 						writer.insert( writer.createPositionAt( spanView, 0 ), innerText );
@@ -1141,6 +1411,16 @@ describe( 'LinkUI', () => {
 		let focusEditableSpy;
 
 		beforeEach( () => {
+			// Make sure that forms are lazy initiated.
+			expect( linkUIFeature.formView ).to.be.null;
+			expect( linkUIFeature.actionsView ).to.be.null;
+
+			linkUIFeature._createViews();
+			formView = linkUIFeature.formView;
+			actionsView = linkUIFeature.actionsView;
+
+			formView.render();
+
 			focusEditableSpy = testUtils.sinon.spy( editor.editing.view, 'focus' );
 		} );
 
@@ -1250,6 +1530,33 @@ describe( 'LinkUI', () => {
 				} )
 				.then( editor => {
 					const linkUIFeature = editor.plugins.get( LinkUI );
+
+					linkUIFeature._createViews();
+
+					const formView = linkUIFeature.formView;
+
+					formView.render();
+
+					editor.model.schema.extend( '$text', {
+						allowIn: '$root',
+						allowAttributes: 'linkHref'
+					} );
+
+					return { editor, formView };
+				} );
+		};
+
+		const createEditorWithEmptyLinks = allowCreatingEmptyLinks => {
+			return ClassicTestEditor
+				.create( editorElement, {
+					plugins: [ LinkEditing, LinkUI, Paragraph, BlockQuote ],
+					link: { allowCreatingEmptyLinks }
+				} )
+				.then( editor => {
+					const linkUIFeature = editor.plugins.get( LinkUI );
+
+					linkUIFeature._createViews();
+
 					const formView = linkUIFeature.formView;
 
 					formView.render();
@@ -1264,6 +1571,16 @@ describe( 'LinkUI', () => {
 		};
 
 		beforeEach( () => {
+			// Make sure that forms are lazy initiated.
+			expect( linkUIFeature.formView ).to.be.null;
+			expect( linkUIFeature.actionsView ).to.be.null;
+
+			linkUIFeature._createViews();
+			formView = linkUIFeature.formView;
+			actionsView = linkUIFeature.actionsView;
+
+			formView.render();
+
 			focusEditableSpy = testUtils.sinon.spy( editor.editing.view, 'focus' );
 		} );
 
@@ -1275,6 +1592,44 @@ describe( 'LinkUI', () => {
 			formView.element.dispatchEvent( new Event( 'focus' ) );
 
 			expect( editor.ui.focusTracker.isFocused ).to.be.true;
+		} );
+
+		describe( 'empty links', () => {
+			it( 'should not allow empty links by default', () => {
+				const allowCreatingEmptyLinks = editor.config.get( 'link.allowCreatingEmptyLinks' );
+
+				expect( allowCreatingEmptyLinks ).to.equal( false );
+			} );
+
+			it( 'should allow enabling empty links', () => {
+				return createEditorWithEmptyLinks( true ).then( ( { editor } ) => {
+					const allowCreatingEmptyLinks = editor.config.get( 'link.allowCreatingEmptyLinks' );
+
+					expect( allowCreatingEmptyLinks ).to.equal( true );
+
+					return editor.destroy();
+				} );
+			} );
+
+			it( 'should not allow submitting empty form when link is required', () => {
+				return createEditorWithEmptyLinks( false ).then( ( { editor, formView } ) => {
+					const executeSpy = sinon.spy( editor, 'execute' );
+
+					formView.urlInputView.fieldView.value = '';
+					formView.fire( 'submit' );
+
+					expect( executeSpy ).not.to.be.called;
+					return editor.destroy();
+				} );
+			} );
+
+			it( 'should allow submitting empty form when link is not required', () => {
+				return createEditorWithEmptyLinks( true ).then( ( { editor, formView } ) => {
+					expect( formView.saveButtonView.isEnabled ).to.be.true;
+
+					return editor.destroy();
+				} );
+			} );
 		} );
 
 		describe( 'link protocol', () => {
@@ -1295,10 +1650,14 @@ describe( 'LinkUI', () => {
 			} );
 
 			it( 'should not add a protocol without the configuration', () => {
+				const linkCommandSpy = sinon.spy( editor.commands.get( 'link' ), 'execute' );
+
 				formView.urlInputView.fieldView.value = 'ckeditor.com';
 				formView.fire( 'submit' );
 
-				expect( formView.urlInputView.fieldView.value ).to.equal( 'ckeditor.com' );
+				sinon.assert.calledWith( linkCommandSpy, 'ckeditor.com', sinon.match.any );
+
+				return editor.destroy();
 			} );
 
 			it( 'should not add a protocol to the local links even when `config.link.defaultProtocol` configured', () => {
@@ -1331,7 +1690,6 @@ describe( 'LinkUI', () => {
 					formView.urlInputView.fieldView.value = 'http://example.com';
 					formView.fire( 'submit' );
 
-					expect( formView.urlInputView.fieldView.value ).to.equal( 'http://example.com' );
 					sinon.assert.calledWith( linkCommandSpy, 'http://example.com', sinon.match.any );
 
 					return editor.destroy();
@@ -1386,7 +1744,6 @@ describe( 'LinkUI', () => {
 					formView.urlInputView.fieldView.value = 'email@example.com';
 					formView.fire( 'submit' );
 
-					expect( formView.urlInputView.fieldView.value ).to.equal( 'mailto:email@example.com' );
 					expect( getModelData( editor.model ) ).to.equal(
 						'[<$text linkHref="mailto:email@example.com">email@example.com</$text>]'
 					);
@@ -1402,19 +1759,20 @@ describe( 'LinkUI', () => {
 				formView.urlInputView.fieldView.value = 'email@example.com';
 				formView.fire( 'submit' );
 
-				expect( formView.urlInputView.fieldView.value ).to.equal( 'mailto:email@example.com' );
 				expect( getModelData( editor.model ) ).to.equal(
 					'<paragraph>[<$text linkHref="mailto:email@example.com">email@example.com</$text>]</paragraph>'
 				);
 			} );
 
-			it( 'should not add an email protocol when given provided within the value' +
+			it( 'should not add an email protocol when given provided within the value ' +
 				'even when `config.link.defaultProtocol` configured', () => {
 				return createEditorWithDefaultProtocol( 'mailto:' ).then( ( { editor, formView } ) => {
+					const linkCommandSpy = sinon.spy( editor.commands.get( 'link' ), 'execute' );
+
 					formView.urlInputView.fieldView.value = 'mailto:test@example.com';
 					formView.fire( 'submit' );
 
-					expect( formView.urlInputView.fieldView.value ).to.equal( 'mailto:test@example.com' );
+					sinon.assert.calledWith( linkCommandSpy, 'mailto:test@example.com', sinon.match.any );
 
 					return editor.destroy();
 				} );
@@ -1460,6 +1818,8 @@ describe( 'LinkUI', () => {
 
 			it( 'should hide and reveal the #actionsView on formView#submit event', () => {
 				linkUIFeature._showUI();
+
+				formView.urlInputView.fieldView.value = '/test.html';
 				formView.fire( 'submit' );
 
 				expect( balloon.visibleView ).to.equal( actionsView );
@@ -1560,6 +1920,7 @@ describe( 'LinkUI', () => {
 							} );
 
 							linkUIFeature = editor.plugins.get( LinkUI );
+							linkUIFeature._createViews();
 
 							const balloon = editor.plugins.get( ContextualBalloon );
 

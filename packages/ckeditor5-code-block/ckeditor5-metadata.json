@@ -10,7 +10,7 @@
 				{
 					"type": "Button",
 					"name": "codeBlock",
-					"iconPath": "theme/icons/codeblock.svg"
+					"iconPath": "@ckeditor/ckeditor5-core/theme/icons/codeblock.svg"
 				}
 			],
 			"htmlOutput": [
@@ -19,11 +19,14 @@
 				},
 				{
 					"elements": "code",
-					"classes": [
-						"*",
-						"language-*"
-					],
-					"_comment": "By default, the language of the code block is represented as a CSS class prefixed by `language-`. The CSS class name can be customized via the `config.codeBlock.languages` array."
+					"classes": "language-*",
+					"_comment": "By default, the language of the code block is represented as a CSS class prefixed by `language-`"
+				},
+				{
+					"elements": "code",
+					"classes": "*",
+					"isAlternative": true,
+					"_comment": "The CSS class name can be customized via the `config.codeBlock.languages` array."
 				}
 			]
 		}

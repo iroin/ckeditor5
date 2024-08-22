@@ -1,33 +1,30 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals window */
 
-import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor';
+import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor.js';
 
-import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
-import ImageBlockEditing from '../../src/image/imageblockediting';
-import ImageUploadEditing from '../../src/imageupload/imageuploadediting';
-import ImageUploadProgress from '../../src/imageupload/imageuploadprogress';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import FileRepository from '@ckeditor/ckeditor5-upload/src/filerepository';
-import ClipboardPipeline from '@ckeditor/ckeditor5-clipboard/src/clipboardpipeline';
+import Plugin from '@ckeditor/ckeditor5-core/src/plugin.js';
+import ImageBlockEditing from '../../src/image/imageblockediting.js';
+import ImageUploadEditing from '../../src/imageupload/imageuploadediting.js';
+import ImageUploadProgress from '../../src/imageupload/imageuploadprogress.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import FileRepository from '@ckeditor/ckeditor5-upload/src/filerepository.js';
+import ClipboardPipeline from '@ckeditor/ckeditor5-clipboard/src/clipboardpipeline.js';
 
-import { createNativeFileMock, NativeFileReaderMock, UploadAdapterMock } from '@ckeditor/ckeditor5-upload/tests/_utils/mocks';
-import { setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import { getData as getViewData } from '@ckeditor/ckeditor5-engine/src/dev-utils/view';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
-import svgPlaceholder from '../../theme/icons/image_placeholder.svg';
-import ImageInlineEditing from '../../src/image/imageinlineediting';
+import { createNativeFileMock, NativeFileReaderMock, UploadAdapterMock } from '@ckeditor/ckeditor5-upload/tests/_utils/mocks.js';
+import { setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import { getData as getViewData } from '@ckeditor/ckeditor5-engine/src/dev-utils/view.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
+import ImageInlineEditing from '../../src/image/imageinlineediting.js';
 
 describe( 'ImageUploadProgress', () => {
-	const imagePlaceholder = encodeURIComponent( svgPlaceholder );
-
 	// eslint-disable-next-line max-len
 	const base64Sample = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
-	let editor, model, doc, fileRepository, view, nativeReaderMock, loader, adapterMock;
+	let editor, model, doc, fileRepository, view, nativeReaderMock, loader, adapterMock, imagePlaceholder;
 
 	class UploadAdapterPluginMock extends Plugin {
 		init() {
@@ -55,7 +52,8 @@ describe( 'ImageUploadProgress', () => {
 				plugins: [
 					ImageBlockEditing, ImageInlineEditing, Paragraph, ImageUploadEditing,
 					ImageUploadProgress, UploadAdapterPluginMock, ClipboardPipeline
-				]
+				],
+				image: { insert: { type: 'auto' } }
 			} )
 			.then( newEditor => {
 				editor = newEditor;
@@ -70,6 +68,8 @@ describe( 'ImageUploadProgress', () => {
 
 					return adapterMock;
 				};
+
+				imagePlaceholder = editor.plugins.get( 'ImageUploadProgress' ).placeholder;
 			} );
 	} );
 
@@ -79,7 +79,7 @@ describe( 'ImageUploadProgress', () => {
 
 		expect( getViewData( view ) ).to.equal(
 			'<p>[<span class="ck-appear ck-image-upload-placeholder ck-widget image-inline" contenteditable="false">' +
-				`<img src="data:image/svg+xml;utf8,${ imagePlaceholder }"></img>` +
+				`<img src="${ imagePlaceholder }"></img>` +
 				'<div class="ck-upload-placeholder-loader"></div>' +
 			'</span>}foo</p>'
 		);
@@ -126,9 +126,9 @@ describe( 'ImageUploadProgress', () => {
 
 		model.document.registerPostFixer( () => {
 			for ( const change of doc.differ.getChanges() ) {
-				// The differ.refreshItem() simulates remove and insert of and image parent thus preventing image from proper work.
+				// The editing.reconvertItem() simulates remove and insert of and image parent thus preventing image from proper work.
 				if ( change.type == 'insert' && change.name == 'imageBlock' ) {
-					doc.differ.refreshItem( change.position.parent );
+					editor.editing.reconvertItem( change.position.parent );
 
 					return false; // Refreshing item should not trigger calling post-fixer again.
 				}
@@ -196,7 +196,7 @@ describe( 'ImageUploadProgress', () => {
 
 		expect( getViewData( view ) ).to.equal(
 			'[<figure class="ck-appear ck-image-upload-placeholder ck-widget image" contenteditable="false">' +
-				`<img src="data:image/svg+xml;utf8,${ imagePlaceholder }"></img>` +
+				`<img src="${ imagePlaceholder }"></img>` +
 				'<div class="ck-upload-placeholder-loader"></div>' +
 			'</figure>]'
 		);
@@ -219,7 +219,7 @@ describe( 'ImageUploadProgress', () => {
 
 		expect( getViewData( view ) ).to.equal(
 			'[<figure class="ck-widget image" contenteditable="false">' +
-				`<img src="data:image/svg+xml;utf8,${ imagePlaceholder }"></img>` +
+				`<img src="${ imagePlaceholder }"></img>` +
 			'</figure>]'
 		);
 	} );
@@ -323,7 +323,7 @@ describe( 'ImageUploadProgress', () => {
 
 		expect( getViewData( view ) ).to.equal(
 			'[<figure class="ck-appear ck-image-upload-placeholder ck-widget image" contenteditable="false">' +
-				`<img src="data:image/svg+xml;utf8,${ imagePlaceholder }"></img>` +
+				`<img src="${ imagePlaceholder }"></img>` +
 				'<div class="ck-upload-placeholder-loader"></div>' +
 			'</figure>]'
 		);
@@ -334,7 +334,7 @@ describe( 'ImageUploadProgress', () => {
 
 		expect( getViewData( view ) ).to.equal(
 			'[<figure class="ck-widget image" contenteditable="false">' +
-				`<img src="data:image/svg+xml;utf8,${ imagePlaceholder }"></img>` +
+				`<img src="${ imagePlaceholder }"></img>` +
 			'</figure>]'
 		);
 	} );
@@ -352,7 +352,7 @@ describe( 'ImageUploadProgress', () => {
 
 		expect( getViewData( newEditor.editing.view ) ).to.equal(
 			'<p>[<span class="ck-appear ck-image-upload-placeholder ck-widget image-inline" contenteditable="false">' +
-				`<img src="data:image/svg+xml;utf8,${ imagePlaceholder }"></img>` +
+				`<img src="${ imagePlaceholder }"></img>` +
 				'<div class="ck-upload-placeholder-loader"></div>' +
 			'</span>}foo</p>'
 		);
@@ -373,7 +373,7 @@ describe( 'ImageUploadProgress', () => {
 
 		expect( getViewData( newEditor.editing.view ) ).to.equal(
 			'[<figure class="ck-appear ck-image-upload-placeholder ck-widget image" contenteditable="false">' +
-				`<img src="data:image/svg+xml;utf8,${ imagePlaceholder }"></img>` +
+				`<img src="${ imagePlaceholder }"></img>` +
 				'<div class="ck-upload-placeholder-loader"></div>' +
 			'</figure>]<p>foo</p>'
 		);

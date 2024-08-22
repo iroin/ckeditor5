@@ -1,15 +1,15 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import FontSizeEditing from './../../src/fontsize/fontsizeediting';
+import FontSizeEditing from './../../src/fontsize/fontsizeediting.js';
 
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
 
-import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor';
-import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import { assertCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
+import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor.js';
+import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import { assertCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils.js';
 
 describe( 'FontSizeEditing', () => {
 	let editor, doc;
@@ -94,10 +94,28 @@ describe( 'FontSizeEditing', () => {
 			} );
 
 			describe( 'editing pipeline conversion', () => {
-				it( 'should pass fontSize to data', () => {
+				it( 'should pass pixel fontSize to data', () => {
 					setModelData( doc, '<paragraph>f<$text fontSize="10px">o</$text>o</paragraph>' );
 
 					expect( editor.getData() ).to.equal( '<p>f<span style="font-size:10px;">o</span>o</p>' );
+				} );
+
+				it( 'should pass number fontSize to data', () => {
+					setModelData( doc, '<paragraph>f<$text fontSize="12">o</$text>o</paragraph>' );
+
+					expect( editor.getData() ).to.equal( '<p>f<span style="font-size:12;">o</span>o</p>' );
+				} );
+
+				it( 'should pass percentage fontSize to data', () => {
+					setModelData( doc, '<paragraph>f<$text fontSize="6.25%">o</$text>o</paragraph>' );
+
+					expect( editor.getData() ).to.equal( '<p>f<span style="font-size:6.25%;">o</span>o</p>' );
+				} );
+
+				it( 'should pass em fontSize to data', () => {
+					setModelData( doc, '<paragraph>f<$text fontSize="8em">o</$text>o</paragraph>' );
+
+					expect( editor.getData() ).to.equal( '<p>f<span style="font-size:8em;">o</span>o</p>' );
 				} );
 			} );
 

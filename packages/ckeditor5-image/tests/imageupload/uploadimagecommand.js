@@ -1,22 +1,22 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals console */
 
-import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor';
+import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor.js';
 
-import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
+import Plugin from '@ckeditor/ckeditor5-core/src/plugin.js';
 
-import UploadImageCommand from '../../src/imageupload/uploadimagecommand';
-import FileRepository from '@ckeditor/ckeditor5-upload/src/filerepository';
+import UploadImageCommand from '../../src/imageupload/uploadimagecommand.js';
+import FileRepository from '@ckeditor/ckeditor5-upload/src/filerepository.js';
 
-import { createNativeFileMock, UploadAdapterMock } from '@ckeditor/ckeditor5-upload/tests/_utils/mocks';
-import { setData as setModelData, getData as getModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import ImageBlockEditing from '../../src/image/imageblockediting';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import ImageInlineEditing from '../../src/image/imageinlineediting';
+import { createNativeFileMock, UploadAdapterMock } from '@ckeditor/ckeditor5-upload/tests/_utils/mocks.js';
+import { setData as setModelData, getData as getModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import ImageBlockEditing from '../../src/image/imageblockediting.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import ImageInlineEditing from '../../src/image/imageinlineediting.js';
 
 describe( 'UploadImageCommand', () => {
 	let editor, command, model, fileRepository;
@@ -33,7 +33,8 @@ describe( 'UploadImageCommand', () => {
 	beforeEach( () => {
 		return VirtualTestEditor
 			.create( {
-				plugins: [ FileRepository, ImageBlockEditing, ImageInlineEditing, Paragraph, UploadAdapterPluginMock ]
+				plugins: [ FileRepository, ImageBlockEditing, ImageInlineEditing, Paragraph, UploadAdapterPluginMock ],
+				image: { insert: { type: 'auto' } }
 			} )
 			.then( newEditor => {
 				editor = newEditor;
@@ -53,9 +54,15 @@ describe( 'UploadImageCommand', () => {
 		return editor.destroy();
 	} );
 
+	describe( 'constructor()', () => {
+		it( 'should set `isAccessAllowed` on `true` when initialized', () => {
+			expect( command.isAccessAllowed ).to.be.true;
+		} );
+	} );
+
 	describe( 'isEnabled', () => {
 		it( 'should be true when the selection directly in the root', () => {
-			model.enqueueChange( 'transparent', () => {
+			model.enqueueChange( { isUndoable: false }, () => {
 				setModelData( model, '[]' );
 
 				command.refresh();
@@ -223,10 +230,6 @@ describe( 'UploadImageCommand', () => {
 		it( 'should set document selection attributes on an image to maintain attribute continuity in downcast (e.g. links)', () => {
 			editor.model.schema.extend( '$text', { allowAttributes: [ 'foo', 'bar', 'baz' ] } );
 
-			editor.model.schema.extend( 'imageInline', {
-				allowAttributes: [ 'foo', 'bar' ]
-			} );
-
 			const file = createNativeFileMock();
 			setModelData( model, '<paragraph><$text bar="b" baz="c" foo="a">f[o]o</$text></paragraph>' );
 
@@ -237,7 +240,7 @@ describe( 'UploadImageCommand', () => {
 			expect( getModelData( model ) ).to.equal(
 				'<paragraph>' +
 					'<$text bar="b" baz="c" foo="a">f</$text>' +
-					`[<imageInline bar="b" foo="a" uploadId="${ id }"></imageInline>]` +
+					`[<imageInline bar="b" baz="c" foo="a" uploadId="${ id }"></imageInline>]` +
 					'<$text bar="b" baz="c" foo="a">o</$text>' +
 				'</paragraph>'
 			);
@@ -245,10 +248,6 @@ describe( 'UploadImageCommand', () => {
 
 		it( 'should set document selection attributes on multiple images to maintain attribute continuity in downcast (e.g. links)', () => {
 			editor.model.schema.extend( '$text', { allowAttributes: [ 'foo', 'bar', 'baz' ] } );
-
-			editor.model.schema.extend( 'imageInline', {
-				allowAttributes: [ 'foo', 'bar' ]
-			} );
 
 			const file = [ createNativeFileMock(), createNativeFileMock(), createNativeFileMock() ];
 			setModelData( model, '<paragraph><$text bar="b" baz="c" foo="a">f[o]o</$text></paragraph>' );
@@ -262,9 +261,9 @@ describe( 'UploadImageCommand', () => {
 			expect( getModelData( model ) ).to.equal(
 				'<paragraph>' +
 					'<$text bar="b" baz="c" foo="a">f</$text>' +
-					`<imageInline bar="b" foo="a" uploadId="${ idA }"></imageInline>` +
-					`<imageInline bar="b" foo="a" uploadId="${ idB }"></imageInline>` +
-					`[<imageInline bar="b" foo="a" uploadId="${ idC }"></imageInline>]` +
+					`<imageInline bar="b" baz="c" foo="a" uploadId="${ idA }"></imageInline>` +
+					`<imageInline bar="b" baz="c" foo="a" uploadId="${ idB }"></imageInline>` +
+					`[<imageInline bar="b" baz="c" foo="a" uploadId="${ idC }"></imageInline>]` +
 					'<$text bar="b" baz="c" foo="a">o</$text>' +
 				'</paragraph>'
 			);

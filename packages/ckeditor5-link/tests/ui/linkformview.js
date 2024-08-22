@@ -1,25 +1,25 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals Event, document */
 
-import LinkFormView from '../../src/ui/linkformview';
-import View from '@ckeditor/ckeditor5-ui/src/view';
-import { keyCodes } from '@ckeditor/ckeditor5-utils/src/keyboard';
-import KeystrokeHandler from '@ckeditor/ckeditor5-utils/src/keystrokehandler';
-import FocusTracker from '@ckeditor/ckeditor5-utils/src/focustracker';
-import FocusCycler from '@ckeditor/ckeditor5-ui/src/focuscycler';
-import ViewCollection from '@ckeditor/ckeditor5-ui/src/viewcollection';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
-import ManualDecorator from '../../src/utils/manualdecorator';
-import Collection from '@ckeditor/ckeditor5-utils/src/collection';
-import { add as addTranslations, _clear as clearTranslations } from '@ckeditor/ckeditor5-utils/src/translation-service';
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
-import Link from '../../src/link';
-import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin';
-import mix from '@ckeditor/ckeditor5-utils/src/mix';
+import LinkFormView from '../../src/ui/linkformview.js';
+import View from '@ckeditor/ckeditor5-ui/src/view.js';
+import { keyCodes } from '@ckeditor/ckeditor5-utils/src/keyboard.js';
+import KeystrokeHandler from '@ckeditor/ckeditor5-utils/src/keystrokehandler.js';
+import FocusTracker from '@ckeditor/ckeditor5-utils/src/focustracker.js';
+import FocusCycler from '@ckeditor/ckeditor5-ui/src/focuscycler.js';
+import ViewCollection from '@ckeditor/ckeditor5-ui/src/viewcollection.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
+import ManualDecorator from '../../src/utils/manualdecorator.js';
+import Collection from '@ckeditor/ckeditor5-utils/src/collection.js';
+import { add as addTranslations, _clear as clearTranslations } from '@ckeditor/ckeditor5-utils/src/translation-service.js';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+import Link from '../../src/link.js';
+import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin.js';
+import mix from '@ckeditor/ckeditor5-utils/src/mix.js';
 
 describe( 'LinkFormView', () => {
 	let view;
@@ -29,9 +29,11 @@ describe( 'LinkFormView', () => {
 	beforeEach( () => {
 		view = new LinkFormView( { t: val => val }, { manualDecorators: [] } );
 		view.render();
+		document.body.appendChild( view.element );
 	} );
 
 	afterEach( () => {
+		view.element.remove();
 		view.destroy();
 	} );
 
@@ -82,6 +84,10 @@ describe( 'LinkFormView', () => {
 			expect( spy.calledOnce ).to.true;
 		} );
 
+		it( 'should create url input with inputmode=url', () => {
+			expect( view.urlInputView.fieldView.inputMode ).to.be.equal( 'url' );
+		} );
+
 		describe( 'template', () => {
 			it( 'has url input view', () => {
 				expect( view.template.children[ 0 ].get( 0 ) ).to.equal( view.urlInputView );
@@ -91,10 +97,6 @@ describe( 'LinkFormView', () => {
 				expect( view.template.children[ 0 ].get( 1 ) ).to.equal( view.saveButtonView );
 				expect( view.template.children[ 0 ].get( 2 ) ).to.equal( view.cancelButtonView );
 			} );
-		} );
-
-		it( 'should implement the CSS transition disabling feature', () => {
-			expect( view.disableCssTransitions ).to.be.a( 'function' );
 		} );
 	} );
 
@@ -108,7 +110,7 @@ describe( 'LinkFormView', () => {
 		} );
 
 		it( 'should register child views\' #element in #focusTracker', () => {
-			view = new LinkFormView( { t: () => {} }, { manualDecorators: [] } );
+			const view = new LinkFormView( { t: () => {} }, { manualDecorators: [] } );
 
 			const spy = testUtils.sinon.spy( view.focusTracker, 'add' );
 
@@ -117,16 +119,20 @@ describe( 'LinkFormView', () => {
 			sinon.assert.calledWithExactly( spy.getCall( 0 ), view.urlInputView.element );
 			sinon.assert.calledWithExactly( spy.getCall( 1 ), view.saveButtonView.element );
 			sinon.assert.calledWithExactly( spy.getCall( 2 ), view.cancelButtonView.element );
+
+			view.destroy();
 		} );
 
 		it( 'starts listening for #keystrokes coming from #element', () => {
-			view = new LinkFormView( { t: () => {} }, { manualDecorators: [] } );
+			const view = new LinkFormView( { t: () => {} }, { manualDecorators: [] } );
 
 			const spy = sinon.spy( view.keystrokes, 'listenTo' );
 
 			view.render();
 			sinon.assert.calledOnce( spy );
 			sinon.assert.calledWithExactly( spy, view.element );
+
+			view.destroy();
 		} );
 
 		describe( 'activates keyboard navigation for the toolbar', () => {
@@ -171,6 +177,63 @@ describe( 'LinkFormView', () => {
 		} );
 	} );
 
+	describe( 'isValid()', () => {
+		it( 'should reset error after successful validation', () => {
+			const view = new LinkFormView( { t: () => {} }, { manualDecorators: [] }, [
+				() => undefined
+			] );
+
+			expect( view.isValid() ).to.be.true;
+			expect( view.urlInputView.errorText ).to.be.null;
+		} );
+
+		it( 'should display first error returned from validators list', () => {
+			const view = new LinkFormView( { t: () => {} }, { manualDecorators: [] }, [
+				() => undefined,
+				() => 'Foo bar',
+				() => 'Another error'
+			] );
+
+			expect( view.isValid() ).to.be.false;
+			expect( view.urlInputView.errorText ).to.be.equal( 'Foo bar' );
+		} );
+
+		it( 'should pass view reference as argument to validator', () => {
+			const validatorSpy = sinon.spy();
+			const view = new LinkFormView( { t: () => {} }, { manualDecorators: [] }, [ validatorSpy ] );
+
+			view.isValid();
+
+			expect( validatorSpy ).to.be.calledOnceWithExactly( view );
+		} );
+	} );
+
+	describe( 'resetFormStatus()', () => {
+		it( 'should clear form input errors', () => {
+			view.urlInputView.errorText = 'Error';
+			view.resetFormStatus();
+			expect( view.urlInputView.errorText ).to.be.null;
+		} );
+	} );
+
+	describe( 'destroy()', () => {
+		it( 'should destroy the FocusTracker instance', () => {
+			const destroySpy = sinon.spy( view.focusTracker, 'destroy' );
+
+			view.destroy();
+
+			sinon.assert.calledOnce( destroySpy );
+		} );
+
+		it( 'should destroy the KeystrokeHandler instance', () => {
+			const destroySpy = sinon.spy( view.keystrokes, 'destroy' );
+
+			view.destroy();
+
+			sinon.assert.calledOnce( destroySpy );
+		} );
+	} );
+
 	describe( 'DOM bindings', () => {
 		describe( 'submit event', () => {
 			it( 'should trigger submit event', () => {
@@ -194,8 +257,23 @@ describe( 'LinkFormView', () => {
 		} );
 	} );
 
+	describe( 'URL getter', () => {
+		it( 'null value should be returned in URL getter if element is null', () => {
+			view.urlInputView.fieldView.element = null;
+
+			expect( view.url ).to.be.equal( null );
+		} );
+
+		it( 'trimmed DOM input value should be returned in URL getter', () => {
+			view.urlInputView.fieldView.element.value = '  https://cksource.com/  ';
+
+			expect( view.url ).to.be.equal( 'https://cksource.com/' );
+		} );
+	} );
+
 	describe( 'manual decorators', () => {
 		let view, collection, linkCommand;
+
 		beforeEach( () => {
 			collection = new Collection();
 			collection.add( new ManualDecorator( {
@@ -248,7 +326,7 @@ describe( 'LinkFormView', () => {
 			expect( view._manualDecoratorSwitches.get( 0 ) ).to.deep.include( {
 				name: 'decorator1',
 				label: 'Foo',
-				isOn: undefined
+				isOn: false
 			} );
 			expect( view._manualDecoratorSwitches.get( 1 ) ).to.deep.include( {
 				name: 'decorator2',
@@ -258,7 +336,7 @@ describe( 'LinkFormView', () => {
 			expect( view._manualDecoratorSwitches.get( 2 ) ).to.deep.include( {
 				name: 'decorator3',
 				label: 'Multi',
-				isOn: undefined
+				isOn: false
 			} );
 		} );
 
@@ -267,7 +345,7 @@ describe( 'LinkFormView', () => {
 			const viewItem = view._manualDecoratorSwitches.first;
 
 			expect( modelItem.value ).to.be.undefined;
-			expect( viewItem.isOn ).to.be.undefined;
+			expect( viewItem.isOn ).to.be.false;
 
 			viewItem.element.dispatchEvent( new Event( 'click' ) );
 
@@ -301,9 +379,9 @@ describe( 'LinkFormView', () => {
 		describe( 'getDecoratorSwitchesState()', () => {
 			it( 'should provide object with decorators states', () => {
 				expect( view.getDecoratorSwitchesState() ).to.deep.equal( {
-					decorator1: undefined,
+					decorator1: false,
 					decorator2: true,
-					decorator3: undefined
+					decorator3: false
 				} );
 
 				view._manualDecoratorSwitches.map( item => {
@@ -321,9 +399,9 @@ describe( 'LinkFormView', () => {
 
 			it( 'should use decorator default value if command and decorator values are not set', () => {
 				expect( view.getDecoratorSwitchesState() ).to.deep.equal( {
-					decorator1: undefined,
+					decorator1: false,
 					decorator2: true,
-					decorator3: undefined
+					decorator3: false
 				} );
 			} );
 
@@ -353,9 +431,9 @@ describe( 'LinkFormView', () => {
 				linkCommand.value = '';
 
 				expect( view.getDecoratorSwitchesState() ).to.deep.equal( {
-					decorator1: undefined,
-					decorator2: undefined,
-					decorator3: undefined
+					decorator1: false,
+					decorator2: false,
+					decorator3: false
 				} );
 
 				for ( const decorator of collection ) {

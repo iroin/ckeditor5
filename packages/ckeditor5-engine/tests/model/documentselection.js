@@ -1,26 +1,26 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals console */
 
-import Model from '../../src/model/model';
-import Batch from '../../src/model/batch';
-import Element from '../../src/model/element';
-import Text from '../../src/model/text';
-import Range from '../../src/model/range';
-import Position from '../../src/model/position';
-import LiveRange from '../../src/model/liverange';
-import DocumentSelection from '../../src/model/documentselection';
-import InsertOperation from '../../src/model/operation/insertoperation';
-import MoveOperation from '../../src/model/operation/moveoperation';
-import AttributeOperation from '../../src/model/operation/attributeoperation';
-import SplitOperation from '../../src/model/operation/splitoperation';
-import Collection from '@ckeditor/ckeditor5-utils/src/collection';
-import count from '@ckeditor/ckeditor5-utils/src/count';
-import { setData, getData } from '../../src/dev-utils/model';
-import { expectToThrowCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
+import Model from '../../src/model/model.js';
+import Batch from '../../src/model/batch.js';
+import Element from '../../src/model/element.js';
+import Text from '../../src/model/text.js';
+import Range from '../../src/model/range.js';
+import Position from '../../src/model/position.js';
+import LiveRange from '../../src/model/liverange.js';
+import DocumentSelection from '../../src/model/documentselection.js';
+import InsertOperation from '../../src/model/operation/insertoperation.js';
+import MoveOperation from '../../src/model/operation/moveoperation.js';
+import AttributeOperation from '../../src/model/operation/attributeoperation.js';
+import SplitOperation from '../../src/model/operation/splitoperation.js';
+import Collection from '@ckeditor/ckeditor5-utils/src/collection.js';
+import count from '@ckeditor/ckeditor5-utils/src/count.js';
+import { setData, getData } from '../../src/dev-utils/model.js';
+import { expectToThrowCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils.js';
 
 describe( 'DocumentSelection', () => {
 	let model, doc, root, selection, liveRange, range;
@@ -43,6 +43,10 @@ describe( 'DocumentSelection', () => {
 		] );
 		selection = doc.selection;
 		model.schema.register( 'p', { inheritAllFrom: '$block' } );
+
+		model.schema.extend( '$text', {
+			allowAttributes: 'bold'
+		} );
 
 		model.schema.register( 'widget', {
 			isObject: true
@@ -1250,15 +1254,26 @@ describe( 'DocumentSelection', () => {
 			} );
 		} );
 
+		it( 'are not inherited from nodes in graveyard', () => {
+			model.change( writer => {
+				writer.insertText( 'foo', { bold: true }, model.document.graveyard, 0 );
+
+				// The only way to place selection in the graveyard is to remove all roots.
+				// This way the default range will be placed in the graveyard.
+				writer.detachRoot( 'main' );
+			} );
+
+			expect( selection.anchor.root ).to.equal( model.document.graveyard );
+			expect( selection.hasAttribute( 'bold' ) ).to.equal( false );
+		} );
+
 		describe( 'parent element\'s attributes', () => {
 			it( 'are set using a normal batch', () => {
-				const batchTypes = [];
+				let batch;
 
-				model.on( 'applyOperation', ( event, args ) => {
+				model.once( 'applyOperation', ( event, args ) => {
 					const operation = args[ 0 ];
-					const batch = operation.batch;
-
-					batchTypes.push( batch.type );
+					batch = operation.batch;
 				} );
 
 				selection._setTo( [ rangeInEmptyP ] );
@@ -1267,13 +1282,13 @@ describe( 'DocumentSelection', () => {
 					writer.setSelectionAttribute( 'foo', 'bar' );
 				} );
 
-				expect( batchTypes ).to.deep.equal( [ 'default' ] );
+				expect( batch.isUndoable ).to.be.true;
+
 				expect( emptyP.getAttribute( fooStoreAttrKey ) ).to.equal( 'bar' );
 			} );
 
 			it( 'are removed when any content is inserted (reuses the same batch)', () => {
-				// Dedupe batches by using a map (multiple change events will be fired).
-				const batchTypes = new Map();
+				const batches = new Set();
 
 				selection._setTo( rangeInEmptyP );
 				selection._setAttribute( 'foo', 'bar' );
@@ -1283,7 +1298,7 @@ describe( 'DocumentSelection', () => {
 					const operation = args[ 0 ];
 					const batch = operation.batch;
 
-					batchTypes.set( batch, batch.type );
+					batches.add( batch );
 				} );
 
 				model.change( writer => {
@@ -1293,7 +1308,11 @@ describe( 'DocumentSelection', () => {
 				expect( emptyP.hasAttribute( fooStoreAttrKey ) ).to.be.false;
 				expect( emptyP.hasAttribute( abcStoreAttrKey ) ).to.be.false;
 
-				expect( Array.from( batchTypes.values() ) ).to.deep.equal( [ 'default' ] );
+				expect( batches.size ).to.equal( 1 );
+
+				const batch = Array.from( batches )[ 0 ];
+
+				expect( batch.isUndoable ).to.be.true;
 			} );
 
 			it( 'are removed when any content is moved into', () => {
@@ -1411,6 +1430,77 @@ describe( 'DocumentSelection', () => {
 				expect( selection.hasAttribute( 'bold' ) ).to.equal( false );
 
 				selection._restoreGravity( overrideGravityUid );
+			} );
+		} );
+
+		// #14106
+		describe( 'reads surrounding attributes from inline object elements', () => {
+			beforeEach( () => {
+				model.schema.register( 'imageInline', {
+					inheritAllFrom: '$inlineObject',
+					allowAttributes: 'src'
+				} );
+			} );
+
+			it( 'inherits attributes from a node before', () => {
+				setData( model, '<p><$text bold="true">Foo Bar.</$text><imageInline bold="true"></imageInline>[]</p>' );
+
+				expect( selection.hasAttribute( 'bold' ) ).to.equal( true );
+			} );
+
+			it( 'inherits attributes from a node after with override gravity', () => {
+				setData( model, '<p><$text>Foo Bar.</$text>[]<imageInline bold="true"></imageInline></p>' );
+
+				const overrideGravityUid = selection._overrideGravity();
+
+				expect( selection.hasAttribute( 'bold' ) ).to.equal( true );
+
+				selection._restoreGravity( overrideGravityUid );
+			} );
+
+			it( 'inherits attributes from <imageInline>, even without any text before it', () => {
+				setData( model, '<p><imageInline bold="true"></imageInline>[]</p>' );
+
+				expect( selection.hasAttribute( 'bold' ) ).to.equal( true );
+			} );
+
+			it( 'ignores attributes from a node before (copyFromObject === false)', () => {
+				model.schema.setAttributeProperties( 'bold', { copyFromObject: false } );
+				setData( model, '<p><$text bold="true">Foo Bar.</$text><imageInline bold="true"></imageInline>[]</p>' );
+
+				expect( selection.hasAttribute( 'bold' ) ).to.equal( false );
+			} );
+
+			it( 'ignores attributes from a node after with override gravity (copyFromObject === false)', () => {
+				model.schema.setAttributeProperties( 'bold', { copyFromObject: false } );
+				setData( model, '<p><$text>Foo Bar.</$text>[]<imageInline bold="true"></imageInline></p>' );
+
+				const overrideGravityUid = selection._overrideGravity();
+
+				expect( selection.hasAttribute( 'bold' ) ).to.equal( false );
+
+				selection._restoreGravity( overrideGravityUid );
+			} );
+
+			it( 'ignores attributes from <imageInline>, even without any text before it (copyFromObject === false)', () => {
+				model.schema.setAttributeProperties( 'bold', { copyFromObject: false } );
+				setData( model, '<p><imageInline bold="true"></imageInline>[]</p>' );
+
+				expect( selection.hasAttribute( 'bold' ) ).to.equal( false );
+			} );
+
+			it( 'inherits attributes from a selected node (only those allowed on text)', () => {
+				setData( model, '<p>foo[<imageInline bold="true" src="123"></imageInline>]bar</p>' );
+
+				expect( selection.hasAttribute( 'bold' ) ).to.equal( true );
+				expect( selection.hasAttribute( 'src' ) ).to.equal( false );
+			} );
+
+			it( 'ignores attributes from a selected node with copyFromObject flag == false', () => {
+				model.schema.setAttributeProperties( 'bold', { copyFromObject: false } );
+				setData( model, '<p>foo[<imageInline bold="true"></imageInline>]bar</p>' );
+
+				expect( selection.hasAttribute( 'bold' ) ).to.equal( false );
 			} );
 		} );
 	} );

@@ -1,13 +1,12 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import attachToForm from '../../../src/editor/utils/attachtoform';
-import ElementApiMixin from '../../../src/editor/utils/elementapimixin';
-import Editor from '../../../src/editor/editor';
-import mix from '@ckeditor/ckeditor5-utils/src/mix';
-import { expectToThrowCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
+import attachToForm from '../../../src/editor/utils/attachtoform.js';
+import ElementApiMixin from '../../../src/editor/utils/elementapimixin.js';
+import Editor from '../../../src/editor/editor.js';
+import { expectToThrowCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils.js';
 
 /* global document, Event */
 
@@ -26,8 +25,8 @@ describe( 'attachToForm()', () => {
 			evt.preventDefault();
 		} );
 
-		class CustomEditor extends Editor {}
-		mix( CustomEditor, ElementApiMixin );
+		// eslint-disable-next-line new-cap
+		class CustomEditor extends ElementApiMixin( Editor ) {}
 
 		editor = new CustomEditor();
 		editor.model.document.createRoot();

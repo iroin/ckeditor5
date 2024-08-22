@@ -1,26 +1,26 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import DowncastWriter from '../../../src/view/downcastwriter';
-import View from '../../../src/view/view';
-import DocumentFragment from '../../../src/view/documentfragment';
-import Element from '../../../src/view/element';
-import ContainerElement from '../../../src/view/containerelement';
-import AttributeElement from '../../../src/view/attributeelement';
-import EmptyElement from '../../../src/view/emptyelement';
-import RawElement from '../../../src/view/rawelement';
-import UIElement from '../../../src/view/uielement';
-import Position from '../../../src/view/position';
-import Range from '../../../src/view/range';
-import Text from '../../../src/view/text';
+import DowncastWriter from '../../../src/view/downcastwriter.js';
+import View from '../../../src/view/view.js';
+import DocumentFragment from '../../../src/view/documentfragment.js';
+import Element from '../../../src/view/element.js';
+import ContainerElement from '../../../src/view/containerelement.js';
+import AttributeElement from '../../../src/view/attributeelement.js';
+import EmptyElement from '../../../src/view/emptyelement.js';
+import RawElement from '../../../src/view/rawelement.js';
+import UIElement from '../../../src/view/uielement.js';
+import Position from '../../../src/view/position.js';
+import Range from '../../../src/view/range.js';
+import Text from '../../../src/view/text.js';
 
-import { stringify, parse } from '../../../src/dev-utils/view';
-import createViewRoot from '../_utils/createroot';
-import Document from '../../../src/view/document';
-import { expectToThrowCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
-import { StylesProcessor } from '../../../src/view/stylesmap';
+import { stringify, parse } from '../../../src/dev-utils/view.js';
+import createViewRoot from '../_utils/createroot.js';
+import Document from '../../../src/view/document.js';
+import { expectToThrowCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils.js';
+import { StylesProcessor } from '../../../src/view/stylesmap.js';
 
 describe( 'DowncastWriter', () => {
 	describe( 'wrap()', () => {
@@ -169,11 +169,11 @@ describe( 'DowncastWriter', () => {
 				);
 			} );
 
-			it( 'should not wrap inside nested containers', () => {
+			it( 'should wrap inside nested containers', () => {
 				testWrap(
 					'<container:div>[foobar<container:p>baz</container:p>]</container:div>',
 					'<attribute:b view-priority="1"></attribute:b>',
-					'<container:div>[<attribute:b view-priority="1">foobar</attribute:b><container:p>baz</container:p>]</container:div>'
+					'<container:div>[<attribute:b view-priority="1">foobar<container:p>baz</container:p></attribute:b>]</container:div>'
 				);
 			} );
 
@@ -445,8 +445,6 @@ describe( 'DowncastWriter', () => {
 				const element = new ContainerElement( document, 'span', {}, 'baz' );
 				const container = new ContainerElement( document, 'p', null, [ 'foo', element, 'bar' ] );
 
-				element._isAllowedInsideAttributeElement = true;
-
 				const wrapAttribute = new AttributeElement( document, 'b' );
 				const range = Range._createFromParentsAndOffsets( container, 0, container, 3 );
 				const newRange = writer.wrap( range, wrapAttribute );
@@ -454,44 +452,6 @@ describe( 'DowncastWriter', () => {
 				expect( stringify( container, newRange, { showType: true, showPriority: true, showAttributeElementId: true } ) ).to.equal(
 					'<container:p>' +
 						'[<attribute:b view-priority="10">foo<container:span>baz</container:span>bar</attribute:b>]' +
-					'</container:p>'
-				);
-			} );
-
-			it( 'should not wrap an non-inline ContainerElement', () => {
-				const element = new ContainerElement( document, 'span', {}, 'baz' );
-				const container = new ContainerElement( document, 'p', null, [ 'foo', element, 'bar' ] );
-
-				element._isAllowedInsideAttributeElement = false;
-
-				const wrapAttribute = new AttributeElement( document, 'b' );
-				const range = Range._createFromParentsAndOffsets( container, 0, container, 3 );
-				const newRange = writer.wrap( range, wrapAttribute );
-
-				expect( stringify( container, newRange, { showType: true, showPriority: true, showAttributeElementId: true } ) ).to.equal(
-					'<container:p>' +
-						'[<attribute:b view-priority="10">foo</attribute:b>' +
-						'<container:span>baz</container:span>' +
-						'<attribute:b view-priority="10">bar</attribute:b>]' +
-					'</container:p>'
-				);
-			} );
-
-			it( 'should not wrap an non-inline UIElement', () => {
-				const element = new UIElement( document, 'span' );
-				const container = new ContainerElement( document, 'p', null, [ 'foo', element, 'bar' ] );
-
-				element._isAllowedInsideAttributeElement = false;
-
-				const wrapAttribute = new AttributeElement( document, 'b' );
-				const range = Range._createFromParentsAndOffsets( container, 0, container, 3 );
-				const newRange = writer.wrap( range, wrapAttribute );
-
-				expect( stringify( container, newRange, { showType: true, showPriority: true, showAttributeElementId: true } ) ).to.equal(
-					'<container:p>' +
-					'[<attribute:b view-priority="10">foo</attribute:b>' +
-					'<ui:span></ui:span>' +
-					'<attribute:b view-priority="10">bar</attribute:b>]' +
 					'</container:p>'
 				);
 			} );

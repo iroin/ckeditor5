@@ -1,16 +1,16 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals window, document, console:false */
 
-import ClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
-import ArticlePluginSet from '@ckeditor/ckeditor5-core/tests/_utils/articlepluginset';
-import Mention from '@ckeditor/ckeditor5-mention/src/mention';
-import BalloonToolbar from '../../../src/toolbar/balloon/balloontoolbar';
-import ContextualBalloon from '../../../src/panel/balloon/contextualballoon';
-import View from '../../../src/view';
+import ClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor.js';
+import ArticlePluginSet from '@ckeditor/ckeditor5-core/tests/_utils/articlepluginset.js';
+import Mention from '@ckeditor/ckeditor5-mention/src/mention.js';
+import BalloonToolbar from '../../../src/toolbar/balloon/balloontoolbar.js';
+import ContextualBalloon from '../../../src/panel/balloon/contextualballoon.js';
+import View from '../../../src/view.js';
 
 class CustomStackHighlight {
 	static get requires() {
@@ -91,6 +91,8 @@ ClassicEditor
 	} )
 	.then( editor => {
 		window.editor = editor;
+
+		editor.model.document.selection.observeMarkers( 'highlight' );
 
 		editor.model.change( writer => {
 			const root = editor.model.document.getRoot();

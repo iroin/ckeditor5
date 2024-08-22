@@ -1,18 +1,18 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* global document */
 
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import UndoEditing from '@ckeditor/ckeditor5-undo/src/undoediting';
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import UndoEditing from '@ckeditor/ckeditor5-undo/src/undoediting.js';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
 
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
 
-import TextTransformation from '../src/texttransformation';
-import Typing from '../src/typing';
+import TextTransformation from '../src/texttransformation.js';
+import Typing from '../src/typing.js';
 
 describe( 'Text transformation feature - integration', () => {
 	let editorElement, editor, model, doc;
@@ -49,7 +49,7 @@ describe( 'Text transformation feature - integration', () => {
 				writer.insertText( '(c', doc.selection.focus );
 			} );
 
-			editor.execute( 'input', { text: ')' } );
+			editor.execute( 'insertText', { text: ')' } );
 
 			expect( editor.getData(), 'inserted text' ).to.equal( '<p>foo©</p>' );
 
@@ -70,7 +70,7 @@ describe( 'Text transformation feature - integration', () => {
 				writer.insertText( 'foo bar baz(c', doc.selection.focus );
 			} );
 
-			editor.execute( 'input', { text: ')' } );
+			editor.execute( 'insertText', { text: ')' } );
 
 			expect( editor.getData() ).to.equal( '<p>foo bar baz©</p>' );
 

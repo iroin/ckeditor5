@@ -1,16 +1,18 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import LinkActionsView from '../../src/ui/linkactionsview';
-import View from '@ckeditor/ckeditor5-ui/src/view';
-import { keyCodes } from '@ckeditor/ckeditor5-utils/src/keyboard';
-import KeystrokeHandler from '@ckeditor/ckeditor5-utils/src/keystrokehandler';
-import FocusTracker from '@ckeditor/ckeditor5-utils/src/focustracker';
-import FocusCycler from '@ckeditor/ckeditor5-ui/src/focuscycler';
-import ViewCollection from '@ckeditor/ckeditor5-ui/src/viewcollection';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
+/* globals document */
+
+import LinkActionsView from '../../src/ui/linkactionsview.js';
+import View from '@ckeditor/ckeditor5-ui/src/view.js';
+import { keyCodes } from '@ckeditor/ckeditor5-utils/src/keyboard.js';
+import KeystrokeHandler from '@ckeditor/ckeditor5-utils/src/keystrokehandler.js';
+import FocusTracker from '@ckeditor/ckeditor5-utils/src/focustracker.js';
+import FocusCycler from '@ckeditor/ckeditor5-ui/src/focuscycler.js';
+import ViewCollection from '@ckeditor/ckeditor5-ui/src/viewcollection.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
 
 describe( 'LinkActionsView', () => {
 	let view;
@@ -20,6 +22,12 @@ describe( 'LinkActionsView', () => {
 	beforeEach( () => {
 		view = new LinkActionsView( { t: val => val } );
 		view.render();
+		document.body.appendChild( view.element );
+	} );
+
+	afterEach( () => {
+		view.element.remove();
+		view.destroy();
 	} );
 
 	describe( 'constructor()', () => {
@@ -54,6 +62,21 @@ describe( 'LinkActionsView', () => {
 
 		it( 'should create #_focusables view collection', () => {
 			expect( view._focusables ).to.be.instanceOf( ViewCollection );
+		} );
+
+		it( 'should create #_linkConfig as empty object by default', () => {
+			expect( view._linkConfig ).to.be.empty;
+		} );
+
+		it( 'should create #_linkConfig containing config object passed as argument', () => {
+			const customConfig = { allowedProtocols: [ 'https', 'ftps', 'tel', 'sms' ] };
+
+			const view = new LinkActionsView( { t: () => { } }, customConfig );
+			view.render();
+
+			expect( view._linkConfig ).to.equal( customConfig );
+
+			view.destroy();
 		} );
 
 		it( 'should fire `edit` event on editButtonView#execute', () => {
@@ -139,22 +162,26 @@ describe( 'LinkActionsView', () => {
 		it( 'should register child views\' #element in #focusTracker', () => {
 			const spy = testUtils.sinon.spy( FocusTracker.prototype, 'add' );
 
-			view = new LinkActionsView( { t: () => {} } );
+			const view = new LinkActionsView( { t: () => {} } );
 			view.render();
 
 			sinon.assert.calledWithExactly( spy.getCall( 0 ), view.previewButtonView.element );
 			sinon.assert.calledWithExactly( spy.getCall( 1 ), view.editButtonView.element );
 			sinon.assert.calledWithExactly( spy.getCall( 2 ), view.unlinkButtonView.element );
+
+			view.destroy();
 		} );
 
 		it( 'starts listening for #keystrokes coming from #element', () => {
-			view = new LinkActionsView( { t: () => {} } );
+			const view = new LinkActionsView( { t: () => {} } );
 
 			const spy = sinon.spy( view.keystrokes, 'listenTo' );
 
 			view.render();
 			sinon.assert.calledOnce( spy );
 			sinon.assert.calledWithExactly( spy, view.element );
+
+			view.destroy();
 		} );
 
 		describe( 'activates keyboard navigation for the toolbar', () => {
@@ -196,6 +223,24 @@ describe( 'LinkActionsView', () => {
 				sinon.assert.calledOnce( keyEvtData.stopPropagation );
 				sinon.assert.calledOnce( spy );
 			} );
+		} );
+	} );
+
+	describe( 'destroy()', () => {
+		it( 'should destroy the FocusTracker instance', () => {
+			const destroySpy = sinon.spy( view.focusTracker, 'destroy' );
+
+			view.destroy();
+
+			sinon.assert.calledOnce( destroySpy );
+		} );
+
+		it( 'should destroy the KeystrokeHandler instance', () => {
+			const destroySpy = sinon.spy( view.keystrokes, 'destroy' );
+
+			view.destroy();
+
+			sinon.assert.calledOnce( destroySpy );
 		} );
 	} );
 

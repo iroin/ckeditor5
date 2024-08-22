@@ -1,9 +1,11 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals console, window, document, ClassicEditor */
+
+import { TOKEN_URL } from '@ckeditor/ckeditor5-ckbox/tests/_utils/ckbox-config.js';
 
 import './source-editing.css';
 
@@ -11,35 +13,13 @@ ClassicEditor
 	.create( document.querySelector( '#editor' ), {
 		toolbar: {
 			items: [
-				'heading',
-				'|',
-				'alignment',
-				'outdent',
-				'indent',
-				'|',
-				'bold',
-				'italic',
-				'underline',
-				'strikethrough',
-				'subscript',
-				'superscript',
-				'code',
-				'-',
-				'codeBlock',
-				'blockQuote',
-				'link',
-				'uploadImage',
-				'insertTable',
-				'mediaEmbed',
-				'|',
-				'bulletedList',
-				'numberedList',
-				'todoList',
-				'|',
-				'undo',
-				'redo',
-				'|',
-				'sourceEditing'
+				'undo', 'redo',
+				'|', 'sourceEditing',
+				'|', 'heading',
+				'|', 'bold', 'italic', 'underline', 'strikethrough', 'subscript', 'superscript', 'code',
+				'-', 'link', 'insertImage', 'insertTable', 'blockQuote', 'mediaEmbed', 'codeBlock',
+				'|', 'alignment',
+				'|', 'bulletedList', 'numberedList', 'todoList', 'outdent', 'indent'
 			],
 			shouldNotGroupWhenFull: true
 		},
@@ -54,10 +34,12 @@ ClassicEditor
 				'linkImage',
 				'|',
 				'imageStyle:block',
-				'imageStyle:side',
+				'imageStyle:wrapText',
 				'|',
 				'imageTextAlternative',
-				'toggleImageCaption'
+				'toggleImageCaption',
+				'|',
+				'ckboxImageEdit'
 			]
 		},
 		htmlSupport: {
@@ -79,6 +61,16 @@ ClassicEditor
 				},
 				{ name: 'script' }
 			]
+		},
+		ui: {
+			viewportOffset: {
+				top: window.getViewportTopOffsetConfig()
+			}
+		},
+		ckbox: {
+			tokenUrl: TOKEN_URL,
+			allowExternalImagesEditing: [ /^data:/, 'origin', /ckbox/ ],
+			forceDemoLabel: true
 		}
 	} )
 	.then( editor => {
@@ -88,7 +80,10 @@ ClassicEditor
 			target: window.findToolbarItem( editor.ui.view.toolbar,
 				item => item.label && item.label === 'Source' ),
 			text: 'Switch to the source mode to edit the HTML source.',
-			editor
+			editor,
+			tippyOptions: {
+				placement: 'bottom-start'
+			}
 		} );
 	} )
 	.catch( err => {

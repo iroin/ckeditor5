@@ -1,14 +1,15 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import ModelTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/modeltesteditor';
-import { setData, getData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import FindAndReplaceEditing from '../src/findandreplaceediting';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import BoldEditing from '@ckeditor/ckeditor5-basic-styles/src/bold/boldediting';
-import ItalicEditing from '@ckeditor/ckeditor5-basic-styles/src/italic/italicediting';
+import ModelTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/modeltesteditor.js';
+import { setData, getData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import FindAndReplaceEditing from '../src/findandreplaceediting.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import BoldEditing from '@ckeditor/ckeditor5-basic-styles/src/bold/boldediting.js';
+import ItalicEditing from '@ckeditor/ckeditor5-basic-styles/src/italic/italicediting.js';
+import UndoEditing from '@ckeditor/ckeditor5-undo/src/undoediting.js';
 
 describe( 'ReplaceCommand', () => {
 	let editor, model, command;
@@ -16,7 +17,7 @@ describe( 'ReplaceCommand', () => {
 	beforeEach( () => {
 		return ModelTestEditor
 			.create( {
-				plugins: [ FindAndReplaceEditing, Paragraph, BoldEditing, ItalicEditing ]
+				plugins: [ FindAndReplaceEditing, Paragraph, BoldEditing, ItalicEditing, UndoEditing ]
 			} )
 			.then( newEditor => {
 				editor = newEditor;
@@ -45,7 +46,7 @@ describe( 'ReplaceCommand', () => {
 		} );
 
 		it( 'should be disabled in readonly editor', () => {
-			editor.isReadOnly = true;
+			editor.enableReadOnlyMode( 'unit-test' );
 
 			expect( command.isEnabled ).to.be.false;
 		} );
@@ -114,7 +115,7 @@ describe( 'ReplaceCommand', () => {
 				}
 			}
 
-			expect( getData( editor.model, { convertMarkers: true } ) ).to.equal(
+			expect( getData( editor.model, { convertMarkers: true, withoutSelection: true } ) ).to.equal(
 				'<paragraph>bar <findResult:1:start></findResult:1:start>' +
 					'<findResultHighlighted:x:start></findResultHighlighted:x:start>foo<findResult:1:end></findResult:1:end>' +
 					'<findResultHighlighted:x:end></findResultHighlighted:x:end> ' +
@@ -155,6 +156,18 @@ describe( 'ReplaceCommand', () => {
 
 			expect( getData( editor.model, { withoutSelection: true } ) ).to.equal(
 				'<paragraph>foo <$text bold="true">bom</$text> foo</paragraph>'
+			);
+		} );
+
+		it( 'should not replace if selectable is not editable', () => {
+			setData( model, '<paragraph>foo</paragraph>' );
+
+			model.document.isReadOnly = true;
+			const { results } = editor.execute( 'find', 'foo' );
+			editor.execute( 'replace', 'bar', results.get( 0 ) );
+
+			expect( getData( editor.model, { withoutSelection: true } ) ).to.equal(
+				'<paragraph>foo</paragraph>'
 			);
 		} );
 

@@ -1,21 +1,21 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals console, window, document */
 
-import ClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
-import ArticlePluginSet from '@ckeditor/ckeditor5-core/tests/_utils/articlepluginset';
-import HorizontalLine from '@ckeditor/ckeditor5-horizontal-line/src/horizontalline';
-import MediaEmbed from '@ckeditor/ckeditor5-media-embed/src/mediaembed';
-import TableProperties from '@ckeditor/ckeditor5-table/src/tableproperties';
-import TableCellProperties from '@ckeditor/ckeditor5-table/src/tablecellproperties';
-import ImageResize from '@ckeditor/ckeditor5-image/src/imageresize';
+import ClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor.js';
+import ArticlePluginSet from '@ckeditor/ckeditor5-core/tests/_utils/articlepluginset.js';
+import HorizontalLine from '@ckeditor/ckeditor5-horizontal-line/src/horizontalline.js';
+import MediaEmbed from '@ckeditor/ckeditor5-media-embed/src/mediaembed.js';
+import TableProperties from '@ckeditor/ckeditor5-table/src/tableproperties.js';
+import TableCellProperties from '@ckeditor/ckeditor5-table/src/tablecellproperties.js';
+import ImageResize from '@ckeditor/ckeditor5-image/src/imageresize.js';
 
-import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
-import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview';
-import { toWidget, viewToModelPositionOutsideModelElement } from '../../src/utils';
+import Plugin from '@ckeditor/ckeditor5-core/src/plugin.js';
+import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview.js';
+import { toWidget, viewToModelPositionOutsideModelElement } from '../../src/utils.js';
 
 class InlineWidget extends Plugin {
 	constructor( editor ) {
@@ -93,8 +93,18 @@ class InlineWidget extends Plugin {
 	}
 }
 
+let isReadOnly = false;
+
 document.querySelector( '#toggleReadOnly' ).addEventListener( 'click', () => {
-	window.editor.isReadOnly = !window.editor.isReadOnly;
+	isReadOnly = !isReadOnly;
+
+	if ( isReadOnly ) {
+		window.editor.enableReadOnlyMode( 'manual-test' );
+	} else {
+		window.editor.disableReadOnlyMode( 'manual-test' );
+	}
+
+	window.editor.editing.view.focus();
 } );
 
 ClassicEditor
@@ -128,7 +138,7 @@ ClassicEditor
 			'redo'
 		],
 		image: {
-			toolbar: [ 'imageStyle:inline', 'imageStyle:block', 'imageStyle:side', '|', 'toggleImageCaption', 'imageTextAlternative' ]
+			toolbar: [ 'imageStyle:inline', 'imageStyle:block', 'imageStyle:wrapText', '|', 'toggleImageCaption', 'imageTextAlternative' ]
 		},
 		table: {
 			contentToolbar: [

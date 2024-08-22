@@ -1,11 +1,11 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import RemoveFormat from '../src/removeformat';
-import RemoveFormatEditing from '../src/removeformatediting';
-import RemoveFormatUI from '../src/removeformatui';
+import RemoveFormat from '../src/removeformat.js';
+import RemoveFormatEditing from '../src/removeformatediting.js';
+import RemoveFormatUI from '../src/removeformatui.js';
 
 describe( 'RemoveFormat', () => {
 	it( 'should require RemoveFormatEditing', () => {

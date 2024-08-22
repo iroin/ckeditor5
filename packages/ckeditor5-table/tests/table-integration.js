@@ -1,26 +1,25 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import Widget from '@ckeditor/ckeditor5-widget/src/widget';
+import Widget from '@ckeditor/ckeditor5-widget/src/widget.js';
 
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import Clipboard from '@ckeditor/ckeditor5-clipboard/src/clipboard';
-import UndoEditing from '@ckeditor/ckeditor5-undo/src/undoediting';
-import ListEditing from '@ckeditor/ckeditor5-list/src/listediting';
-import BlockQuoteEditing from '@ckeditor/ckeditor5-block-quote/src/blockquoteediting';
-import Typing from '@ckeditor/ckeditor5-typing/src/typing';
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import Clipboard from '@ckeditor/ckeditor5-clipboard/src/clipboard.js';
+import UndoEditing from '@ckeditor/ckeditor5-undo/src/undoediting.js';
+import LegacyListEditing from '@ckeditor/ckeditor5-list/src/legacylist/legacylistediting.js';
+import BlockQuoteEditing from '@ckeditor/ckeditor5-block-quote/src/blockquoteediting.js';
+import Typing from '@ckeditor/ckeditor5-typing/src/typing.js';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
 import {
 	getData as getModelData,
 	setData as setModelData
-} from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import { parse as parseView } from '@ckeditor/ckeditor5-engine/src/dev-utils/view';
+} from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import { parse as parseView } from '@ckeditor/ckeditor5-engine/src/dev-utils/view.js';
 
-import TableEditing from '../src/tableediting';
-import { modelTable, viewTable } from './_utils/utils';
-import { assertEqualMarkup } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
+import TableEditing from '../src/tableediting.js';
+import { modelTable, viewTable } from './_utils/utils.js';
 
 describe( 'Table feature – integration', () => {
 	describe( 'with clipboard', () => {
@@ -28,7 +27,7 @@ describe( 'Table feature – integration', () => {
 
 		beforeEach( () => {
 			return ClassicTestEditor
-				.create( '', { plugins: [ Paragraph, TableEditing, ListEditing, BlockQuoteEditing, Widget, Clipboard ] } )
+				.create( '', { plugins: [ Paragraph, TableEditing, LegacyListEditing, BlockQuoteEditing, Widget, Clipboard ] } )
 				.then( newEditor => {
 					editor = newEditor;
 					clipboard = editor.plugins.get( 'ClipboardPipeline' );
@@ -46,7 +45,7 @@ describe( 'Table feature – integration', () => {
 				content: parseView( '<td>bar</td>' )
 			} );
 
-			assertEqualMarkup( getModelData( editor.model ), modelTable( [
+			expect( getModelData( editor.model ) ).to.equalMarkup( modelTable( [
 				[ 'foobar[]' ]
 			] ) );
 		} );
@@ -58,7 +57,7 @@ describe( 'Table feature – integration', () => {
 				content: parseView( '<td>bar</td>' )
 			} );
 
-			assertEqualMarkup( getModelData( editor.model ), '<paragraph>foobar[]</paragraph>' );
+			expect( getModelData( editor.model ) ).to.equalMarkup( '<paragraph>foobar[]</paragraph>' );
 		} );
 
 		it( 'pastes list into the td', () => {
@@ -68,7 +67,7 @@ describe( 'Table feature – integration', () => {
 				content: parseView( '<li>bar</li>' )
 			} );
 
-			assertEqualMarkup( getModelData( editor.model ), modelTable( [
+			expect( getModelData( editor.model ) ).to.equalMarkup( modelTable( [
 				[ '<listItem listIndent="0" listType="bulleted">bar[]</listItem>' ]
 			] ) );
 		} );
@@ -80,7 +79,7 @@ describe( 'Table feature – integration', () => {
 				content: parseView( '<blockquote>bar</blockquote>' )
 			} );
 
-			assertEqualMarkup( getModelData( editor.model ), modelTable( [
+			expect( getModelData( editor.model ) ).to.equalMarkup( modelTable( [
 				[ '<blockQuote><paragraph>bar[]</paragraph></blockQuote>' ]
 			] ) );
 		} );
@@ -164,7 +163,7 @@ describe( 'Table feature – integration', () => {
 
 		beforeEach( () => {
 			return ClassicTestEditor
-				.create( '', { plugins: [ Paragraph, TableEditing, ListEditing, BlockQuoteEditing, Widget, Typing ] } )
+				.create( '', { plugins: [ Paragraph, TableEditing, LegacyListEditing, BlockQuoteEditing, Widget, Typing ] } )
 				.then( newEditor => {
 					editor = newEditor;
 				} );
@@ -181,7 +180,7 @@ describe( 'Table feature – integration', () => {
 
 			editor.execute( 'delete' );
 
-			assertEqualMarkup( getModelData( editor.model ), modelTable( [
+			expect( getModelData( editor.model ) ).to.equalMarkup( modelTable( [
 				[ '<blockQuote><paragraph>Foo[]Bar</paragraph></blockQuote>' ]
 			] ) );
 		} );
@@ -254,7 +253,7 @@ describe( 'Table feature – integration with markers', () => {
 			editor.setData( '<table><tr><td><p></p><foo></foo></td></tr></table>' );
 
 			expect( editor.getData() ).to.equal(
-				'<figure class="table"><table><tbody><tr><td><foo></foo>&nbsp;</td></tr></tbody></table></figure>'
+				'<figure class="table"><table><tbody><tr><td>&nbsp;<foo></foo></td></tr></tbody></table></figure>'
 			);
 		} );
 
@@ -280,6 +279,328 @@ describe( 'Table feature – integration with markers', () => {
 			expect( editor.getData() ).to.equal(
 				'<figure class="table"><table><tbody><tr><td><foo></foo>foobar</td></tr></tbody></table></figure>'
 			);
+		} );
+	} );
+
+	describe( 'markers converted to data and vice versa', () => {
+		beforeEach( async () => {
+			editor = await ClassicTestEditor.create( '', { plugins: [ Paragraph, TableEditing ] } );
+
+			editor.conversion.for( 'upcast' ).dataToMarker( { view: 'foo' } );
+			editor.conversion.for( 'dataDowncast' ).markerToData( { model: 'foo' } );
+		} );
+
+		function addMarker( range ) {
+			editor.model.change( writer => {
+				writer.addMarker( 'foo:bar', {
+					usingOperation: true,
+					affectsData: true,
+					range
+				} );
+			} );
+		}
+
+		function checkMarker( range ) {
+			const marker = editor.model.markers.get( 'foo:bar' );
+
+			expect( marker ).to.not.be.null;
+			expect( marker.getRange().isEqual( range ) ).to.be.true;
+		}
+
+		describe( 'single empty paragraph', () => {
+			let paragraph;
+
+			beforeEach( async () => {
+				setModelData( editor.model, modelTable( [ [ '' ] ] ) );
+
+				paragraph = editor.model.document.getRoot().getNodeByPath( [ 0, 0, 0, 0 ] );
+			} );
+
+			it( 'marker beginning before a paragraph and ending inside', async () => {
+				const range = editor.model.createRange(
+					editor.model.createPositionBefore( paragraph ),
+					editor.model.createPositionAt( paragraph, 'end' )
+				);
+
+				addMarker( range );
+
+				const data = editor.getData();
+
+				expect( data ).to.equal(
+					'<figure class="table"><table><tbody><tr>' +
+						'<td><p data-foo-start-before="bar"><foo-end name="bar"></foo-end>&nbsp;</p>' +
+					'</td></tr></tbody></table></figure>'
+				);
+
+				editor.setData( data );
+
+				checkMarker( range );
+				expect( editor.getData() ).to.equal( data );
+			} );
+
+			it( 'marker beginning in a paragraph and ending after it', async () => {
+				const range = editor.model.createRange(
+					editor.model.createPositionAt( paragraph, 0 ),
+					editor.model.createPositionAfter( paragraph )
+				);
+
+				addMarker( range );
+
+				const data = editor.getData();
+
+				expect( data ).to.equal(
+					'<figure class="table"><table><tbody><tr>' +
+						'<td><p data-foo-end-after="bar"><foo-start name="bar"></foo-start>&nbsp;</p></td>' +
+					'</tr></tbody></table></figure>'
+				);
+
+				editor.setData( data );
+
+				checkMarker( range );
+				expect( editor.getData() ).to.equal( data );
+			} );
+
+			it( 'marker on the paragraph', async () => {
+				const range = editor.model.createRangeOn( paragraph );
+
+				addMarker( range );
+
+				const data = editor.getData();
+
+				expect( data ).to.equal(
+					'<figure class="table"><table><tbody><tr>' +
+						'<td><p data-foo-end-after="bar" data-foo-start-before="bar">&nbsp;</p></td>' +
+					'</tr></tbody></table></figure>'
+				);
+
+				editor.setData( data );
+
+				checkMarker( range );
+				expect( editor.getData() ).to.equal( data );
+			} );
+
+			it( 'marker inside a paragraph', async () => {
+				const range = editor.model.createRangeIn( paragraph );
+
+				addMarker( range );
+
+				const data = editor.getData();
+
+				expect( data ).to.equal(
+					'<figure class="table"><table><tbody><tr>' +
+						'<td><foo-start name="bar"></foo-start><foo-end name="bar"></foo-end>&nbsp;</td>' +
+					'</tr></tbody></table></figure>'
+				);
+
+				editor.setData( data );
+
+				checkMarker( range );
+				expect( editor.getData() ).to.equal( data );
+			} );
+		} );
+
+		describe( 'single paragraph', () => {
+			let paragraph;
+
+			beforeEach( async () => {
+				setModelData( editor.model, modelTable( [ [ 'text' ] ] ) );
+
+				paragraph = editor.model.document.getRoot().getNodeByPath( [ 0, 0, 0, 0 ] );
+			} );
+
+			it( 'marker beginning before a paragraph and ending inside', async () => {
+				const range = editor.model.createRange(
+					editor.model.createPositionBefore( paragraph ),
+					editor.model.createPositionAt( paragraph, 'end' )
+				);
+
+				addMarker( range );
+
+				const data = editor.getData();
+
+				expect( data ).to.equal(
+					'<figure class="table"><table><tbody><tr>' +
+						'<td><p data-foo-start-before="bar">text<foo-end name="bar"></foo-end></p>' +
+					'</td></tr></tbody></table></figure>'
+				);
+
+				editor.setData( data );
+
+				checkMarker( range );
+				expect( editor.getData() ).to.equal( data );
+			} );
+
+			it( 'marker beginning in a paragraph and ending after it', async () => {
+				const range = editor.model.createRange(
+					editor.model.createPositionAt( paragraph, 0 ),
+					editor.model.createPositionAfter( paragraph )
+				);
+
+				addMarker( range );
+
+				const data = editor.getData();
+
+				expect( data ).to.equal(
+					'<figure class="table"><table><tbody><tr>' +
+						'<td><p data-foo-end-after="bar"><foo-start name="bar"></foo-start>text</p></td>' +
+					'</tr></tbody></table></figure>'
+				);
+
+				editor.setData( data );
+
+				checkMarker( range );
+				expect( editor.getData() ).to.equal( data );
+			} );
+
+			it( 'marker on the paragraph', async () => {
+				const range = editor.model.createRangeOn( paragraph );
+
+				addMarker( range );
+
+				const data = editor.getData();
+
+				expect( data ).to.equal(
+					'<figure class="table"><table><tbody><tr>' +
+						'<td><p data-foo-end-after="bar" data-foo-start-before="bar">text</p></td>' +
+					'</tr></tbody></table></figure>'
+				);
+
+				editor.setData( data );
+
+				checkMarker( range );
+				expect( editor.getData() ).to.equal( data );
+			} );
+
+			it( 'marker inside a paragraph', async () => {
+				const range = editor.model.createRangeIn( paragraph );
+
+				addMarker( range );
+
+				const data = editor.getData();
+
+				expect( data ).to.equal(
+					'<figure class="table"><table><tbody><tr>' +
+						'<td><foo-start name="bar"></foo-start>text<foo-end name="bar"></foo-end></td>' +
+					'</tr></tbody></table></figure>'
+				);
+
+				editor.setData( data );
+
+				// We would expect such positions and data but due to a bug https://github.com/cksource/ckeditor5-commercial/issues/5287
+				// we are accepting slightly off positions for now:
+				//
+				// checkMarker( range );
+				// expect( editor.getData() ).to.equal( data );
+
+				const currentRange = editor.model.createRange(
+					editor.model.createPositionFromPath( range.root, [ 0, 0, 0, 0 ] ),
+					editor.model.createPositionFromPath( range.root, [ 0, 0, 0, 0, 4 ] )
+				);
+
+				checkMarker( currentRange );
+				expect( editor.getData() ).to.equal(
+					'<figure class="table"><table><tbody><tr><td>' +
+						'<p data-foo-start-before="bar">text<foo-end name="bar"></foo-end></p>' +
+					'</td></tr></tbody></table></figure>'
+				);
+			} );
+		} );
+
+		describe( 'multiple paragraphs', () => {
+			let paragraphA, paragraphB, tableCell;
+
+			beforeEach( async () => {
+				setModelData( editor.model, modelTable( [ [ '<paragraph>a</paragraph><paragraph>b</paragraph>' ] ] ) );
+
+				tableCell = editor.model.document.getRoot().getNodeByPath( [ 0, 0, 0 ] );
+				paragraphA = tableCell.getChild( 0 );
+				paragraphB = tableCell.getChild( 1 );
+			} );
+
+			it( 'marker beginning before a paragraph and ending inside another paragraph', async () => {
+				const range = editor.model.createRange(
+					editor.model.createPositionBefore( paragraphA ),
+					editor.model.createPositionAt( paragraphB, 'end' )
+				);
+
+				addMarker( range );
+
+				const data = editor.getData();
+
+				expect( data ).to.equal(
+					'<figure class="table"><table><tbody><tr>' +
+						'<td><p data-foo-start-before="bar">a</p><p>b<foo-end name="bar"></foo-end></p></td>' +
+					'</tr></tbody></table></figure>'
+				);
+
+				editor.setData( data );
+
+				checkMarker( range );
+				expect( editor.getData() ).to.equal( data );
+			} );
+
+			it( 'marker beginning in a paragraph and ending after another paragraph', async () => {
+				const range = editor.model.createRange(
+					editor.model.createPositionAt( paragraphA, 0 ),
+					editor.model.createPositionAfter( paragraphB )
+				);
+
+				addMarker( range );
+
+				const data = editor.getData();
+
+				expect( data ).to.equal(
+					'<figure class="table"><table><tbody><tr>' +
+						'<td><p><foo-start name="bar"></foo-start>a</p><p data-foo-end-after="bar">b</p></td>' +
+					'</tr></tbody></table></figure>'
+				);
+
+				editor.setData( data );
+
+				checkMarker( range );
+				expect( editor.getData() ).to.equal( data );
+			} );
+
+			it( 'marker on multiple paragraphs', async () => {
+				const range = editor.model.createRangeIn( tableCell );
+
+				addMarker( range );
+
+				const data = editor.getData();
+
+				expect( data ).to.equal(
+					'<figure class="table"><table><tbody><tr>' +
+						'<td><p data-foo-start-before="bar">a</p><p data-foo-end-after="bar">b</p></td>' +
+					'</tr></tbody></table></figure>'
+				);
+
+				editor.setData( data );
+
+				checkMarker( range );
+				expect( editor.getData() ).to.equal( data );
+			} );
+
+			it( 'marker inside starting in a paragraph and ending in an other paragraph', async () => {
+				const range = editor.model.createRange(
+					editor.model.createPositionAt( paragraphA, 'end' ),
+					editor.model.createPositionAt( paragraphB, 0 )
+				);
+
+				addMarker( range );
+
+				const data = editor.getData();
+
+				expect( data ).to.equal(
+					'<figure class="table"><table><tbody><tr>' +
+						'<td><p>a<foo-start name="bar"></foo-start></p><p><foo-end name="bar"></foo-end>b</p></td>' +
+					'</tr></tbody></table></figure>'
+				);
+
+				editor.setData( data );
+
+				checkMarker( range );
+				expect( editor.getData() ).to.equal( data );
+			} );
 		} );
 	} );
 } );

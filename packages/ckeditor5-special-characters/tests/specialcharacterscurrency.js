@@ -1,14 +1,14 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals document */
 
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
-import SpecialCharacters from '../src/specialcharacters';
-import SpecialCharactersCurrency from '../src/specialcharacterscurrency';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+import SpecialCharacters from '../src/specialcharacters.js';
+import SpecialCharactersCurrency from '../src/specialcharacterscurrency.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
 
 describe( 'SpecialCharactersCurrency', () => {
 	testUtils.createSinonSandbox();
@@ -44,6 +44,12 @@ describe( 'SpecialCharactersCurrency', () => {
 
 	it( 'properly names the category', () => {
 		expect( addItemsFirstCallArgs[ 0 ] ).to.equal( 'Currency' );
+	} );
+
+	it( 'defines a label displayed in the toolbar', () => {
+		expect( addItemsFirstCallArgs[ 2 ] ).to.deep.equal( {
+			label: 'Currency'
+		} );
 	} );
 
 	it( 'adds proper characters', () => {

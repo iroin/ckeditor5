@@ -1,22 +1,22 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-/* globals Event */
+/* globals document, Event */
 
-import TablePropertiesView from '../../../src/tableproperties/ui/tablepropertiesview';
-import LabeledFieldView from '@ckeditor/ckeditor5-ui/src/labeledfield/labeledfieldview';
-import { keyCodes } from '@ckeditor/ckeditor5-utils/src/keyboard';
-import KeystrokeHandler from '@ckeditor/ckeditor5-utils/src/keystrokehandler';
-import FocusTracker from '@ckeditor/ckeditor5-utils/src/focustracker';
-import FocusCycler from '@ckeditor/ckeditor5-ui/src/focuscycler';
-import ViewCollection from '@ckeditor/ckeditor5-ui/src/viewcollection';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
-import ToolbarView from '@ckeditor/ckeditor5-ui/src/toolbar/toolbarview';
-import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview';
-import InputTextView from '@ckeditor/ckeditor5-ui/src/inputtext/inputtextview';
-import ColorInputView from '../../../src/ui/colorinputview';
+import TablePropertiesView from '../../../src/tableproperties/ui/tablepropertiesview.js';
+import LabeledFieldView from '@ckeditor/ckeditor5-ui/src/labeledfield/labeledfieldview.js';
+import { keyCodes } from '@ckeditor/ckeditor5-utils/src/keyboard.js';
+import KeystrokeHandler from '@ckeditor/ckeditor5-utils/src/keystrokehandler.js';
+import FocusTracker from '@ckeditor/ckeditor5-utils/src/focustracker.js';
+import FocusCycler from '@ckeditor/ckeditor5-ui/src/focuscycler.js';
+import ViewCollection from '@ckeditor/ckeditor5-ui/src/viewcollection.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
+import ToolbarView from '@ckeditor/ckeditor5-ui/src/toolbar/toolbarview.js';
+import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview.js';
+import InputTextView from '@ckeditor/ckeditor5-ui/src/inputtext/inputtextview.js';
+import ColorInputView from '../../../src/ui/colorinputview.js';
 
 const VIEW_OPTIONS = {
 	borderColors: [
@@ -59,9 +59,11 @@ describe( 'table properties', () => {
 			locale = { t: val => val };
 			view = new TablePropertiesView( locale, VIEW_OPTIONS );
 			view.render();
+			document.body.appendChild( view.element );
 		} );
 
 		afterEach( () => {
+			view.element.remove();
 			view.destroy();
 		} );
 
@@ -148,6 +150,8 @@ describe( 'table properties', () => {
 							expect(	labeledDropdown.fieldView.buttonView.isOn ).to.be.false;
 							expect(	labeledDropdown.fieldView.buttonView.withText ).to.be.true;
 							expect(	labeledDropdown.fieldView.buttonView.tooltip ).to.equal( 'Style' );
+							expect( labeledDropdown.fieldView.buttonView.ariaLabel ).to.equal( 'Style' );
+							expect( labeledDropdown.fieldView.buttonView.ariaLabelledBy ).to.be.undefined;
 						} );
 
 						it( 'should bind button\'s label to #borderStyle property', () => {
@@ -167,6 +171,7 @@ describe( 'table properties', () => {
 						} );
 
 						it( 'should change #borderStyle when executed', () => {
+							labeledDropdown.fieldView.isOpen = true;
 							labeledDropdown.fieldView.listView.items.first.children.first.fire( 'execute' );
 							expect( view.borderStyle ).to.equal( 'none' );
 
@@ -175,6 +180,8 @@ describe( 'table properties', () => {
 						} );
 
 						it( 'should come with a set of pre–defined border styles', () => {
+							labeledDropdown.fieldView.isOpen = true;
+
 							expect( labeledDropdown.fieldView.listView.items.map( item => {
 								return item.children.first.label;
 							} ) ).to.have.ordered.members( [
@@ -191,6 +198,15 @@ describe( 'table properties', () => {
 
 							expect( view.borderColor ).to.equal( '' );
 							expect( view.borderWidth ).to.equal( '' );
+						} );
+
+						it( 'listView should have properties set', () => {
+							labeledDropdown.fieldView.isOpen = true;
+
+							const listView = labeledDropdown.fieldView.listView;
+
+							expect( listView.element.role ).to.equal( 'menu' );
+							expect( listView.element.ariaLabel ).to.equal( 'Style' );
 						} );
 					} );
 
@@ -690,6 +706,67 @@ describe( 'table properties', () => {
 					sinon.assert.calledOnce( keyEvtData.stopPropagation );
 					sinon.assert.calledOnce( spy );
 				} );
+
+				it( 'providing seamless forward navigation over child views with their own focusable children and focus cyclers', () => {
+					const keyEvtData = {
+						keyCode: keyCodes.tab,
+						preventDefault: sinon.spy(),
+						stopPropagation: sinon.spy()
+					};
+
+					// Mock the border color dropdown button button is focused.
+					view.focusTracker.isFocused = view.borderColorInput.fieldView.focusTracker.isFocused = true;
+					view.focusTracker.focusedElement = view.borderColorInput.element;
+					view.borderColorInput.fieldView.focusTracker.focusedElement =
+						view.borderColorInput.fieldView.dropdownView.buttonView.element;
+
+					const spy = sinon.spy( view.borderWidthInput, 'focus' );
+
+					view.borderColorInput.fieldView.keystrokes.press( keyEvtData );
+					sinon.assert.calledOnce( keyEvtData.preventDefault );
+					sinon.assert.calledOnce( keyEvtData.stopPropagation );
+					sinon.assert.calledOnce( spy );
+				} );
+
+				it( 'providing seamless backward navigation over child views with their own focusable children and focus cyclers', () => {
+					const keyEvtData = {
+						keyCode: keyCodes.tab,
+						shiftKey: true,
+						preventDefault: sinon.spy(),
+						stopPropagation: sinon.spy()
+					};
+
+					// Mock the border color dropdown input is focused.
+					view.focusTracker.isFocused = view.borderColorInput.fieldView.focusTracker.isFocused = true;
+					view.focusTracker.focusedElement = view.borderColorInput.element;
+					view.borderColorInput.fieldView.focusTracker.focusedElement =
+						view.borderColorInput.fieldView.inputView.element;
+
+					const spy = sinon.spy( view.borderStyleDropdown, 'focus' );
+
+					view.borderColorInput.fieldView.keystrokes.press( keyEvtData );
+					sinon.assert.calledOnce( keyEvtData.preventDefault );
+					sinon.assert.calledOnce( keyEvtData.stopPropagation );
+					sinon.assert.calledOnce( spy );
+				} );
+			} );
+		} );
+
+		describe( 'destroy()', () => {
+			it( 'should destroy the FocusTracker instance', () => {
+				const destroySpy = sinon.spy( view.focusTracker, 'destroy' );
+
+				view.destroy();
+
+				sinon.assert.calledOnce( destroySpy );
+			} );
+
+			it( 'should destroy the KeystrokeHandler instance', () => {
+				const destroySpy = sinon.spy( view.keystrokes, 'destroy' );
+
+				view.destroy();
+
+				sinon.assert.calledOnce( destroySpy );
 			} );
 		} );
 
@@ -790,9 +867,10 @@ describe( 'table properties', () => {
 
 						it( 'should replace "Remove color" with the "Restore default" label', () => {
 							const { borderColorInput } = view;
-							const { panelView } = borderColorInput.fieldView._dropdownView;
+							const { panelView } = borderColorInput.fieldView.dropdownView;
 
-							expect( panelView.children.first.label ).to.equal( 'Restore default' );
+							expect( panelView.children.first.colorGridsFragmentView.removeColorButtonView.label )
+								.to.equal( 'Restore default' );
 						} );
 					} );
 				} );
@@ -800,9 +878,9 @@ describe( 'table properties', () => {
 				describe( 'background row', () => {
 					it( 'should replace "Remove color" with the "Restore default" label', () => {
 						const { backgroundInput } = view;
-						const { panelView } = backgroundInput.fieldView._dropdownView;
+						const { panelView } = backgroundInput.fieldView.dropdownView;
 
-						expect( panelView.children.first.label ).to.equal( 'Restore default' );
+						expect( panelView.children.first.colorGridsFragmentView.removeColorButtonView.label ).to.equal( 'Restore default' );
 					} );
 				} );
 			} );

@@ -1,17 +1,42 @@
-node_modules/
-coverage/
-packages/*/node_modules/
+# All "dot directories".
+.*/**
+!.github/**
+!.husky/**
+!.circleci/**
+
+# Generated automatically via CircleCI.
+.circleci/config-tests.yml
+
+# Files associated with CKEditor 5 repository.
+**/node_modules
+build/
+dist/
+!packages/ckeditor5-build-*/build
 docs/api/output.json
+yarn.lock
+package-lock.json
+coverage/
+
+# Files associated with external repositories.
 external/
-lerna-debug.log
+mrgit.json
+
+# Files associated with specific development environments.
+.DS_Store
 .idea
 .vscode
 
-# Ignore `yarn.lock` - this file might contain info from external repositories.
-yarn.lock
+# Prepared files to publish to npm.
+/release/
 
-# Ignore `mrgit.json` this file contains info about external repositories.
-mrgit.json
+# Ignore yalc
+.yalc
+yalc.lock
 
-build/
-!packages/ckeditor5-build-*/build
+# Ignore compiled TypeScript files.
+packages/*/src/**/*.d.ts
+packages/*/src/**/*.js
+packages/*/src/**/*.js.map
+src/**/*.js
+src/**/*.js.map
+src/**/*.d.ts

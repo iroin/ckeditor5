@@ -1,15 +1,15 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* global document, HTMLElement */
 
-import UIElement from '../../src/view/uielement';
-import Element from '../../src/view/element';
-import Document from '../../src/view/document';
-import { expectToThrowCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
-import { StylesProcessor } from '../../src/view/stylesmap';
+import UIElement from '../../src/view/uielement.js';
+import Element from '../../src/view/element.js';
+import Document from '../../src/view/document.js';
+import { expectToThrowCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils.js';
+import { StylesProcessor } from '../../src/view/stylesmap.js';
 
 describe( 'UIElement', () => {
 	let uiElement, doc;
@@ -32,7 +32,6 @@ describe( 'UIElement', () => {
 			expect( uiElement.getStyle( 'color' ) ).to.equal( 'white' );
 			expect( uiElement.hasClass( 'foo' ) ).to.true;
 			expect( uiElement.hasClass( 'bar' ) ).to.true;
-			expect( uiElement.isAllowedInsideAttributeElement ).to.be.true;
 		} );
 
 		it( 'should throw if child elements are passed to constructor', () => {

@@ -1,18 +1,18 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import Image from '../src/image';
-import ImageEditing from '../src/image/imageediting';
-import Widget from '@ckeditor/ckeditor5-widget/src/widget';
-import ImageTextAlternative from '../src/imagetextalternative';
-import { setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import { getData as getViewData } from '@ckeditor/ckeditor5-engine/src/dev-utils/view';
-import global from '@ckeditor/ckeditor5-utils/src/dom/global';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import Image from '../src/image.js';
+import ImageEditing from '../src/image/imageediting.js';
+import Widget from '@ckeditor/ckeditor5-widget/src/widget.js';
+import ImageTextAlternative from '../src/imagetextalternative.js';
+import { setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import { getData as getViewData } from '@ckeditor/ckeditor5-engine/src/dev-utils/view.js';
+import global from '@ckeditor/ckeditor5-utils/src/dom/global.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
 
 describe( 'Image', () => {
 	let editorElement, model, view, editor, document, viewDocument;
@@ -74,7 +74,9 @@ describe( 'Image', () => {
 				);
 
 				expect( viewDocument.selection.isFake ).to.be.true;
-				expect( viewDocument.selection.fakeSelectionLabel ).to.equal( 'alt text image widget' );
+				expect( viewDocument.selection.fakeSelectionLabel ).to.equal(
+					'alt text image widget. Press Enter to type after or press Shift + Enter to type before the widget'
+				);
 			} );
 
 			it( 'should create proper fake selection label when alt attribute is empty', () => {
@@ -91,7 +93,9 @@ describe( 'Image', () => {
 				);
 
 				expect( viewDocument.selection.isFake ).to.be.true;
-				expect( viewDocument.selection.fakeSelectionLabel ).to.equal( 'image widget' );
+				expect( viewDocument.selection.fakeSelectionLabel ).to.equal(
+					'image widget. Press Enter to type after or press Shift + Enter to type before the widget'
+				);
 			} );
 
 			it( 'should remove selected class from previously selected element', () => {

@@ -1,20 +1,20 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* global document */
 
 import Heading from '../src/heading.js';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
 
-import Enter from '@ckeditor/ckeditor5-enter/src/enter';
-import Image from '@ckeditor/ckeditor5-image/src/image';
-import ImageCaption from '@ckeditor/ckeditor5-image/src/imagecaption';
-import Undo from '@ckeditor/ckeditor5-undo/src/undo';
+import Enter from '@ckeditor/ckeditor5-enter/src/enter.js';
+import Image from '@ckeditor/ckeditor5-image/src/image.js';
+import ImageCaption from '@ckeditor/ckeditor5-image/src/imagecaption.js';
+import Undo from '@ckeditor/ckeditor5-undo/src/undo.js';
 
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
-import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
 
 describe( 'Heading integration', () => {
 	let editor, model, doc, element;
@@ -93,7 +93,7 @@ describe( 'Heading integration', () => {
 	describe( 'with the undo feature', () => {
 		it( 'does not create undo steps when applied to an existing heading (collapsed selection)', () => {
 			// Ensure no undo step by using a transparent batch.
-			model.enqueueChange( 'transparent', () => {
+			model.enqueueChange( { isUndoable: false }, () => {
 				setModelData( model, '<heading1>foo[]bar</heading1>' );
 			} );
 
@@ -105,7 +105,7 @@ describe( 'Heading integration', () => {
 
 		it( 'does not create undo steps when applied to an existing heading (non–collapsed selection)', () => {
 			// Ensure no undo step by using a transparent batch.
-			model.enqueueChange( 'transparent', () => {
+			model.enqueueChange( { isUndoable: false }, () => {
 				setModelData( model, '<heading1>[foo</heading1><heading1>bar]</heading1>' );
 			} );
 

@@ -1,11 +1,11 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import Editor from '../../src/editor/editor';
-import DataApiMixin from '../../src/editor/utils/dataapimixin';
-import mix from '@ckeditor/ckeditor5-utils/src/mix';
+/* eslint-disable new-cap */
+
+import Editor from '../../src/editor/editor.js';
 
 /**
  * A simple editor implementation useful for testing the engine part of the features.
@@ -38,5 +38,3 @@ export default class VirtualTestEditor extends Editor {
 		} );
 	}
 }
-
-mix( VirtualTestEditor, DataApiMixin );

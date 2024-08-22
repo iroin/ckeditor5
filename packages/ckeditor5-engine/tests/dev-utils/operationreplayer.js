@@ -1,10 +1,10 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import OperationReplayer from '../../src/dev-utils/operationreplayer';
-import Model from '../../src/model/model';
+import OperationReplayer from '../../src/dev-utils/operationreplayer.js';
+import Model from '../../src/model/model.js';
 
 describe( 'OperationReplayer', () => {
 	describe( 'constructor()', () => {
@@ -148,7 +148,7 @@ describe( 'OperationReplayer', () => {
 				.then( () => {
 					throw new Error( 'It should throw an error' );
 				}, err => {
-					expect( err.message ).to.match( /model-document-applyoperation-wrong-version/ );
+					expect( err.message ).to.match( /model-document-history-addoperation-incorrect-version/ );
 				} );
 		} );
 	} );

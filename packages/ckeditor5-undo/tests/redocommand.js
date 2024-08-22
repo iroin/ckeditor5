@@ -1,14 +1,14 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import ModelTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/modeltesteditor';
-import Batch from '@ckeditor/ckeditor5-engine/src/model/batch';
-import UndoCommand from '../src/undocommand';
-import RedoCommand from '../src/redocommand';
-import { itemAt, getText } from '@ckeditor/ckeditor5-engine/tests/model/_utils/utils';
-import toArray from '@ckeditor/ckeditor5-utils/src/toarray';
+import ModelTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/modeltesteditor.js';
+import Batch from '@ckeditor/ckeditor5-engine/src/model/batch.js';
+import UndoCommand from '../src/undocommand.js';
+import RedoCommand from '../src/redocommand.js';
+import { itemAt, getText } from '@ckeditor/ckeditor5-engine/tests/model/_utils/utils.js';
+import toArray from '@ckeditor/ckeditor5-utils/src/toarray.js';
 
 describe( 'RedoCommand', () => {
 	let editor, model, root, redo, undo;
@@ -298,18 +298,18 @@ describe( 'RedoCommand', () => {
 			sinon.assert.called( spy );
 		} );
 
-		it( 'should clear stack on DataController set() when the `batchType` is set to `transparent`', () => {
+		it( 'should clear stack on DataController set() when the batch is set as not undoable', () => {
 			const spy = sinon.stub( redo, 'clearStack' );
 
-			editor.setData( 'foo' );
+			editor.data.set( 'foo', { batchType: { isUndoable: false } } );
 
 			sinon.assert.called( spy );
 		} );
 
-		it( 'should not clear stack on DataController#set() when the `batchType` is set to `default`', () => {
+		it( 'should not clear stack on DataController#set() when the batch is set as undoable', () => {
 			const spy = sinon.spy( redo, 'clearStack' );
 
-			editor.data.set( 'foo', { batchType: 'default' } );
+			editor.data.set( 'foo', { batchType: { isUndoable: true } } );
 
 			sinon.assert.notCalled( spy );
 		} );
@@ -325,7 +325,7 @@ describe( 'RedoCommand', () => {
 			const data = firstCall.args[ 1 ];
 
 			expect( data[ 1 ] ).to.be.an( 'object' );
-			expect( data[ 1 ] ).to.have.property( 'batchType', 'transparent' );
+			expect( data[ 1 ].batchType ).to.deep.equal( { isUndoable: false } );
 		} );
 
 		it( 'should not override the batch type in editor.data.set() when the batch type is set', () => {
@@ -333,13 +333,13 @@ describe( 'RedoCommand', () => {
 
 			editor.data.on( 'set', dataSetSpy, { priority: 'lowest' } );
 
-			editor.data.set( 'foo', { batchType: 'default' } );
+			editor.data.set( 'foo', { batchType: { isUndoable: true } } );
 
 			const firstCall = dataSetSpy.firstCall;
 			const data = firstCall.args[ 1 ];
 
 			expect( data[ 1 ] ).to.be.an( 'object' );
-			expect( data[ 1 ] ).to.have.property( 'batchType', 'default' );
+			expect( data[ 1 ].batchType ).to.deep.equal( { isUndoable: true } );
 		} );
 	} );
 } );

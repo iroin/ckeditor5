@@ -1,24 +1,23 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals document */
 
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
 import {
 	getData as getModelData,
 	setData as setModelData,
 	stringify as stringifyModel
-} from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
+} from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
 
-import TableEditing from '../src/tableediting';
-import TableSelection from '../src/tableselection';
-import { assertSelectedCells, modelTable } from './_utils/utils';
-import DocumentFragment from '@ckeditor/ckeditor5-engine/src/model/documentfragment';
-import Typing from '@ckeditor/ckeditor5-typing/src/typing';
-import { assertEqualMarkup } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
+import TableEditing from '../src/tableediting.js';
+import TableSelection from '../src/tableselection.js';
+import { assertSelectedCells, modelTable } from './_utils/utils.js';
+import DocumentFragment from '@ckeditor/ckeditor5-engine/src/model/documentfragment.js';
+import Typing from '@ckeditor/ckeditor5-typing/src/typing.js';
 
 describe( 'TableSelection', () => {
 	let editorElement, editor, model, tableSelection, modelRoot;
@@ -353,7 +352,7 @@ describe( 'TableSelection', () => {
 
 			editor.execute( 'delete' );
 
-			assertEqualMarkup( getModelData( model ), modelTable( [
+			expect( getModelData( model ) ).to.equalMarkup( modelTable( [
 				[ '', '', '13' ],
 				[ '', '[]', '23' ],
 				[ '31', '32', '33' ]
@@ -368,7 +367,7 @@ describe( 'TableSelection', () => {
 
 			editor.execute( 'delete' );
 
-			assertEqualMarkup( getModelData( model ), modelTable( [
+			expect( getModelData( model ) ).to.equalMarkup( modelTable( [
 				[ '', '', '13' ],
 				[ '', '[]', '23' ],
 				[ '31', '32', '33' ]
@@ -383,7 +382,7 @@ describe( 'TableSelection', () => {
 
 			editor.execute( 'deleteForward' );
 
-			assertEqualMarkup( getModelData( model ), modelTable( [
+			expect( getModelData( model ) ).to.equalMarkup( modelTable( [
 				[ '[]', '12', '13' ],
 				[ '21', '22', '23' ],
 				[ '31', '32', '33' ]
@@ -400,7 +399,7 @@ describe( 'TableSelection', () => {
 				model.deleteContent( model.document.selection );
 			} );
 
-			assertEqualMarkup( getModelData( model ), modelTable( [
+			expect( getModelData( model ) ).to.equalMarkup( modelTable( [
 				[ '', '', '13' ],
 				[ '', '[]', '23' ],
 				[ '31', '32', '33' ]
@@ -424,7 +423,7 @@ describe( 'TableSelection', () => {
 				writer.setSelection( selection );
 			} );
 
-			assertEqualMarkup( getModelData( model ), modelTable( [
+			expect( getModelData( model ) ).to.equalMarkup( modelTable( [
 				[ '', '[]', '13' ],
 				[ '21', '22', '23' ],
 				[ '31', '32', '33' ]
@@ -450,7 +449,7 @@ describe( 'TableSelection', () => {
 				writer.setSelection( selection );
 			} );
 
-			assertEqualMarkup( getModelData( model ), modelTable( [
+			expect( getModelData( model ) ).to.equalMarkup( modelTable( [
 				[ '[]', '', '13' ],
 				[ '21', '22', '23' ],
 				[ '31', '32', '33' ]

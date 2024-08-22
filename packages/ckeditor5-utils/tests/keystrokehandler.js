@@ -1,21 +1,23 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import EmitterMixin from '../src/emittermixin';
-import KeystrokeHandler from '../src/keystrokehandler';
-import { keyCodes } from '../src/keyboard';
-import env from '../src/env';
+import EmitterMixin from '../src/emittermixin.js';
+import KeystrokeHandler from '../src/keystrokehandler.js';
+import { keyCodes } from '../src/keyboard.js';
+import env from '../src/env.js';
 
 describe( 'KeystrokeHandler', () => {
+	const Emitter = EmitterMixin();
+
 	const initialEnvMac = env.isMac;
 	let emitter, keystrokes;
 
 	beforeEach( () => {
 		env.isMac = false;
 
-		emitter = Object.create( EmitterMixin );
+		emitter = new Emitter();
 		keystrokes = new KeystrokeHandler();
 
 		keystrokes.listenTo( emitter );
@@ -138,31 +140,68 @@ describe( 'KeystrokeHandler', () => {
 			sinon.assert.callOrder( spy2, spy1, spy4 );
 			sinon.assert.notCalled( spy3 );
 		} );
+
+		it( 'should support event filtering using a callback', () => {
+			const spy = sinon.spy();
+
+			const keyEvtDataFails = getCtrlA();
+			const keyEvtDataPasses = getCtrlA();
+			keyEvtDataPasses.foo = true;
+
+			keystrokes.set( 'Ctrl+A', spy, {
+				filter: evt => evt.foo
+			} );
+
+			emitter.fire( 'keydown', keyEvtDataFails );
+			sinon.assert.notCalled( spy );
+
+			emitter.fire( 'keydown', keyEvtDataPasses );
+			sinon.assert.calledOnce( spy );
+		} );
 	} );
 
-	describe( 'destroy()', () => {
-		it( 'detaches #keydown listener', () => {
-			const spy = sinon.spy( keystrokes, 'press' );
+	describe( 'stopListening()', () => {
+		it( 'detaches events from the given emitter', () => {
+			const spy = sinon.spy();
+			const newEmitter = new Emitter();
 
-			keystrokes.destroy();
+			keystrokes.listenTo( newEmitter );
 
-			emitter.fire( 'keydown', { keyCode: 1 } );
+			keystrokes.set( 'Ctrl+A', spy );
+			keystrokes.stopListening( emitter );
+
+			emitter.fire( 'keydown', getCtrlA() );
+
+			sinon.assert.notCalled( spy );
+
+			newEmitter.fire( 'keydown', getCtrlA() );
+
+			sinon.assert.called( spy );
+		} );
+
+		it( 'detaches events from all emitters', () => {
+			const spy = sinon.spy();
+			const newEmitter = new Emitter();
+
+			keystrokes.listenTo( newEmitter );
+
+			keystrokes.set( 'Ctrl+A', spy );
+			keystrokes.stopListening();
+
+			emitter.fire( 'keydown', getCtrlA() );
+			newEmitter.fire( 'keydown', getCtrlA() );
 
 			sinon.assert.notCalled( spy );
 		} );
+	} );
 
-		it( 'removes all keystrokes', () => {
-			const spy = sinon.spy();
-			const keystrokeHandler = keystrokes;
+	describe( 'destroy()', () => {
+		it( 'detaches events from all emitters', () => {
+			const spy = sinon.spy( keystrokes, 'stopListening' );
 
-			keystrokeHandler.set( 'Ctrl+A', spy );
+			keystrokes.destroy();
 
-			keystrokeHandler.destroy();
-
-			const wasHandled = keystrokeHandler.press( getCtrlA() );
-
-			expect( wasHandled ).to.be.false;
-			sinon.assert.notCalled( spy );
+			sinon.assert.calledWithExactly( spy );
 		} );
 	} );
 } );

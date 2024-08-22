@@ -1,19 +1,18 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals document */
 
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
-import Clipboard from '@ckeditor/ckeditor5-clipboard/src/clipboard';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import { assertEqualMarkup } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
-import { modelTable, viewTable } from './_utils/utils';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+import Clipboard from '@ckeditor/ckeditor5-clipboard/src/clipboard.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import { modelTable, viewTable } from './_utils/utils.js';
 
-import TableEditing from '../src/tableediting';
-import TableClipboard from '../src/tableclipboard';
+import TableEditing from '../src/tableediting.js';
+import TableClipboard from '../src/tableclipboard.js';
 
 describe( 'table clipboard', () => {
 	let editor, model, modelRoot, tableSelection, viewDocument, element;
@@ -343,7 +342,7 @@ describe( 'table clipboard', () => {
 				preventDefault: sinon.spy()
 			} );
 
-			assertEqualMarkup( getModelData( model ), modelTable( [
+			expect( getModelData( model ) ).to.equalMarkup( modelTable( [
 				[ { contents: '00', isSelected: true }, { contents: '01', isSelected: true }, '02' ],
 				[ { contents: '10', isSelected: true }, { contents: '11', isSelected: true }, '12' ],
 				[ '20', '21', '22' ]
@@ -365,7 +364,7 @@ describe( 'table clipboard', () => {
 				preventDefault: sinon.spy()
 			} );
 
-			assertEqualMarkup( getModelData( model ), modelTable( [
+			expect( getModelData( model ) ).to.equalMarkup( modelTable( [
 				[ '', '', '02' ],
 				[ '', '[]', '12' ],
 				[ '20', '21', '22' ]
@@ -396,7 +395,7 @@ describe( 'table clipboard', () => {
 		it( 'should be disabled in a readonly mode', () => {
 			const preventDefaultStub = sinon.stub();
 
-			editor.isReadOnly = true;
+			editor.enableReadOnlyMode( 'unit-test' );
 
 			tableSelection.setCellSelection(
 				modelRoot.getNodeByPath( [ 0, 0, 1 ] ),
@@ -409,10 +408,10 @@ describe( 'table clipboard', () => {
 			};
 			viewDocument.fire( 'cut', data );
 
-			editor.isReadOnly = false;
+			editor.disableReadOnlyMode( 'unit-test' );
 
 			expect( data.dataTransfer.getData( 'text/html' ) ).to.be.undefined;
-			assertEqualMarkup( getModelData( model, { withoutSelection: true } ), modelTable( [
+			expect( getModelData( model, { withoutSelection: true } ) ).to.equalMarkup( modelTable( [
 				[ '00', '01', '02' ],
 				[ '10', '11', '12' ],
 				[ '20', '21', '22' ]

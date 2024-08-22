@@ -1,11 +1,12 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals ClassicEditor, console, window, document, setTimeout */
 
-import { CS_CONFIG } from '@ckeditor/ckeditor5-cloud-services/tests/_utils/cloud-services-config';
+import { CS_CONFIG } from '@ckeditor/ckeditor5-cloud-services/tests/_utils/cloud-services-config.js';
+import { TOKEN_URL } from '@ckeditor/ckeditor5-ckbox/tests/_utils/ckbox-config.js';
 
 ClassicEditor
 	.create( document.querySelector( '#snippet-mention-customization' ), {
@@ -13,7 +14,16 @@ ClassicEditor
 		extraPlugins: [ MentionCustomization ],
 		toolbar: {
 			items: [
-				'heading', '|', 'bold', 'italic', '|', 'undo', 'redo'
+				'undo', 'redo', '|', 'heading',
+				'|', 'bold', 'italic',
+				'|', 'link', 'insertImage', 'insertTable', 'mediaEmbed',
+				'|', 'bulletedList', 'numberedList', 'outdent', 'indent'
+			]
+		},
+		image: {
+			toolbar: [
+				'imageStyle:inline', 'imageStyle:block', 'imageStyle:wrapText', '|',
+				'toggleImageCaption', 'imageTextAlternative', 'ckboxImageEdit'
 			]
 		},
 		ui: {
@@ -21,7 +31,13 @@ ClassicEditor
 				top: window.getViewportTopOffsetConfig()
 			}
 		},
+		ckbox: {
+			tokenUrl: TOKEN_URL,
+			allowExternalImagesEditing: [ /^data:/, 'origin', /ckbox/ ],
+			forceDemoLabel: true
+		},
 		mention: {
+			dropdownLimit: 4,
 			feeds: [
 				{
 					marker: '@',
@@ -97,9 +113,10 @@ function MentionCustomization( editor ) {
 const items = [
 	{ id: '@swarley', userId: '1', name: 'Barney Stinson', link: 'https://www.imdb.com/title/tt0460649/characters/nm0000439' },
 	{ id: '@lilypad', userId: '2', name: 'Lily Aldrin', link: 'https://www.imdb.com/title/tt0460649/characters/nm0004989' },
-	{ id: '@marshmallow', userId: '3', name: 'Marshall Eriksen', link: 'https://www.imdb.com/title/tt0460649/characters/nm0781981' },
-	{ id: '@rsparkles', userId: '4', name: 'Robin Scherbatsky', link: 'https://www.imdb.com/title/tt0460649/characters/nm1130627' },
-	{ id: '@tdog', userId: '5', name: 'Ted Mosby', link: 'https://www.imdb.com/title/tt0460649/characters/nm1102140' }
+	{ id: '@marry', userId: '3', name: 'Marry Ann Lewis', link: 'https://www.imdb.com/title/tt0460649/characters/nm1130627' },
+	{ id: '@marshmallow', userId: '4', name: 'Marshall Eriksen', link: 'https://www.imdb.com/title/tt0460649/characters/nm0781981' },
+	{ id: '@rsparkles', userId: '5', name: 'Robin Scherbatsky', link: 'https://www.imdb.com/title/tt0460649/characters/nm1130627' },
+	{ id: '@tdog', userId: '6', name: 'Ted Mosby', link: 'https://www.imdb.com/title/tt0460649/characters/nm1102140' }
 ];
 
 function getFeedItems( queryText ) {

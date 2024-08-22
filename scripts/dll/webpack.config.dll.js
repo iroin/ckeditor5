@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -8,12 +8,14 @@
 const path = require( 'path' );
 const webpack = require( 'webpack' );
 const TerserPlugin = require( 'terser-webpack-plugin' );
-const WrapperPlugin = require( 'wrapper-webpack-plugin' );
-const { bundler, styles } = require( '@ckeditor/ckeditor5-dev-utils' );
-const CKEditorWebpackPlugin = require( '@ckeditor/ckeditor5-dev-webpack-plugin' );
+const FooterPlugin = require( './webpack-footer-plugin' );
+const { bundler, loaders } = require( '@ckeditor/ckeditor5-dev-utils' );
+const { CKEditorTranslationsPlugin } = require( '@ckeditor/ckeditor5-dev-translations' );
+const { addTypeScriptLoader } = require( '../docs/utils' );
 
 const ROOT_DIRECTORY = path.resolve( __dirname, '..', '..' );
-const IS_DEVELOPMENT_MODE = process.argv.includes( '--dev' );
+const IS_DEVELOPMENT_MODE = process.argv.includes( '--mode=development' );
+const { CI } = process.env;
 
 if ( ROOT_DIRECTORY !== process.cwd() ) {
 	throw new Error( 'This script should be called from the package root directory.' );
@@ -41,7 +43,8 @@ function loadCKEditor5modules( window ) {
 		'typing',
 		'undo',
 		'upload',
-		'widget'
+		'widget',
+		'watchdog'
 	];
 
 	for ( const item of dllPackages ) {
@@ -71,7 +74,8 @@ const webpackConfig = {
 
 		// Other, common packages:
 		'./src/upload.js',
-		'./src/widget.js'
+		'./src/widget.js',
+		'./src/watchdog.js'
 	],
 	optimization: {
 		minimize: false,
@@ -84,7 +88,7 @@ const webpackConfig = {
 		libraryTarget: 'window'
 	},
 	plugins: [
-		new CKEditorWebpackPlugin( {
+		new CKEditorTranslationsPlugin( {
 			// UI language. Language codes follow the https://en.wikipedia.org/wiki/ISO_639-1 format.
 			language: 'en',
 			additionalLanguages: 'all',
@@ -101,42 +105,29 @@ const webpackConfig = {
 			format: true,
 			entryOnly: true
 		} ),
-		new WrapperPlugin( {
-			footer: `( ( fn, root ) => fn( root ) )( ${ loadCKEditor5modules.toString() }, window );`
-		} )
+		new FooterPlugin(
+			`( ( fn, root ) => fn( root ) )( ${ loadCKEditor5modules.toString() }, window );`
+		)
 	],
+	resolve: {
+		extensions: [ '.ts', '.js', '.json' ],
+		extensionAlias: {
+			'.js': [ '.js', '.ts' ]
+		}
+	},
 	module: {
 		rules: [
-			{
-				test: /\.svg$/,
-				use: [ 'raw-loader' ]
-			},
-			{
-				test: /\.css$/,
-				use: [
-					{
-						loader: 'style-loader',
-						options: {
-							injectType: 'singletonStyleTag',
-							attributes: {
-								'data-cke': true
-							}
-						}
-					},
-					{
-						loader: 'postcss-loader',
-						options: styles.getPostCssConfig( {
-							themeImporter: {
-								themePath: require.resolve( '@ckeditor/ckeditor5-theme-lark' )
-							},
-							minify: true
-						} )
-					}
-				]
-			}
+			loaders.getIconsLoader( { matchExtensionOnly: true } ),
+			loaders.getStylesLoader( {
+				themePath: require.resolve( '@ckeditor/ckeditor5-theme-lark' ),
+				minify: true
+			} )
+			// TypeScript is injected by the `addTypeScriptLoader()` function.
 		]
 	}
 };
+
+addTypeScriptLoader( webpackConfig, 'tsconfig.dll.json' );
 
 if ( !IS_DEVELOPMENT_MODE ) {
 	webpackConfig.optimization.minimize = true;
@@ -152,6 +143,12 @@ if ( !IS_DEVELOPMENT_MODE ) {
 			extractComments: false
 		} )
 	];
+}
+
+if ( CI ) {
+	webpackConfig.cache = {
+		type: 'filesystem'
+	};
 }
 
 module.exports = webpackConfig;

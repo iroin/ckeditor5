@@ -1,13 +1,13 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import RawElement from '../../src/view/rawelement';
-import Element from '../../src/view/element';
-import Document from '../../src/view/document';
-import { expectToThrowCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
-import { StylesProcessor } from '../../src/view/stylesmap';
+import RawElement from '../../src/view/rawelement.js';
+import Element from '../../src/view/element.js';
+import Document from '../../src/view/document.js';
+import { expectToThrowCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils.js';
+import { StylesProcessor } from '../../src/view/stylesmap.js';
 
 describe( 'RawElement', () => {
 	let rawElement, doc;
@@ -30,7 +30,6 @@ describe( 'RawElement', () => {
 			expect( rawElement.getStyle( 'color' ) ).to.equal( 'white' );
 			expect( rawElement.hasClass( 'foo' ) ).to.true;
 			expect( rawElement.hasClass( 'bar' ) ).to.true;
-			expect( rawElement.isAllowedInsideAttributeElement ).to.be.true;
 		} );
 
 		it( 'should throw if child elements are passed to constructor', () => {

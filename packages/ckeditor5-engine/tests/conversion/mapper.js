@@ -1,23 +1,26 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import Mapper from '../../src/conversion/mapper';
+import Mapper from '../../src/conversion/mapper.js';
 
-import ModelElement from '../../src/model/element';
-import ModelRootElement from '../../src/model/rootelement';
-import ModelText from '../../src/model/text';
-import ModelPosition from '../../src/model/position';
-import ModelRange from '../../src/model/range';
+import ModelElement from '../../src/model/element.js';
+import ModelRootElement from '../../src/model/rootelement.js';
+import ModelText from '../../src/model/text.js';
+import ModelPosition from '../../src/model/position.js';
+import ModelRange from '../../src/model/range.js';
 
-import ViewDocument from '../../src/view/document';
-import ViewElement from '../../src/view/element';
-import ViewUIElement from '../../src/view/uielement';
-import ViewText from '../../src/view/text';
-import ViewPosition from '../../src/view/position';
-import ViewRange from '../../src/view/range';
-import { StylesProcessor } from '../../src/view/stylesmap';
+import ViewDocument from '../../src/view/document.js';
+import ViewElement from '../../src/view/element.js';
+import ViewUIElement from '../../src/view/uielement.js';
+import ViewText from '../../src/view/text.js';
+import ViewPosition from '../../src/view/position.js';
+import ViewRange from '../../src/view/range.js';
+import ViewDocumentFragment from '../../src/view/documentfragment.js';
+import { StylesProcessor } from '../../src/view/stylesmap.js';
+
+import CKEditorError from '@ckeditor/ckeditor5-utils/src/ckeditorerror.js';
 
 describe( 'Mapper', () => {
 	let viewDocument;
@@ -144,6 +147,60 @@ describe( 'Mapper', () => {
 
 			expect( mapper.toModelElement( viewA ) ).to.be.undefined;
 			expect( mapper.toViewElement( modelA ) ).to.equal( viewB );
+		} );
+
+		it( 'should allow deferred unbinding', () => {
+			const viewA = new ViewElement( viewDocument, 'a' );
+			const modelA = new ModelElement( 'a' );
+
+			const mapper = new Mapper();
+			mapper.bindElements( modelA, viewA );
+
+			expect( mapper.toModelElement( viewA ) ).to.equal( modelA );
+			expect( mapper.toViewElement( modelA ) ).to.equal( viewA );
+
+			mapper.unbindViewElement( viewA, { defer: true } );
+
+			expect( mapper.toModelElement( viewA ) ).to.equal( modelA );
+			expect( mapper.toViewElement( modelA ) ).to.equal( viewA );
+
+			mapper.flushDeferredBindings();
+
+			expect( mapper.toModelElement( viewA ) ).to.be.undefined;
+			expect( mapper.toViewElement( modelA ) ).to.be.undefined;
+		} );
+
+		it( 'should not unbind if element was reused after deferred unbinding', () => {
+			const viewA = new ViewElement( viewDocument, 'a' );
+			const viewFragmentA = new ViewDocumentFragment( viewDocument, [ viewA ] );
+			const viewFragmentB = new ViewDocumentFragment( viewDocument );
+
+			const modelA = new ModelElement( 'a' );
+
+			const mapper = new Mapper();
+			mapper.bindElements( modelA, viewA );
+
+			expect( mapper.toModelElement( viewA ) ).to.equal( modelA );
+			expect( mapper.toViewElement( modelA ) ).to.equal( viewA );
+			expect( viewA.root ).to.equal( viewFragmentA );
+
+			mapper.unbindViewElement( viewA, { defer: true } );
+
+			expect( mapper.toModelElement( viewA ) ).to.equal( modelA );
+			expect( mapper.toViewElement( modelA ) ).to.equal( viewA );
+			expect( viewA.root ).to.equal( viewFragmentA );
+
+			viewFragmentB._appendChild( viewA );
+
+			expect( mapper.toModelElement( viewA ) ).to.equal( modelA );
+			expect( mapper.toViewElement( modelA ) ).to.equal( viewA );
+			expect( viewA.root ).to.equal( viewFragmentB );
+
+			mapper.flushDeferredBindings();
+
+			expect( mapper.toModelElement( viewA ) ).to.equal( modelA );
+			expect( mapper.toViewElement( modelA ) ).to.equal( viewA );
+			expect( viewA.root ).to.equal( viewFragmentB );
 		} );
 	} );
 
@@ -376,6 +433,19 @@ describe( 'Mapper', () => {
 				const result = mapper.toViewPosition( modelPosition );
 
 				expect( result ).to.equal( stub );
+			} );
+
+			it( 'should throw an error on missing position parent view element', () => {
+				// The foo element was not downcasted to view.
+				const modelElement = new ModelElement( 'foo' );
+
+				modelDiv._appendChild( modelElement );
+
+				const modelPosition = new ModelPosition( modelElement, [ 0 ] );
+
+				expect( () => {
+					mapper.toViewPosition( modelPosition );
+				} ).to.throw( CKEditorError, 'mapping-model-position-view-parent-not-found' );
 			} );
 
 			// Default algorithm tests.

@@ -1,11 +1,11 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import List from '../src/list';
-import ListEditing from '../src/listediting';
-import ListUI from '../src/listui';
+import List from '../src/list.js';
+import ListUI from '../src/list/listui.js';
+import ListEditing from '../src/list/listediting.js';
 
 describe( 'List', () => {
 	it( 'should be named', () => {

@@ -1,13 +1,13 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals document */
 
-import MouseObserver from '../../../src/view/observer/mouseobserver';
-import View from '../../../src/view/view';
-import { StylesProcessor } from '../../../src/view/stylesmap';
+import MouseObserver from '../../../src/view/observer/mouseobserver.js';
+import View from '../../../src/view/view.js';
+import { StylesProcessor } from '../../../src/view/stylesmap.js';
 
 describe( 'MouseObserver', () => {
 	let view, viewDocument, observer;

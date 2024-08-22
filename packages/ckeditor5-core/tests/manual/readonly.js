@@ -1,37 +1,55 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals console, window, document */
 
-import ClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
+import ClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor.js';
 
-import ArticlePluginSet from '../_utils/articlepluginset';
-import BalloonToolbar from '@ckeditor/ckeditor5-ui/src/toolbar/balloon/balloontoolbar';
+import ArticlePluginSet from '../_utils/articlepluginset.js';
+import BalloonToolbar from '@ckeditor/ckeditor5-ui/src/toolbar/balloon/balloontoolbar.js';
 
 ClassicEditor
 	.create( document.querySelector( '#editor' ), {
 		plugins: [ ArticlePluginSet, BalloonToolbar ],
 		toolbar: [ 'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'undo', 'redo' ],
 		image: {
-			toolbar: [ 'imageStyle:inline', 'imageStyle:block', 'imageStyle:side', '|', 'imageTextAlternative' ]
+			toolbar: [ 'imageStyle:inline', 'imageStyle:block', 'imageStyle:wrapText', '|', 'imageTextAlternative' ]
 		},
 		balloonToolbar: [ 'bold', 'italic', 'link' ]
 	} )
 	.then( editor => {
 		window.editor = editor;
 
-		const button = document.querySelector( '#read-only' );
+		const button1 = document.querySelector( '#read-only-1' );
+		const button2 = document.querySelector( '#read-only-2' );
 
-		button.addEventListener( 'click', () => {
-			editor.isReadOnly = !editor.isReadOnly;
-			button.textContent = editor.isReadOnly ? 'Turn off read-only mode' : 'Turn on read-only mode';
-
-			editor.editing.view.focus();
-		} );
+		enableReadOnlyManagement( button1, editor, 'feature-1' );
+		enableReadOnlyManagement( button2, editor, 'feature-2' );
 	} )
 	.catch( err => {
 		console.error( err.stack );
 	} );
 
+function enableReadOnlyManagement( button, editor, lockName ) {
+	let isReadOnly = false;
+
+	button.addEventListener( 'click', () => {
+		isReadOnly = !isReadOnly;
+
+		if ( isReadOnly ) {
+			editor.enableReadOnlyMode( lockName );
+		} else {
+			editor.disableReadOnlyMode( lockName );
+		}
+
+		button.textContent = isReadOnly ?
+			`${ lockName }: Clear the read-only mode lock` :
+			`${ lockName }: Create read-only mode lock`;
+
+		editor.editing.view.focus();
+	} );
+
+	button.textContent = `${ lockName }: Create read-only mode lock`;
+}

@@ -1,21 +1,21 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor';
-import UndoEditing from '@ckeditor/ckeditor5-undo/src/undoediting';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
+import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor.js';
+import UndoEditing from '@ckeditor/ckeditor5-undo/src/undoediting.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import Plugin from '@ckeditor/ckeditor5-core/src/plugin.js';
 
-import ImageCaptionEditing from '../../src/imagecaption/imagecaptionediting';
-import ImageBlockEditing from '../../src/image/imageblockediting';
-import ImageInlineEditing from '../../src/image/imageinlineediting';
-import ToggleImageCaptionCommand from '../../src/imagecaption/toggleimagecaptioncommand';
+import ImageCaptionEditing from '../../src/imagecaption/imagecaptionediting.js';
+import ImageBlockEditing from '../../src/image/imageblockediting.js';
+import ImageInlineEditing from '../../src/image/imageinlineediting.js';
+import ToggleImageCaptionCommand from '../../src/imagecaption/toggleimagecaptioncommand.js';
 
-import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import { getData as getViewData } from '@ckeditor/ckeditor5-engine/src/dev-utils/view';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
+import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import { getData as getViewData } from '@ckeditor/ckeditor5-engine/src/dev-utils/view.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
 
 describe( 'ImageCaptionEditing', () => {
 	let editor, model, doc, view;
@@ -179,6 +179,12 @@ describe( 'ImageCaptionEditing', () => {
 			} );
 
 			it( 'should not convert caption from other elements', () => {
+				editor.conversion.for( 'downcast' ).add(
+					dispatcher => dispatcher.on( 'insert:caption', ( evt, data, conversionApi ) => {
+						conversionApi.consumable.consume( data.item, evt.name );
+					}, { priority: 'lowest' } )
+				);
+
 				setModelData( model, '<widget>foo bar<caption></caption></widget>' );
 
 				expect( editor.getData() ).to.equal( '<widget>foo bar</widget>' );
@@ -194,8 +200,8 @@ describe( 'ImageCaptionEditing', () => {
 				expect( getViewData( view, { withoutSelection: true } ) ).to.equal(
 					'<figure class="ck-widget image" contenteditable="false">' +
 						'<img src="img.png"></img>' +
-						'<figcaption class="ck-editor__editable ck-editor__nested-editable" ' +
-							'contenteditable="true" data-placeholder="Enter image caption">' +
+						'<figcaption aria-label="Caption for the image" class="ck-editor__editable ck-editor__nested-editable" ' +
+							'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1">' +
 							'Foo bar baz.' +
 						'</figcaption>' +
 					'</figure>'
@@ -203,6 +209,12 @@ describe( 'ImageCaptionEditing', () => {
 			} );
 
 			it( 'should not convert caption from other elements', () => {
+				editor.conversion.for( 'downcast' ).add(
+					dispatcher => dispatcher.on( 'insert:caption', ( evt, data, conversionApi ) => {
+						conversionApi.consumable.consume( data.item, evt.name );
+					}, { priority: 'lowest' } )
+				);
+
 				setModelData( model, '<widget>foo bar<caption></caption></widget>' );
 				expect( getViewData( view, { withoutSelection: true } ) ).to.equal( '<widget>foo bar</widget>' );
 			} );
@@ -244,8 +256,8 @@ describe( 'ImageCaptionEditing', () => {
 					'<p>{}foo</p>' +
 					'<figure class="ck-widget image" contenteditable="false">' +
 						'<img src="img.png"></img>' +
-						'<figcaption class="ck-editor__editable ck-editor__nested-editable" ' +
-							'contenteditable="true" data-placeholder="Enter image caption">' +
+						'<figcaption aria-label="Caption for the image" class="ck-editor__editable ck-editor__nested-editable" ' +
+							'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1">' +
 							'foo bar' +
 						'</figcaption>' +
 					'</figure>'
@@ -266,8 +278,9 @@ describe( 'ImageCaptionEditing', () => {
 					'<p>{}foo</p>' +
 					'<figure class="ck-widget image" contenteditable="false">' +
 						'<img src="img.png"></img>' +
-						'<figcaption class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
-							'contenteditable="true" data-placeholder="Enter image caption">' +
+						'<figcaption aria-label="Caption for the image" ' +
+							'class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
+							'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1">' +
 						'</figcaption>' +
 					'</figure>'
 				);
@@ -287,8 +300,8 @@ describe( 'ImageCaptionEditing', () => {
 					'<p>{}foo</p>' +
 					'<figure class="ck-widget image" contenteditable="false">' +
 						'<img src="img.png"></img>' +
-						'<figcaption class="ck-editor__editable ck-editor__nested-editable" ' +
-							'contenteditable="true" data-placeholder="Enter image caption">baz</figcaption>' +
+						'<figcaption aria-label="Caption for the image" class="ck-editor__editable ck-editor__nested-editable" ' +
+							'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1">baz</figcaption>' +
 					'</figure>'
 				);
 			} );
@@ -323,8 +336,10 @@ describe( 'ImageCaptionEditing', () => {
 				expect( getViewData( view, { withoutSelection: true } ) ).to.equal(
 					'<figure class="ck-widget image" contenteditable="false">' +
 						'<img src="img.png"></img>' +
-						'<figcaption class="ck-editor__editable ck-editor__nested-editable highlight-yellow" ' +
-								'contenteditable="true" data-foo="yellow" data-placeholder="Enter image caption">' +
+						'<figcaption aria-label="Caption for the image" ' +
+							'class="ck-editor__editable ck-editor__nested-editable highlight-yellow" ' +
+							'contenteditable="true" data-foo="yellow" data-placeholder="Enter image caption" role="textbox" ' +
+							'tabindex="-1">' +
 							'Foo bar baz.' +
 						'</figcaption>' +
 					'</figure>'
@@ -337,8 +352,8 @@ describe( 'ImageCaptionEditing', () => {
 				expect( getViewData( view, { withoutSelection: true } ) ).to.equal(
 					'<figure class="ck-widget image" contenteditable="false">' +
 						'<img src="img.png"></img>' +
-						'<figcaption class="ck-editor__editable ck-editor__nested-editable" ' +
-								'contenteditable="true" data-placeholder="Enter image caption">' +
+						'<figcaption aria-label="Caption for the image" class="ck-editor__editable ck-editor__nested-editable" ' +
+								'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1">' +
 							'Foo bar baz.' +
 						'</figcaption>' +
 					'</figure>'
@@ -436,8 +451,8 @@ describe( 'ImageCaptionEditing', () => {
 			expect( getViewData( view ) ).to.equal(
 				'[<figure class="ck-widget image" contenteditable="false">' +
 					'<img alt="" src=""></img>' +
-					'<figcaption class="ck-editor__editable ck-editor__nested-editable" ' +
-						'contenteditable="true" data-placeholder="Enter image caption">' +
+					'<figcaption aria-label="Caption for the image" class="ck-editor__editable ck-editor__nested-editable" ' +
+						'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1">' +
 						'foo bar' +
 					'</figcaption>' +
 				'</figure>]' +
@@ -465,8 +480,9 @@ describe( 'ImageCaptionEditing', () => {
 			expect( getViewData( view ) ).to.equal(
 				'[<figure class="ck-widget image" contenteditable="false">' +
 					'<img alt="" src=""></img>' +
-					'<figcaption class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
-						'contenteditable="true" data-placeholder="Enter image caption"></figcaption>' +
+					'<figcaption aria-label="Caption for the image" ' +
+						'class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
+						'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1"></figcaption>' +
 				'</figure>]' +
 				'<p></p>'
 			);
@@ -516,8 +532,9 @@ describe( 'ImageCaptionEditing', () => {
 				'<p>foo</p>' +
 				'[<figure class="ck-widget image" contenteditable="false">' +
 					'<img src=""></img>' +
-					'<figcaption class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
-						'contenteditable="true" data-placeholder="Enter image caption">' +
+					'<figcaption aria-label="Caption for the image" ' +
+						'class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
+						'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1">' +
 					'</figcaption>' +
 				'</figure>]'
 			);
@@ -530,8 +547,9 @@ describe( 'ImageCaptionEditing', () => {
 				'<p>{}foo</p>' +
 				'<figure class="ck-widget image" contenteditable="false">' +
 					'<img src=""></img>' +
-					'<figcaption class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
-						'contenteditable="true" data-placeholder="Enter image caption">' +
+					'<figcaption aria-label="Caption for the image" ' +
+						'class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
+						'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1">' +
 					'</figcaption>' +
 				'</figure>'
 			);
@@ -546,8 +564,9 @@ describe( 'ImageCaptionEditing', () => {
 				'<p>foo</p>' +
 				'[<figure class="ck-widget image" contenteditable="false">' +
 					'<img src=""></img>' +
-					'<figcaption class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
-						'contenteditable="true" data-placeholder="Enter image caption">' +
+					'<figcaption aria-label="Caption for the image" ' +
+						'class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
+						'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1">' +
 					'</figcaption>' +
 				'</figure>]'
 			);
@@ -565,9 +584,9 @@ describe( 'ImageCaptionEditing', () => {
 				'<p>foo</p>' +
 				'<figure class="ck-widget image" contenteditable="false">' +
 					'<img src=""></img>' +
-					'<figcaption ' +
+					'<figcaption aria-label="Caption for the image" ' +
 						'class="ck-editor__editable ck-editor__nested-editable ck-editor__nested-editable_focused ck-placeholder" ' +
-						'contenteditable="true" data-placeholder="Enter image caption">[]' +
+						'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1">[]' +
 					'</figcaption>' +
 				'</figure>'
 			);
@@ -580,8 +599,8 @@ describe( 'ImageCaptionEditing', () => {
 				'<p>foo</p>' +
 				'[<figure class="ck-widget image" contenteditable="false">' +
 					'<img src=""></img>' +
-					'<figcaption class="ck-editor__editable ck-editor__nested-editable" ' +
-						'contenteditable="true" data-placeholder="Enter image caption">foo bar</figcaption>' +
+					'<figcaption aria-label="Caption for the image" class="ck-editor__editable ck-editor__nested-editable" ' +
+						'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1">foo bar</figcaption>' +
 				'</figure>]'
 			);
 		} );
@@ -597,8 +616,9 @@ describe( 'ImageCaptionEditing', () => {
 				'<p>{}foo</p>' +
 				'<figure class="ck-widget image" contenteditable="false">' +
 					'<img src=""></img>' +
-					'<figcaption class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
-						'contenteditable="true" data-placeholder="Enter image caption">' +
+					'<figcaption aria-label="Caption for the image" ' +
+						'class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
+						'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1">' +
 					'</figcaption>' +
 				'</figure>'
 			);
@@ -614,8 +634,9 @@ describe( 'ImageCaptionEditing', () => {
 			expect( getViewData( view ) ).to.equal(
 				'<figure class="ck-widget image" contenteditable="false">' +
 					'<img src=""></img>' +
-					'<figcaption class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
-						'contenteditable="true" data-placeholder="Enter image caption">' +
+					'<figcaption aria-label="Caption for the image" ' +
+						'class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
+						'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1">' +
 						'[]' +
 					'</figcaption>' +
 				'</figure>'
@@ -634,8 +655,9 @@ describe( 'ImageCaptionEditing', () => {
 			expect( getViewData( view ) ).to.equal(
 				'[<figure class="ck-widget image" contenteditable="false">' +
 					'<img src=""></img>' +
-					'<figcaption class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
-						'contenteditable="true" data-placeholder="Enter image caption"></figcaption>' +
+					'<figcaption aria-label="Caption for the image" ' +
+						'class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
+						'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1"></figcaption>' +
 				'</figure>]'
 			);
 		} );
@@ -653,27 +675,29 @@ describe( 'ImageCaptionEditing', () => {
 			expect( getViewData( view ) ).to.equal(
 				'<figure class="ck-widget image" contenteditable="false">' +
 					'<img src=""></img>' +
-					'<figcaption class="ck-editor__editable ck-editor__nested-editable" ' +
-						'contenteditable="true" data-placeholder="Enter image caption">foo bar</figcaption>' +
+					'<figcaption aria-label="Caption for the image" class="ck-editor__editable ck-editor__nested-editable" ' +
+						'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1">foo bar</figcaption>' +
 				'</figure>' +
 				'[<figure class="ck-widget image" contenteditable="false">' +
 					'<img src=""></img>' +
-					'<figcaption class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
-						'contenteditable="true" data-placeholder="Enter image caption"></figcaption>' +
+					'<figcaption aria-label="Caption for the image" ' +
+						'class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
+						'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1"></figcaption>' +
 				'</figure>]'
 			);
 		} );
 
 		it( 'should show empty figcaption when image is selected but editor is in the readOnly mode', () => {
-			editor.isReadOnly = true;
+			editor.enableReadOnlyMode( 'unit-test' );
 
 			setModelData( model, '[<imageBlock src="img.png"><caption></caption></imageBlock>]' );
 
 			expect( getViewData( view ) ).to.equal(
 				'[<figure class="ck-widget image" contenteditable="false">' +
 					'<img src="img.png"></img>' +
-					'<figcaption class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
-						'contenteditable="false" data-placeholder="Enter image caption"></figcaption>' +
+					'<figcaption aria-label="Caption for the image" ' +
+						'class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
+						'contenteditable="false" data-placeholder="Enter image caption" role="textbox" tabindex="-1"></figcaption>' +
 				'</figure>]'
 			);
 		} );
@@ -697,8 +721,9 @@ describe( 'ImageCaptionEditing', () => {
 					'<p>{}foo</p>' +
 					'<figure class="ck-widget image" contenteditable="false">' +
 						'<img src=""></img>' +
-						'<figcaption class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
-							'contenteditable="true" data-placeholder="Enter image caption">' +
+						'<figcaption aria-label="Caption for the image" ' +
+							'class="ck-editor__editable ck-editor__nested-editable ck-placeholder" ' +
+							'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1">' +
 						'</figcaption>' +
 					'</figure>'
 				);
@@ -710,8 +735,8 @@ describe( 'ImageCaptionEditing', () => {
 					'<p>foo</p>' +
 					'<figure class="ck-widget image" contenteditable="false">' +
 						'<img src=""></img>' +
-						'<figcaption class="ck-editor__editable ck-editor__nested-editable" ' +
-							'contenteditable="true" data-placeholder="Enter image caption">' +
+						'<figcaption aria-label="Caption for the image" class="ck-editor__editable ck-editor__nested-editable" ' +
+							'contenteditable="true" data-placeholder="Enter image caption" role="textbox" tabindex="-1">' +
 							'{foo bar baz}' +
 						'</figcaption>' +
 					'</figure>'
@@ -735,6 +760,48 @@ describe( 'ImageCaptionEditing', () => {
 
 				expect( getModelData( model ) ).to.equal( '<paragraph>foo[]</paragraph>' );
 			} );
+		} );
+
+		it( 'should reflect the change of image\'s alt attribute in caption\'s aria-label attribute', () => {
+			setModelData( model, '[<imageBlock alt="foo" src="img.png"><caption></caption></imageBlock>]' );
+
+			expect( view.document.getRoot().getChild( 0 ).getChild( 1 ).getAttribute( 'aria-label' ) ).to.equal( 'Caption for image: foo' );
+
+			const image = doc.getRoot().getChild( 0 );
+
+			model.change( writer => {
+				writer.setAttribute( 'alt', 'bar', image );
+			} );
+
+			expect( view.document.getRoot().getChild( 0 ).getChild( 1 ).getAttribute( 'aria-label' ) ).to.equal( 'Caption for image: bar' );
+		} );
+
+		it( 'should not try to update caption\'s aria-label attribute if the image does not have a caption', () => {
+			setModelData( model, '[<imageBlock alt="foo" src="img.png"></imageBlock>]' );
+
+			const image = doc.getRoot().getChild( 0 );
+
+			const spy = sinon.spy( editor.editing, 'reconvertItem' );
+
+			model.change( writer => {
+				writer.setAttribute( 'alt', 'bar', image );
+			} );
+
+			expect( spy.called ).to.be.false;
+		} );
+
+		it( 'should not try to update caption\'s aria-label attribute if the image is not an imageBlock', () => {
+			setModelData( model, '<paragraph>[<imageInline alt="foo" src="img.png"></imageInline>]</paragraph>' );
+
+			const image = doc.getRoot().getChild( 0 );
+
+			const spy = sinon.spy( editor.editing, 'reconvertItem' );
+
+			model.change( writer => {
+				writer.setAttribute( 'alt', 'bar', image );
+			} );
+
+			expect( spy.called ).to.be.false;
 		} );
 	} );
 } );

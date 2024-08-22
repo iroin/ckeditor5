@@ -1,19 +1,19 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
-import ContextualBalloon from '../../../src/panel/balloon/contextualballoon';
-import BalloonPanelView from '../../../src/panel/balloon/balloonpanelview';
-import View from '../../../src/view';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+import ContextualBalloon from '../../../src/panel/balloon/contextualballoon.js';
+import BalloonPanelView from '../../../src/panel/balloon/balloonpanelview.js';
+import View from '../../../src/view.js';
 
-import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import { setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import { add as addTranslations, _clear as clearTranslations } from '@ckeditor/ckeditor5-utils/src/translation-service';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
-import { expectToThrowCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
+import Plugin from '@ckeditor/ckeditor5-core/src/plugin.js';
+import { Paragraph } from '@ckeditor/ckeditor5-paragraph';
+import { setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import { add as addTranslations, _clear as clearTranslations } from '@ckeditor/ckeditor5-utils/src/translation-service.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
+import { expectToThrowCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils.js';
 
 /* global document, Event */
 
@@ -52,23 +52,10 @@ describe( 'ContextualBalloon', () => {
 				editor = newEditor;
 				balloon = editor.plugins.get( ContextualBalloon );
 
-				// We don't need to execute BalloonPanel pin and attachTo methods
-				// it's enough to check if was called with the proper data.
-				sinon.stub( balloon.view, 'attachTo' ).returns( {} );
-				sinon.stub( balloon.view, 'pin' ).returns( {} );
-
 				viewA = new View();
 				viewB = new View();
 				viewC = new View();
 				viewD = new View();
-
-				// Add viewA to the pane and init viewB.
-				balloon.add( {
-					view: viewA,
-					position: {
-						target: 'fake'
-					}
-				} );
 
 				viewB.render();
 			} );
@@ -91,6 +78,10 @@ describe( 'ContextualBalloon', () => {
 	} );
 
 	describe( 'constructor()', () => {
+		beforeEach( () => {
+			stubBalloonPanelView();
+		} );
+
 		it( 'should create a plugin instance with properties', () => {
 			expect( balloon.view ).to.instanceof( BalloonPanelView );
 		} );
@@ -162,7 +153,42 @@ describe( 'ContextualBalloon', () => {
 		} );
 	} );
 
+	describe( 'lazy init', () => {
+		it( 'should create BalloonPanelView on first access to #view', () => {
+			const spy = sinon.spy( balloon, '_createPanelView' );
+
+			expect( balloon._view ).to.be.null;
+			sinon.assert.notCalled( spy );
+
+			expect( balloon.view ).to.instanceof( BalloonPanelView );
+			sinon.assert.calledOnce( spy );
+			expect( editor.ui.view.body.has( balloon._view ) ).to.be.true;
+		} );
+
+		it( 'should create BalloonPanelView on first view added', () => {
+			const spy = sinon.spy( balloon, '_createPanelView' );
+
+			expect( balloon._view ).to.be.null;
+			sinon.assert.notCalled( spy );
+
+			balloon.add( {
+				view: viewA,
+				position: {
+					target: 'fake'
+				}
+			} );
+
+			expect( balloon._view ).to.instanceof( BalloonPanelView );
+			sinon.assert.calledOnce( spy );
+			expect( editor.ui.view.body.has( balloon._view ) ).to.be.true;
+		} );
+	} );
+
 	describe( 'hasView()', () => {
+		beforeEach( () => {
+			stubBalloonPanelView();
+		} );
+
 		it( 'should return true when given view is in stack', () => {
 			expect( balloon.hasView( viewA ) ).to.true;
 		} );
@@ -185,7 +211,65 @@ describe( 'ContextualBalloon', () => {
 		} );
 	} );
 
+	describe( 'getPositionOptions()', () => {
+		beforeEach( () => {
+			sinon.stub( balloon.view, 'attachTo' ).returns( {} );
+			sinon.stub( balloon.view, 'pin' ).returns( {} );
+		} );
+
+		it( 'should return undefined if last element from visible stack has no position', () => {
+			balloon.add( {
+				view: viewA
+			} );
+
+			expect( balloon.getPositionOptions() ).to.be.undefined;
+		} );
+
+		it( 'should return position of the last visible stack element', () => {
+			balloon.add( {
+				view: viewA,
+				position: {
+					target: 'fake'
+				}
+			} );
+
+			expect( balloon.getPositionOptions() ).to.be.deep.equal( {
+				limiter: balloon.positionLimiter,
+				target: 'fake',
+				viewportOffsetConfig: {
+					top: 0
+				}
+			} );
+		} );
+
+		it( 'should attach limiter to the position of element from the last visible stack if it\'s not present', () => {
+			balloon.add( {
+				view: viewA,
+				position: {
+					target: 'blank'
+				}
+			} );
+
+			expect( balloon.getPositionOptions().limiter ).to.be.equal( balloon.positionLimiter );
+		} );
+
+		it( 'should attach viewportOffsetConfig to the position of element from the last visible stack if it\'s not present', () => {
+			balloon.add( {
+				view: viewA,
+				position: {
+					target: 'blank'
+				}
+			} );
+
+			expect( balloon.getPositionOptions().viewportOffsetConfig ).to.be.equal( editor.ui.viewportOffset );
+		} );
+	} );
+
 	describe( 'add()', () => {
+		beforeEach( () => {
+			stubBalloonPanelView();
+		} );
+
 		it( 'should add view to the `main` stack and display in balloon attached using given position options', () => {
 			const content = balloon.view.content.get( 0 ).content;
 
@@ -397,6 +481,10 @@ describe( 'ContextualBalloon', () => {
 	} );
 
 	describe( 'visibleView', () => {
+		beforeEach( () => {
+			stubBalloonPanelView();
+		} );
+
 		it( 'should return data of currently visible view', () => {
 			expect( balloon.visibleView ).to.equal( viewA );
 		} );
@@ -431,6 +519,10 @@ describe( 'ContextualBalloon', () => {
 	} );
 
 	describe( 'showStack()', () => {
+		beforeEach( () => {
+			stubBalloonPanelView();
+		} );
+
 		it( 'should hide current view and display last view from the given stack', () => {
 			balloon.add( {
 				stackId: 'second',
@@ -467,6 +559,10 @@ describe( 'ContextualBalloon', () => {
 	} );
 
 	describe( 'remove()', () => {
+		beforeEach( () => {
+			stubBalloonPanelView();
+		} );
+
 		it( 'should remove given view and hide balloon when there is no other view to display', () => {
 			balloon.view.isVisible = true;
 
@@ -632,6 +728,10 @@ describe( 'ContextualBalloon', () => {
 	} );
 
 	describe( 'updatePosition()', () => {
+		beforeEach( () => {
+			stubBalloonPanelView();
+		} );
+
 		it( 'should attach balloon to the target using position option from the last view in the stack', () => {
 			balloon.add( {
 				view: viewB,
@@ -707,6 +807,54 @@ describe( 'ContextualBalloon', () => {
 			} );
 		} );
 
+		// https://github.com/ckeditor/ckeditor5/issues/10597
+		it( 'should respect viewportOffset#top config and allow to set it in runtime', () => {
+			const editorElement = document.createElement( 'div' );
+			document.body.appendChild( editorElement );
+
+			return ClassicTestEditor
+				.create( editorElement, {
+					plugins: [ Paragraph, ContextualBalloon ],
+					ui: {
+						viewportOffset: {
+							top: 100
+						}
+					}
+				} )
+				.then( newEditor => {
+					balloon = newEditor.plugins.get( ContextualBalloon );
+					sinon.stub( balloon.view, 'pin' ).returns( {} );
+
+					viewA = new View();
+					viewB = new View();
+
+					balloon.add( {
+						view: viewA,
+						position: {
+							target: 'fake'
+						}
+					} );
+
+					expect( balloon.view.pin.calledOnce );
+					expect( balloon.view.pin.firstCall.args[ 0 ].viewportOffsetConfig.top ).to.equal( 100 );
+
+					newEditor.ui.viewportOffset = { top: 200 };
+
+					balloon.add( {
+						view: viewB,
+						position: {
+							target: 'fake'
+						}
+					} );
+
+					expect( balloon.view.pin.calledTwice );
+					expect( balloon.view.pin.secondCall.args[ 0 ].viewportOffsetConfig.top ).to.equal( 200 );
+
+					newEditor.destroy();
+					editorElement.remove();
+				} );
+		} );
+
 		it( 'should throw an error when there is no given view in the stack', () => {
 			expectToThrowCKEditorError( () => {
 				balloon.remove( viewB );
@@ -715,6 +863,10 @@ describe( 'ContextualBalloon', () => {
 	} );
 
 	describe( 'destroy()', () => {
+		beforeEach( () => {
+			stubBalloonPanelView();
+		} );
+
 		it( 'can be called multiple times', () => {
 			expect( () => {
 				balloon.destroy();
@@ -727,12 +879,37 @@ describe( 'ContextualBalloon', () => {
 
 			expect( editor.ui.view.body.getIndex( balloon.view ) ).to.not.equal( -1 );
 		} );
+
+		it( 'should destroy the #view', () => {
+			const destroySpy = sinon.spy( balloon.view, 'destroy' );
+
+			balloon.destroy();
+
+			sinon.assert.called( destroySpy );
+		} );
+
+		it( 'should destroy the #_rotatorView', () => {
+			const destroySpy = sinon.spy( balloon._rotatorView, 'destroy' );
+
+			balloon.destroy();
+
+			sinon.assert.called( destroySpy );
+		} );
+
+		it( 'should destroy the #_fakePanelsView', () => {
+			const destroySpy = sinon.spy( balloon._rotatorView, 'destroy' );
+
+			balloon.destroy();
+
+			sinon.assert.called( destroySpy );
+		} );
 	} );
 
 	describe( 'rotator view', () => {
 		let rotatorView;
 
 		beforeEach( () => {
+			stubBalloonPanelView();
 			rotatorView = balloon.view.content.get( 0 );
 		} );
 
@@ -1035,6 +1212,16 @@ describe( 'ContextualBalloon', () => {
 				} );
 		} );
 
+		describe( 'destroy()', () => {
+			it( 'should destroy the FocusTracker instance', () => {
+				const destroySpy = sinon.spy( rotatorView.focusTracker, 'destroy' );
+
+				rotatorView.destroy();
+
+				sinon.assert.calledOnce( destroySpy );
+			} );
+		} );
+
 		describe( 'singleViewMode', () => {
 			it( 'should not display navigation when there is more than one stack', () => {
 				const navigationElement = rotatorView.element.querySelector( '.ck-balloon-rotator__navigation' );
@@ -1214,4 +1401,18 @@ describe( 'ContextualBalloon', () => {
 			} );
 		} );
 	} );
+
+	function stubBalloonPanelView() {
+		// We don't need to execute BalloonPanel pin and attachTo methods
+		// it's enough to check if was called with the proper data.
+		sinon.stub( balloon.view, 'attachTo' ).returns( {} );
+		sinon.stub( balloon.view, 'pin' ).returns( {} );
+
+		balloon.add( {
+			view: viewA,
+			position: {
+				target: 'fake'
+			}
+		} );
+	}
 } );

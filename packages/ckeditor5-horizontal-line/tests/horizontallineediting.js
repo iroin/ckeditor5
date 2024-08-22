@@ -1,15 +1,15 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor';
-import HorizontalLineEditing from '../src/horizontallineediting';
-import HorizontalLineCommand from '../src/horizontallinecommand';
-import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import { getData as getViewData } from '@ckeditor/ckeditor5-engine/src/dev-utils/view';
-import { isWidget } from '@ckeditor/ckeditor5-widget/src/utils';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
+import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor.js';
+import HorizontalLineEditing from '../src/horizontallineediting.js';
+import HorizontalLineCommand from '../src/horizontallinecommand.js';
+import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import { getData as getViewData } from '@ckeditor/ckeditor5-engine/src/dev-utils/view.js';
+import { isWidget } from '@ckeditor/ckeditor5-widget/src/utils.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
 
 describe( 'HorizontalLineEditing', () => {
 	let editor, model, view, viewDocument;
@@ -44,6 +44,14 @@ describe( 'HorizontalLineEditing', () => {
 
 		expect( model.schema.checkChild( [ '$root', 'horizontalLine' ], '$text' ) ).to.be.false;
 		expect( model.schema.checkChild( [ '$root', '$block' ], 'horizontalLine' ) ).to.be.false;
+	} );
+
+	it( 'inherits attributes from $blockObject', () => {
+		model.schema.extend( '$blockObject', {
+			allowAttributes: 'foo'
+		} );
+
+		expect( model.schema.checkAttribute( 'horizontalLine', 'foo' ) ).to.be.true;
 	} );
 
 	it( 'should register horizontalLine command', () => {

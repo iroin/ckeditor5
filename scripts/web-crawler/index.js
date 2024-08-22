@@ -1,20 +1,18 @@
 #!/usr/bin/env node
 
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* eslint-env node */
 
 const minimist = require( 'minimist' );
-const { verify } = require( '@ckeditor/ckeditor5-dev-docs' );
-const { DEFAULT_CONCURRENCY } = require( '@ckeditor/ckeditor5-dev-docs/lib/web-crawler/constants' );
-const { toArray, isUrlValid } = require( '@ckeditor/ckeditor5-dev-docs/lib/web-crawler/utils' );
+const { DEFAULT_CONCURRENCY, runCrawler, toArray, isUrlValid } = require( '@ckeditor/ckeditor5-dev-web-crawler' );
 
 const options = parseArguments( process.argv.slice( 2 ) );
 
-verify( options );
+runCrawler( options );
 
 /**
  * Parses CLI arguments and prepares configuration for the crawler.
@@ -41,6 +39,7 @@ function parseArguments( args ) {
 		boolean: [
 			'docs',
 			'manual',
+			'spinner',
 			'quit'
 		],
 
@@ -50,6 +49,10 @@ function parseArguments( args ) {
 			e: 'exclusions',
 			c: 'concurrency',
 			q: 'quit'
+		},
+
+		default: {
+			spinner: true
 		}
 	};
 
@@ -96,6 +99,7 @@ function parseArguments( args ) {
 		depth: options.depth ? Number( options.depth ) : Infinity,
 		exclusions: options.exclusions ? toArray( options.exclusions ).filter( exclusion => exclusion.length > 0 ) : [],
 		concurrency: options.concurrency ? Number( options.concurrency ) : 1,
-		quit: Boolean( options.quit )
+		quit: Boolean( options.quit ),
+		noSpinner: !options.spinner
 	};
 }

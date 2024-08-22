@@ -1,12 +1,12 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 import Document from '../../../src/view/document.js';
 import RootAttributeElement from '../../../src/view/rooteditableelement.js';
 import createRoot from '../_utils/createroot.js';
-import { StylesProcessor } from '../../../src/view/stylesmap';
+import { StylesProcessor } from '../../../src/view/stylesmap.js';
 
 describe( 'createRoot', () => {
 	let viewDoc;

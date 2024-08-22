@@ -1,21 +1,21 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import { setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
+import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import { setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
 
-import TableEditing from '../../src/tableediting';
-import TablePropertiesEditing from '../../src/tableproperties/tablepropertiesediting';
+import TableEditing from '../../src/tableediting.js';
+import TablePropertiesEditing from '../../src/tableproperties/tablepropertiesediting.js';
 
-import TableCellPropertiesEditing from '../../src/tablecellproperties/tablecellpropertiesediting';
+import TableCellPropertiesEditing from '../../src/tablecellproperties/tablecellpropertiesediting.js';
 
-import AlignmentEditing from '@ckeditor/ckeditor5-alignment/src/alignmentediting';
-import UndoEditing from '@ckeditor/ckeditor5-undo/src/undoediting';
+import AlignmentEditing from '@ckeditor/ckeditor5-alignment/src/alignmentediting.js';
+import UndoEditing from '@ckeditor/ckeditor5-undo/src/undoediting.js';
 
-import { assertTableStyle } from '../_utils/utils';
+import { assertTableStyle } from '../_utils/utils.js';
 
 describe( 'table properties', () => {
 	describe( 'TablePropertiesEditing integration', () => {
@@ -37,9 +37,17 @@ describe( 'table properties', () => {
 			} );
 
 			it( 'should properly downcast table with Alignment plugin enabled', () => {
-				model.change( writer => writer.setAttribute( 'alignment', 'right', table ) );
+				model.change( writer => writer.setAttribute( 'tableAlignment', 'right', table ) );
 
 				assertTableStyle( editor, null, 'float:right;' );
+			} );
+
+			it( 'Alignment command should be disabled when table is selected', () => {
+				model.change( writer => {
+					writer.setSelection( table, 'on' );
+				} );
+
+				expect( editor.commands.get( 'alignment' ).isEnabled ).to.be.false;
 			} );
 		} );
 
@@ -66,18 +74,18 @@ describe( 'table properties', () => {
 
 				editor.execute( 'tableCellBackgroundColor', { value: 'green' } );
 
-				expect( table.getAttribute( 'backgroundColor' ) ).to.equal( 'red' );
-				expect( firstCell.getAttribute( 'backgroundColor' ) ).to.equal( 'green' );
+				expect( table.getAttribute( 'tableBackgroundColor' ) ).to.equal( 'red' );
+				expect( firstCell.getAttribute( 'tableCellBackgroundColor' ) ).to.equal( 'green' );
 
 				editor.execute( 'undo' );
 
-				expect( table.getAttribute( 'backgroundColor' ) ).to.equal( 'red' );
-				expect( firstCell.getAttribute( 'backgroundColor' ) ).to.be.undefined;
+				expect( table.getAttribute( 'tableBackgroundColor' ) ).to.equal( 'red' );
+				expect( firstCell.getAttribute( 'tableCellBackgroundColor' ) ).to.be.undefined;
 
 				editor.execute( 'undo' );
 
-				expect( table.getAttribute( 'backgroundColor' ) ).to.be.undefined;
-				expect( firstCell.getAttribute( 'backgroundColor' ) ).to.be.undefined;
+				expect( table.getAttribute( 'tableBackgroundColor' ) ).to.be.undefined;
+				expect( firstCell.getAttribute( 'tableCellBackgroundColor' ) ).to.be.undefined;
 			} );
 		} );
 

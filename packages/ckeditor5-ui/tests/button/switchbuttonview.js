@@ -1,10 +1,10 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import SwitchButtonView from '../../src/button/switchbuttonview';
-import View from '../../src/view';
+import SwitchButtonView from '../../src/button/switchbuttonview.js';
+import View from '../../src/view.js';
 
 describe( 'SwitchButtonView', () => {
 	let locale, view;
@@ -32,7 +32,7 @@ describe( 'SwitchButtonView', () => {
 
 	describe( 'render', () => {
 		it( 'adds #toggleSwitchView to #children', () => {
-			expect( view.children.get( 2 ) ).to.equal( view.toggleSwitchView );
+			expect( view.children.get( 1 ) ).to.equal( view.toggleSwitchView );
 		} );
 	} );
 

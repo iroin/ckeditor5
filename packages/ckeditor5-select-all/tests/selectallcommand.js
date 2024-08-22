@@ -1,15 +1,15 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import ModelTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/modeltesteditor';
-import SelectAllEditing from '../src/selectallediting';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import ImageBlockEditing from '@ckeditor/ckeditor5-image/src/image/imageblockediting';
-import ImageCaptionEditing from '@ckeditor/ckeditor5-image/src/imagecaption/imagecaptionediting';
-import TableEditing from '@ckeditor/ckeditor5-table/src/tableediting';
-import { setData, getData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
+import ModelTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/modeltesteditor.js';
+import SelectAllEditing from '../src/selectallediting.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import ImageBlockEditing from '@ckeditor/ckeditor5-image/src/image/imageblockediting.js';
+import ImageCaptionEditing from '@ckeditor/ckeditor5-image/src/imagecaption/imagecaptionediting.js';
+import TableEditing from '@ckeditor/ckeditor5-table/src/tableediting.js';
+import { setData, getData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
 
 describe( 'SelectAllCommand', () => {
 	let editor, model, command;
@@ -30,8 +30,20 @@ describe( 'SelectAllCommand', () => {
 		return editor.destroy();
 	} );
 
+	describe( 'constructor()', () => {
+		it( 'sets public properties', () => {
+			expect( command ).to.have.property( 'affectsData', false );
+		} );
+	} );
+
 	describe( 'isEnabled', () => {
 		it( 'should always be "true" because the command is stateless', () => {
+			expect( command.isEnabled ).to.be.true;
+		} );
+
+		it( 'should not depend on editor read-only state', () => {
+			editor.enableReadOnlyMode( 'unit-test' );
+
 			expect( command.isEnabled ).to.be.true;
 		} );
 	} );

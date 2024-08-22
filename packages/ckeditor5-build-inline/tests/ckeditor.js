@@ -1,13 +1,13 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals document */
 
-import InlineEditor from '../src/ckeditor';
-import BaseInlineEditor from '@ckeditor/ckeditor5-editor-inline/src/inlineeditor';
-import { describeMemoryUsage, testMemoryUsage } from '@ckeditor/ckeditor5-core/tests/_utils/memory';
+import InlineEditor from '../src/ckeditor.js';
+import BaseInlineEditor from '@ckeditor/ckeditor5-editor-inline/src/inlineeditor.js';
+import { describeMemoryUsage, testMemoryUsage } from '@ckeditor/ckeditor5-core/tests/_utils/memory.js';
 
 describe( 'InlineEditor build', () => {
 	let editor, editorElement;
@@ -63,8 +63,18 @@ describe( 'InlineEditor build', () => {
 				} );
 		} );
 
-		it( 'sets the data back to the editor element', () => {
+		it( 'clears editor element if config.updateSourceElementOnDestroy flag is not set', () => {
 			editor.setData( '<p>foo</p>' );
+
+			return editor.destroy()
+				.then( () => {
+					expect( editorElement.innerHTML ).to.equal( '' );
+				} );
+		} );
+
+		it( 'sets the data back to the editor element if config.updateSourceElementOnDestroy flag is set', () => {
+			editor.setData( '<p>foo</p>' );
+			editor.config.set( 'updateSourceElementOnDestroy', true );
 
 			return editor.destroy()
 				.then( () => {

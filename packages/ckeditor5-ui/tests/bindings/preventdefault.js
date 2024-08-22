@@ -1,12 +1,12 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* global Event */
 
-import preventDefault from '../../src/bindings/preventdefault';
-import View from '../../src/view';
+import preventDefault from '../../src/bindings/preventdefault.js';
+import View from '../../src/view.js';
 
 describe( 'preventDefault', () => {
 	it( 'prevents default of a native DOM event', () => {

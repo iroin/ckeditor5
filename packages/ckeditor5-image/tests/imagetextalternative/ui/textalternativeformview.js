@@ -1,18 +1,18 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-/* global Event */
+/* global document, Event */
 
-import { keyCodes } from '@ckeditor/ckeditor5-utils/src/keyboard';
-import TextAlternativeFormView from '../../../src/imagetextalternative/ui/textalternativeformview';
-import View from '@ckeditor/ckeditor5-ui/src/view';
-import KeystrokeHandler from '@ckeditor/ckeditor5-utils/src/keystrokehandler';
-import FocusTracker from '@ckeditor/ckeditor5-utils/src/focustracker';
-import FocusCycler from '@ckeditor/ckeditor5-ui/src/focuscycler';
-import ViewCollection from '@ckeditor/ckeditor5-ui/src/viewcollection';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
+import { keyCodes } from '@ckeditor/ckeditor5-utils/src/keyboard.js';
+import TextAlternativeFormView from '../../../src/imagetextalternative/ui/textalternativeformview.js';
+import View from '@ckeditor/ckeditor5-ui/src/view.js';
+import KeystrokeHandler from '@ckeditor/ckeditor5-utils/src/keystrokehandler.js';
+import FocusTracker from '@ckeditor/ckeditor5-utils/src/focustracker.js';
+import FocusCycler from '@ckeditor/ckeditor5-ui/src/focuscycler.js';
+import ViewCollection from '@ckeditor/ckeditor5-ui/src/viewcollection.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
 
 describe( 'TextAlternativeFormView', () => {
 	let view;
@@ -67,10 +67,6 @@ describe( 'TextAlternativeFormView', () => {
 
 			sinon.assert.calledOnce( spy );
 		} );
-
-		it( 'should implement the CSS transition disabling feature', () => {
-			expect( view.disableCssTransitions ).to.be.a( 'function' );
-		} );
 	} );
 
 	describe( 'render()', () => {
@@ -106,6 +102,12 @@ describe( 'TextAlternativeFormView', () => {
 			describe( 'activates keyboard navigation in the form', () => {
 				beforeEach( () => {
 					view.render();
+					document.body.appendChild( view.element );
+				} );
+
+				afterEach( () => {
+					view.element.remove();
+					view.destroy();
 				} );
 
 				it( 'so "tab" focuses the next focusable item', () => {
@@ -147,6 +149,24 @@ describe( 'TextAlternativeFormView', () => {
 					sinon.assert.calledOnce( spy );
 				} );
 			} );
+		} );
+	} );
+
+	describe( 'destroy()', () => {
+		it( 'should destroy the FocusTracker instance', () => {
+			const destroySpy = sinon.spy( view.focusTracker, 'destroy' );
+
+			view.destroy();
+
+			sinon.assert.calledOnce( destroySpy );
+		} );
+
+		it( 'should destroy the KeystrokeHandler instance', () => {
+			const destroySpy = sinon.spy( view.keystrokes, 'destroy' );
+
+			view.destroy();
+
+			sinon.assert.calledOnce( destroySpy );
 		} );
 	} );
 

@@ -1,16 +1,17 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals console */
 
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
-import utils from '../../src/imagestyle/utils';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
+import utils from '../../src/imagestyle/utils.js';
 
 describe( 'ImageStyle utils', () => {
 	const { getDefaultStylesConfiguration, DEFAULT_OPTIONS, DEFAULT_ICONS } = utils;
 	const allStyles = Object.values( DEFAULT_OPTIONS );
+	const allStyleNames = Object.keys( DEFAULT_OPTIONS );
 
 	describe( 'default styles', () => {
 		describe( 'styles', () => {
@@ -59,6 +60,13 @@ describe( 'ImageStyle utils', () => {
 					expect( style ).to.equal( DEFAULT_OPTIONS[ style ].name );
 					expect( DEFAULT_OPTIONS[ style ].icon ).to.be.a( 'string' );
 				}
+			} );
+
+			it( 'should always return new configuration object for each style', () => {
+				allStyleNames.forEach( styleName => {
+					expect( DEFAULT_OPTIONS[ styleName ] ).to.not.equal( DEFAULT_OPTIONS[ styleName ] );
+					expect( DEFAULT_OPTIONS[ styleName ].modelElements ).to.not.equal( DEFAULT_OPTIONS[ styleName ].modelElements );
+				} );
 			} );
 		} );
 	} );

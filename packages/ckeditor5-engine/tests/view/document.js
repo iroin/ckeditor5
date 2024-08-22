@@ -1,16 +1,16 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals document */
 
-import createElement from '@ckeditor/ckeditor5-utils/src/dom/createelement';
-import Document from '../../src/view/document';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
-import count from '@ckeditor/ckeditor5-utils/src/count';
-import createViewRoot from './_utils/createroot';
-import { StylesProcessor } from '../../src/view/stylesmap';
+import createElement from '@ckeditor/ckeditor5-utils/src/dom/createelement.js';
+import Document from '../../src/view/document.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
+import count from '@ckeditor/ckeditor5-utils/src/count.js';
+import createViewRoot from './_utils/createroot.js';
+import { StylesProcessor } from '../../src/view/stylesmap.js';
 
 describe( 'Document', () => {
 	let domRoot, viewDocument;
@@ -32,9 +32,48 @@ describe( 'Document', () => {
 	} );
 
 	describe( 'constructor()', () => {
-		it( 'should create Document with all properties', () => {
+		it( 'should create the #roots collection', () => {
 			expect( count( viewDocument.roots ) ).to.equal( 0 );
-			expect( viewDocument ).to.have.property( 'isReadOnly' ).to.false;
+		} );
+
+		it( 'should set the observable #isReadOnly property', () => {
+			const spy = sinon.spy();
+
+			expect( viewDocument.isReadOnly ).to.be.false;
+
+			viewDocument.on( 'change:isReadOnly', spy );
+			viewDocument.isReadOnly = true;
+			sinon.assert.calledOnce( spy );
+		} );
+
+		it( 'should set the observable #isFocused property', () => {
+			const spy = sinon.spy();
+
+			expect( viewDocument.isFocused ).to.be.false;
+
+			viewDocument.on( 'change:isFocused', spy );
+			viewDocument.isFocused = true;
+			sinon.assert.calledOnce( spy );
+		} );
+
+		it( 'should set the observable #isSelecting property', () => {
+			const spy = sinon.spy();
+
+			expect( viewDocument.isSelecting ).to.be.false;
+
+			viewDocument.on( 'change:isSelecting', spy );
+			viewDocument.isSelecting = true;
+			sinon.assert.calledOnce( spy );
+		} );
+
+		it( 'should set the observable #isComposing property', () => {
+			const spy = sinon.spy();
+
+			expect( viewDocument.isComposing ).to.be.false;
+
+			viewDocument.on( 'change:isComposing', spy );
+			viewDocument.isComposing = true;
+			sinon.assert.calledOnce( spy );
 		} );
 	} );
 

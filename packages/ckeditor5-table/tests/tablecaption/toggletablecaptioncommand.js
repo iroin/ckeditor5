@@ -1,19 +1,19 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import ModelTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/modeltesteditor';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import { getData, setData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import { assertEqualMarkup } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
+import ModelTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/modeltesteditor.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import { getData, setData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
 
-import TableSelection from '../../src/tableselection';
-import TableEditing from '../../src/tableediting';
-import { modelTable } from '../_utils/utils';
+import TableSelection from '../../src/tableselection.js';
+import TableEditing from '../../src/tableediting.js';
+import { modelTable } from '../_utils/utils.js';
 
-import ToggleTableCaptionCommand from '../../src/tablecaption/toggletablecaptioncommand';
-import TableCaptionEditing from '../../src/tablecaption/tablecaptionediting';
+import ToggleTableCaptionCommand from '../../src/tablecaption/toggletablecaptioncommand.js';
+import TableCaptionEditing from '../../src/tablecaption/tablecaptionediting.js';
+import { BoldEditing } from '@ckeditor/ckeditor5-basic-styles';
 
 describe( 'ToggleTableCaptionCommand', () => {
 	let editor, model, command;
@@ -21,7 +21,7 @@ describe( 'ToggleTableCaptionCommand', () => {
 	beforeEach( () => {
 		return ModelTestEditor
 			.create( {
-				plugins: [ Paragraph, TableEditing, TableCaptionEditing, TableSelection ]
+				plugins: [ Paragraph, TableEditing, TableCaptionEditing, TableSelection, BoldEditing ]
 			} )
 			.then( newEditor => {
 				editor = newEditor;
@@ -68,7 +68,7 @@ describe( 'ToggleTableCaptionCommand', () => {
 
 			command.execute();
 
-			assertEqualMarkup( getData( model ),
+			expect( getData( model ) ).to.equalMarkup(
 				'<table>' +
 					'<tableRow>' +
 						'<tableCell>' +
@@ -116,11 +116,11 @@ describe( 'ToggleTableCaptionCommand', () => {
 
 			command.execute();
 
-			assertEqualMarkup( getData( model ),
+			expect( getData( model ) ).to.equalMarkup(
 				'<table>' +
 					'<tableRow>' +
 						'<tableCell>' +
-							'<paragraph>[11]</paragraph>' +
+							'<paragraph>11[]</paragraph>' +
 						'</tableCell>' +
 						'<tableCell>' +
 							'<paragraph>12</paragraph>' +
@@ -151,7 +151,7 @@ describe( 'ToggleTableCaptionCommand', () => {
 
 			command.execute();
 
-			assertEqualMarkup( getData( model ),
+			expect( getData( model ) ).to.equalMarkup(
 				'[<table>' +
 					'<tableRow>' +
 						'<tableCell>' +
@@ -177,14 +177,14 @@ describe( 'ToggleTableCaptionCommand', () => {
 
 			command.execute();
 
-			assertEqualMarkup( getData( model ),
-				'<table>' +
+			expect( getData( model ) ).to.equalMarkup(
+				'[<table>' +
 					'<tableRow>' +
 						'<tableCell>' +
-							'<paragraph>[]</paragraph>' +
+							'<paragraph></paragraph>' +
 						'</tableCell>' +
 					'</tableRow>' +
-				'</table>'
+				'</table>]'
 			);
 		} );
 
@@ -201,7 +201,7 @@ describe( 'ToggleTableCaptionCommand', () => {
 
 			command.execute( { focusCaptionOnShow: true } );
 
-			assertEqualMarkup( getData( model ),
+			expect( getData( model ) ).to.equalMarkup(
 				'<table>' +
 					'<tableRow>' +
 						'<tableCell>' +
@@ -218,7 +218,7 @@ describe( 'ToggleTableCaptionCommand', () => {
 				'<table>' +
 					'<tableRow>' +
 						'<tableCell>' +
-							'<paragraph></paragraph>' +
+							'<paragraph>[]</paragraph>' +
 						'</tableCell>' +
 					'</tableRow>' +
 					'<caption>Foo<$text bold="true">bar</$text></caption>' +
@@ -227,7 +227,7 @@ describe( 'ToggleTableCaptionCommand', () => {
 
 			command.execute();
 
-			assertEqualMarkup( getData( model ),
+			expect( getData( model ) ).to.equalMarkup(
 				'<table>' +
 					'<tableRow>' +
 						'<tableCell>' +
@@ -239,7 +239,7 @@ describe( 'ToggleTableCaptionCommand', () => {
 
 			command.execute();
 
-			assertEqualMarkup( getData( model ),
+			expect( getData( model ) ).to.equalMarkup(
 				'<table>' +
 					'<tableRow>' +
 						'<tableCell>' +
@@ -256,7 +256,7 @@ describe( 'ToggleTableCaptionCommand', () => {
 				'<table>' +
 					'<tableRow>' +
 						'<tableCell>' +
-							'<paragraph></paragraph>' +
+							'<paragraph>A[]bc</paragraph>' +
 						'</tableCell>' +
 					'</tableRow>' +
 					'<caption>Foo</caption>' +
@@ -266,11 +266,11 @@ describe( 'ToggleTableCaptionCommand', () => {
 			// Hide the caption.
 			command.execute();
 
-			assertEqualMarkup( getData( model ),
+			expect( getData( model ) ).to.equalMarkup(
 				'<table>' +
 					'<tableRow>' +
 						'<tableCell>' +
-							'<paragraph>[]</paragraph>' +
+							'<paragraph>A[]bc</paragraph>' +
 						'</tableCell>' +
 					'</tableRow>' +
 				'</table>'
@@ -291,11 +291,11 @@ describe( 'ToggleTableCaptionCommand', () => {
 			command.execute();
 			command.execute();
 
-			assertEqualMarkup( getData( model ),
+			expect( getData( model ) ).to.equalMarkup(
 				'<table>' +
 					'<tableRow>' +
 						'<tableCell>' +
-							'<paragraph>[]</paragraph>' +
+							'<paragraph>A[]bc</paragraph>' +
 						'</tableCell>' +
 					'</tableRow>' +
 

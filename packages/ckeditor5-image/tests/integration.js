@@ -1,18 +1,18 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
-import { setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import BalloonToolbar from '@ckeditor/ckeditor5-ui/src/toolbar/balloon/balloontoolbar';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import global from '@ckeditor/ckeditor5-utils/src/dom/global';
-import Image from '../src/image';
-import ImageToolbar from '../src/imagetoolbar';
-import View from '@ckeditor/ckeditor5-ui/src/view';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
-import ImageTextAlternative from '../src/imagetextalternative';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+import { setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import BalloonToolbar from '@ckeditor/ckeditor5-ui/src/toolbar/balloon/balloontoolbar.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import global from '@ckeditor/ckeditor5-utils/src/dom/global.js';
+import Image from '../src/image.js';
+import ImageToolbar from '../src/imagetoolbar.js';
+import View from '@ckeditor/ckeditor5-ui/src/view.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
+import ImageTextAlternative from '../src/imagetextalternative.js';
 
 describe( 'ImageToolbar integration', () => {
 	describe( 'with the BalloonToolbar', () => {
@@ -54,6 +54,8 @@ describe( 'ImageToolbar integration', () => {
 		} );
 
 		it( 'should prevent the BalloonToolbar from being displayed when an image is selected', () => {
+			newEditor.ui.focusTracker.isFocused = true;
+
 			// When image is selected along with text.
 			setModelData( newEditor.model,
 				'<paragraph>fo[o</paragraph><imageBlock alt="alt text" src="/assets/sample.png"></imageBlock>]' );
@@ -70,7 +72,7 @@ describe( 'ImageToolbar integration', () => {
 			balloonToolbar.show();
 
 			// BalloonToolbar should not be visible.
-			expect( balloon.visibleView ).to.be.null;
+			expect( balloon.visibleView.ariaLabel ).to.equal( 'Image toolbar' );
 		} );
 
 		it( 'should listen to BalloonToolbar#show event with the high priority', () => {

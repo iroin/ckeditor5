@@ -1,4 +1,4 @@
-# Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+# Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
 #
 #                                     !!! IMPORTANT !!!
 #
@@ -12,13 +12,58 @@
 #
 msgid ""
 msgstr ""
-"Language-Team: Hindi (https://www.transifex.com/ckeditor/teams/11143/hi/)\n"
+"Language-Team: Hindi (https://app.transifex.com/ckeditor/teams/11143/hi/)\n"
 "Language: hi\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 
 msgctxt "Name of the special characters plugins, visible in a dropdown and as a button tooltip."
 msgid "Special characters"
 msgstr "Special characters"
+
+msgctxt "A label for a special character dropdown with symbol categories."
+msgid "Category"
+msgstr "केटेगरी"
+
+msgctxt "A category name is displayed in a special characters dropdown representing all available symbols."
+msgid "All"
+msgstr "सभी"
+
+msgctxt "A category name is displayed in a special characters dropdown representing arrow symbols."
+msgid "Arrows"
+msgstr "एरोज"
+
+msgctxt "A category name is displayed in a special characters dropdown representing currency symbols."
+msgid "Currency"
+msgstr "करेंसी"
+
+msgctxt "A category name is displayed in a special characters dropdown representing latin symbols."
+msgid "Latin"
+msgstr "लैटिन"
+
+msgctxt "A category name is displayed in a special characters dropdown representing mathematical symbols."
+msgid "Mathematical"
+msgstr "मैथमैटिकल"
+
+msgctxt "A category name is displayed in a special characters dropdown representing text symbols."
+msgid "Text"
+msgstr "टेक्स्ट"
+
+msgctxt "A label for the \"leftwards simple arrow\" symbol."
+msgid "leftwards simple arrow"
+msgstr "सिम्पल ऐरो बाएं तरफ"
+
+msgctxt "A label for the \"rightwards simple arrow\" symbol."
+msgid "rightwards simple arrow"
+msgstr "सिम्पल ऐरो दाएं तरफ"
+
+msgctxt "A label for the \"upwards simple arrow\" symbol."
+msgid "upwards simple arrow"
+msgstr "सिम्पल ऐरो ऊपर की तरफ"
+
+msgctxt "A label for the \"downwards simple arrow\" symbol."
+msgid "downwards simple arrow"
+msgstr "सिम्पल ऐरो नीचे की तरफ"
 
 msgctxt "A label for the \"leftwards double arrow\" symbol."
 msgid "leftwards double arrow"
@@ -1031,7 +1076,3 @@ msgstr "Paragraph sign"
 msgctxt "A label for the \"reversed paragraph sign\" symbol."
 msgid "Reversed paragraph sign"
 msgstr "Reversed paragraph sign"
-
-msgctxt "A label for a tooltip showing when the user hovers over the plugin icon."
-msgid "Character categories"
-msgstr "Character categories"

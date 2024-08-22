@@ -1,23 +1,23 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* global document, console */
 
-import ClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
-import LinkImage from '@ckeditor/ckeditor5-link/src/linkimage';
-import ImageToolbar from '../src/imagetoolbar';
-import ImageCaption from '../src/imagecaption';
-import Image from '../src/image';
-import global from '@ckeditor/ckeditor5-utils/src/dom/global';
-import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
-import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import View from '@ckeditor/ckeditor5-ui/src/view';
-import { setData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
-import ImageStyle from '../src/imagestyle';
+import ClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor.js';
+import LinkImage from '@ckeditor/ckeditor5-link/src/linkimage.js';
+import ImageToolbar from '../src/imagetoolbar.js';
+import ImageCaption from '../src/imagecaption.js';
+import Image from '../src/image.js';
+import global from '@ckeditor/ckeditor5-utils/src/dom/global.js';
+import Plugin from '@ckeditor/ckeditor5-core/src/plugin.js';
+import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import View from '@ckeditor/ckeditor5-ui/src/view.js';
+import { setData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
+import ImageStyle from '../src/imagestyle.js';
 
 describe( 'ImageToolbar', () => {
 	let editor, model, doc, toolbar, balloon, widgetToolbarRepository, editorElement;
@@ -83,12 +83,27 @@ describe( 'ImageToolbar', () => {
 
 	describe( 'toolbar', () => {
 		it( 'should use the config.image.toolbar to create items', () => {
+			// Make sure that toolbar is empty before first show.
+			expect( toolbar.items.length ).to.equal( 0 );
+
+			editor.ui.focusTracker.isFocused = true;
+
+			setData( model, '[<imageBlock src=""></imageBlock>]' );
+
 			expect( toolbar.items ).to.have.length( 2 );
 			expect( toolbar.items.get( 0 ).label ).to.equal( 'fake button' );
 		} );
 
 		it( 'should convert the declarative dropdown definition to the component factory item name', () => {
+			// Make sure that toolbar is empty before first show.
+			expect( toolbar.items.length ).to.equal( 0 );
+
+			editor.ui.focusTracker.isFocused = true;
+
+			setData( model, '[<imageBlock src=""></imageBlock>]' );
+
 			expect( toolbar.items.get( 1 ).buttonView.label ).to.equal( 'Fake dropdown: Centered image' );
+			expect( toolbar.items.get( 1 ).buttonView.arrowView.label ).to.equal( 'Fake dropdown' );
 		} );
 
 		it( 'should set proper CSS classes', () => {

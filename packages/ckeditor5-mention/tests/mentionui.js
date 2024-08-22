@@ -1,26 +1,26 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* global window, document, setTimeout, Event, console */
 
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
-import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import { keyCodes } from '@ckeditor/ckeditor5-utils/src/keyboard';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
-import global from '@ckeditor/ckeditor5-utils/src/dom/global';
-import { setData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import DomEventData from '@ckeditor/ckeditor5-engine/src/view/observer/domeventdata';
-import EventInfo from '@ckeditor/ckeditor5-utils/src/eventinfo';
-import ContextualBalloon from '@ckeditor/ckeditor5-ui/src/panel/balloon/contextualballoon';
-import env from '@ckeditor/ckeditor5-utils/src/env';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+import Plugin from '@ckeditor/ckeditor5-core/src/plugin.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import { keyCodes } from '@ckeditor/ckeditor5-utils/src/keyboard.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
+import global from '@ckeditor/ckeditor5-utils/src/dom/global.js';
+import { setData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import DomEventData from '@ckeditor/ckeditor5-engine/src/view/observer/domeventdata.js';
+import EventInfo from '@ckeditor/ckeditor5-utils/src/eventinfo.js';
+import ContextualBalloon from '@ckeditor/ckeditor5-ui/src/panel/balloon/contextualballoon.js';
+import env from '@ckeditor/ckeditor5-utils/src/env.js';
 
-import MentionUI, { createRegExp } from '../src/mentionui';
-import MentionEditing from '../src/mentionediting';
-import MentionsView from '../src/ui/mentionsview';
-import { assertCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
+import MentionUI, { createRegExp } from '../src/mentionui.js';
+import MentionEditing from '../src/mentionediting.js';
+import MentionsView from '../src/ui/mentionsview.js';
+import { assertCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils.js';
 
 describe( 'MentionUI', () => {
 	let editor, model, doc, editingView, mentionUI, editorElement, mentionsView, panelView, clock;
@@ -120,6 +120,14 @@ describe( 'MentionUI', () => {
 
 		it( 'should add MentionView to a panel', () => {
 			expect( editor.plugins.get( ContextualBalloon ).visibleView ).to.be.instanceof( MentionsView );
+		} );
+
+		it( 'should hide the contextual balloon when editor turns into a readonly mode', () => {
+			expect( panelView.isVisible ).to.be.true;
+
+			editor.enableReadOnlyMode( 'unit-test' );
+
+			expect( panelView.isVisible ).to.be.false;
 		} );
 	} );
 
@@ -290,6 +298,123 @@ describe( 'MentionUI', () => {
 					// Should not break;
 					expect( limiter() ).to.be.null;
 				} );
+		} );
+
+		describe( 'relation with the UI language direction of the editor', () => {
+			describe( 'for RTL languages', () => {
+				let contextualBaloonSpy;
+
+				beforeEach( async () => {
+					await editor.destroy();
+
+					return createClassicTestEditor( { ...staticConfig } )
+						.then( () => {
+							const contextualBalloon = editor.plugins.get( ContextualBalloon );
+							setData( model, '<paragraph>foo []</paragraph>' );
+							editor.locale.uiLanguageDirection = 'rtl';
+							contextualBaloonSpy = sinon.spy( contextualBalloon, 'add' );
+
+							model.change( writer => {
+								writer.insertText( '@', doc.selection.getFirstPosition() );
+							} );
+						} )
+						.then( waitForDebounce );
+				} );
+
+				it( 'should prefer the west position first (to the left of the caret)', () => {
+					const positionNames = contextualBaloonSpy.firstCall.firstArg.position.positions.map( ( { name } ) => name );
+
+					expect( positionNames ).to.have.ordered.members( [
+						'caret_sw',
+						'caret_se',
+						'caret_nw',
+						'caret_ne'
+					] );
+				} );
+			} );
+
+			describe( 'for ltr languages', () => {
+				let contextualBaloonSpy;
+
+				beforeEach( async () => {
+					await editor.destroy();
+
+					return createClassicTestEditor( { ...staticConfig } )
+						.then( () => {
+							const contextualBalloon = editor.plugins.get( ContextualBalloon );
+							setData( model, '<paragraph>foo []</paragraph>' );
+							contextualBaloonSpy = sinon.spy( contextualBalloon, 'add' );
+
+							model.change( writer => {
+								writer.insertText( '@', doc.selection.getFirstPosition() );
+							} );
+						} )
+						.then( waitForDebounce );
+				} );
+
+				it( 'should prefer the east position first (to the right of the caret)', () => {
+					const positionNames = contextualBaloonSpy.firstCall.firstArg.position.positions.map( ( { name } ) => name );
+
+					expect( positionNames ).to.have.ordered.members( [
+						'caret_se',
+						'caret_sw',
+						'caret_ne',
+						'caret_nw'
+					] );
+				} );
+			} );
+		} );
+	} );
+
+	describe( 'createRegExp()', () => {
+		let regExpStub;
+
+		// Cache the original value to restore it after the tests.
+		const originalGroupSupport = env.features.isRegExpUnicodePropertySupported;
+
+		before( () => {
+			env.features.isRegExpUnicodePropertySupported = false;
+		} );
+
+		beforeEach( () => {
+			return createClassicTestEditor( staticConfig )
+				.then( editor => {
+					regExpStub = sinon.stub( window, 'RegExp' );
+
+					return editor;
+				} );
+		} );
+
+		after( () => {
+			env.features.isRegExpUnicodePropertySupported = originalGroupSupport;
+		} );
+
+		it( 'returns a simplified RegExp for browsers not supporting Unicode punctuation groups', () => {
+			env.features.isRegExpUnicodePropertySupported = false;
+			createRegExp( '@', 2 );
+			sinon.assert.calledOnce( regExpStub );
+			sinon.assert.calledWithExactly( regExpStub, '(?:^|[ \\(\\[{"\'])([@])(.{2,})$', 'u' );
+		} );
+
+		it( 'returns a ES2018 RegExp for browsers supporting Unicode punctuation groups', () => {
+			env.features.isRegExpUnicodePropertySupported = true;
+			createRegExp( '@', 2 );
+			sinon.assert.calledOnce( regExpStub );
+			sinon.assert.calledWithExactly( regExpStub, '(?:^|[ \\p{Ps}\\p{Pi}"\'])([@])(.{2,})$', 'u' );
+		} );
+
+		it( 'correctly escapes passed marker #1', () => {
+			env.features.isRegExpUnicodePropertySupported = true;
+			createRegExp( ']', 2 );
+			sinon.assert.calledOnce( regExpStub );
+			sinon.assert.calledWithExactly( regExpStub, '(?:^|[ \\p{Ps}\\p{Pi}"\'])([\\]])(.{2,})$', 'u' );
+		} );
+
+		it( 'correctly escapes passed marker #2', () => {
+			env.features.isRegExpUnicodePropertySupported = true;
+			createRegExp( '\\', 2 );
+			sinon.assert.calledOnce( regExpStub );
+			sinon.assert.calledWithExactly( regExpStub, '(?:^|[ \\p{Ps}\\p{Pi}"\'])([\\\\])(.{2,})$', 'u' );
 		} );
 	} );
 
@@ -487,44 +612,6 @@ describe( 'MentionUI', () => {
 
 						sinon.assert.callCount( mentionElementSpy.set, 2 );
 					} );
-			} );
-		} );
-
-		describe( 'ES2018 RegExp Unicode property escapes fallback', () => {
-			let regExpStub;
-
-			// Cache the original value to restore it after the tests.
-			const originalGroupSupport = env.features.isRegExpUnicodePropertySupported;
-
-			before( () => {
-				env.features.isRegExpUnicodePropertySupported = false;
-			} );
-
-			beforeEach( () => {
-				return createClassicTestEditor( staticConfig )
-					.then( editor => {
-						regExpStub = sinon.stub( window, 'RegExp' );
-
-						return editor;
-					} );
-			} );
-
-			after( () => {
-				env.features.isRegExpUnicodePropertySupported = originalGroupSupport;
-			} );
-
-			it( 'returns a simplified RegExp for browsers not supporting Unicode punctuation groups', () => {
-				env.features.isRegExpUnicodePropertySupported = false;
-				createRegExp( '@', 2 );
-				sinon.assert.calledOnce( regExpStub );
-				sinon.assert.calledWithExactly( regExpStub, '(?:^|[ \\(\\[{"\'])([@])([\\S]{2,})$', 'u' );
-			} );
-
-			it( 'returns a ES2018 RegExp for browsers supporting Unicode punctuation groups', () => {
-				env.features.isRegExpUnicodePropertySupported = true;
-				createRegExp( '@', 2 );
-				sinon.assert.calledOnce( regExpStub );
-				sinon.assert.calledWithExactly( regExpStub, '(?:^|[ \\p{Ps}\\p{Pi}"\'])([@])([\\S]{2,})$', 'u' );
 			} );
 		} );
 
@@ -862,6 +949,69 @@ describe( 'MentionUI', () => {
 					} )
 					.then( waitForDebounce )
 					.then( () => expect( panelView.isVisible ).to.be.false );
+			} );
+		} );
+
+		// https://github.com/ckeditor/ckeditor5/issues/11400
+		describe( 'matching with whitespaces', () => {
+			const feedItems = [
+				{ id: '@foo', name: 'Foo' },
+				{ id: '@marry', name: 'Marry Foo' },
+				{ id: '@marry', name: 'Marry Bar' },
+				{ id: '@marry', name: 'Marry Baz' }
+			];
+
+			beforeEach( async () => {
+				await createClassicTestEditor( {
+					feeds: [
+						{
+							feed: queryText => feedItems.filter( ( { name } ) => name.toLowerCase().includes( queryText ) ),
+							marker: '@'
+						}
+					]
+				} );
+			} );
+
+			it( 'should not show panel when the selection is at the whitespace after an existing mention', async () => {
+				setData( model, '<paragraph>foo @marry bar[]</paragraph>' );
+
+				model.change( writer => {
+					const range = writer.createRange(
+						// <paragraph>foo [@marry] bar</paragraph>
+						writer.createPositionAt( doc.getRoot().getChild( 0 ), 4 ),
+						writer.createPositionAt( doc.getRoot().getChild( 0 ), 10 )
+					);
+
+					writer.setAttribute( 'mention', { id: '@marry', uid: 1234 }, range );
+				} );
+
+				await waitForDebounce();
+
+				model.change( writer => {
+					writer.setSelection( doc.getRoot().getChild( 0 ), 0 );
+				} );
+
+				expect( panelView.isVisible ).to.be.false;
+
+				model.change( writer => {
+					// <paragraph>foo @marry []bar</paragraph>
+					// All "Marry *" could match here if it wasn't for the existing mention.
+					writer.setSelection( doc.getRoot().getChild( 0 ), 11 );
+				} );
+
+				expect( panelView.isVisible ).to.be.false;
+				expect( model.markers.has( 'mention' ) ).to.be.false;
+			} );
+
+			it( 'should show the panel when the selection is at the whitespace after a matching marker and text', async () => {
+				// This should match all "Marry *" because there's no marker for @marry yet.
+				setData( model, '<paragraph>foo @marry []bar</paragraph>' );
+
+				await waitForDebounce();
+
+				expect( panelView.isVisible ).to.be.true;
+				expect( model.markers.has( 'mention' ) ).to.be.true;
+				expect( mentionsView.items ).to.have.length( 3 );
 			} );
 		} );
 
@@ -1934,7 +2084,7 @@ describe( 'MentionUI', () => {
 					feeds: [
 						{
 							marker: '@',
-							feed: [ '@a1', '@a2', '@a3' ]
+							feed: [ '@a1', '@a2', '@a3', '@a4 xyz', '@a5 x y z', '@a6 x$z' ]
 						},
 						{
 							marker: '$',
@@ -1959,7 +2109,7 @@ describe( 'MentionUI', () => {
 					.then( () => {
 						expect( panelView.isVisible ).to.be.true;
 						expect( editor.model.markers.has( 'mention' ) ).to.be.true;
-						expect( mentionsView.items ).to.have.length( 3 );
+						expect( mentionsView.items ).to.have.length( 6 );
 
 						mentionsView.items.get( 0 ).children.get( 0 ).fire( 'execute' );
 					} )
@@ -1994,7 +2144,7 @@ describe( 'MentionUI', () => {
 						expect( panelView.isVisible ).to.be.true;
 						expect( editor.model.markers.has( 'mention' ) ).to.be.true;
 
-						expect( mentionsView.items ).to.have.length( 3 );
+						expect( mentionsView.items ).to.have.length( 6 );
 					} );
 			} );
 
@@ -2009,7 +2159,7 @@ describe( 'MentionUI', () => {
 					.then( () => {
 						expect( panelView.isVisible ).to.be.true;
 						expect( editor.model.markers.has( 'mention' ) ).to.be.true;
-						expect( mentionsView.items ).to.have.length( 3 );
+						expect( mentionsView.items ).to.have.length( 6 );
 
 						mentionsView.items.get( 0 ).children.get( 0 ).fire( 'execute' );
 					} )
@@ -2032,6 +2182,66 @@ describe( 'MentionUI', () => {
 					.then( () => {
 						expect( panelView.isVisible ).to.be.true;
 						expect( editor.model.markers.has( 'mention' ) ).to.be.true;
+					} );
+			} );
+
+			it( 'should match a feed', () => {
+				setData( model, '<paragraph>foo []</paragraph>' );
+
+				model.change( writer => {
+					writer.insertText( '@a3', doc.selection.getFirstPosition() );
+				} );
+
+				return waitForDebounce()
+					.then( () => {
+						expect( panelView.isVisible ).to.be.true;
+						expect( editor.model.markers.has( 'mention' ) ).to.be.true;
+						expect( mentionsView.items ).to.have.length( 1 );
+					} );
+			} );
+
+			it( 'should match a feed with space', () => {
+				setData( model, '<paragraph>foo []</paragraph>' );
+
+				model.change( writer => {
+					writer.insertText( '@a4 xyz', doc.selection.getFirstPosition() );
+				} );
+
+				return waitForDebounce()
+					.then( () => {
+						expect( panelView.isVisible ).to.be.true;
+						expect( editor.model.markers.has( 'mention' ) ).to.be.true;
+						expect( mentionsView.items ).to.have.length( 1 );
+					} );
+			} );
+
+			it( 'should match a feed with multiple spaces', () => {
+				setData( model, '<paragraph>foo []</paragraph>' );
+
+				model.change( writer => {
+					writer.insertText( '@a5 x y z', doc.selection.getFirstPosition() );
+				} );
+
+				return waitForDebounce()
+					.then( () => {
+						expect( panelView.isVisible ).to.be.true;
+						expect( editor.model.markers.has( 'mention' ) ).to.be.true;
+						expect( mentionsView.items ).to.have.length( 1 );
+					} );
+			} );
+
+			it( 'should match a feed with spaces and other mention character', () => {
+				setData( model, '<paragraph>foo []</paragraph>' );
+
+				model.change( writer => {
+					writer.insertText( '@a6 x$z', doc.selection.getFirstPosition() );
+				} );
+
+				return waitForDebounce()
+					.then( () => {
+						expect( panelView.isVisible ).to.be.true;
+						expect( editor.model.markers.has( 'mention' ) ).to.be.true;
+						expect( mentionsView.items ).to.have.length( 1 );
 					} );
 			} );
 		} );
@@ -2182,6 +2392,106 @@ describe( 'MentionUI', () => {
 					} );
 			} );
 		} );
+
+		describe( 'overriding the number of visible mentions using config.mention.dropdownLimit', () => {
+			const longFeed = [
+				'@01', '@02', '@03', '@04', '@05', '@06', '@07', '@08', '@09', '@10',
+				'@11', '@12', '@13', '@16', '@17', '@18', '@17', '@18', '@19', '@20',
+				'@21', '@22', '@23', '@24', '@25', '@26', '@27', '@28', '@29', '@30'
+			];
+
+			const simpleArrayFeed = {
+				marker: '@',
+				feed: longFeed
+			};
+
+			const limitedArrayFeed = {
+				marker: '@',
+				feed: longFeed,
+				dropdownLimit: 5
+			};
+
+			const customFunctionFeed = {
+				marker: '@',
+				feed: () => {
+					return longFeed;
+				}
+			};
+
+			it( 'works with specific number in case of custom function feed', () => {
+				const mentionsLimit = 3;
+
+				return createClassicTestEditor( {
+					dropdownLimit: mentionsLimit,
+					feeds: [ customFunctionFeed ] } )
+					.then( () => {
+						setData( editor.model, '<paragraph>foo []</paragraph>' );
+
+						model.change( writer => {
+							writer.insertText( '@', doc.selection.getFirstPosition() );
+						} );
+					} )
+					.then( waitForDebounce )
+					.then( () => {
+						expect( panelView.isVisible ).to.be.true;
+						expect( mentionsView.items ).to.have.length( mentionsLimit );
+					} );
+			} );
+
+			it( 'dropdown list length should be equal to the dropdownLimit value', () => {
+				return createClassicTestEditor( {
+					dropdownLimit: 25,
+					feeds: [ simpleArrayFeed ] } )
+					.then( () => {
+						setData( model, '<paragraph>foo []</paragraph>' );
+
+						model.change( writer => {
+							writer.insertText( '@', doc.selection.getFirstPosition() );
+						} );
+					} )
+					.then( waitForDebounce )
+					.then( () => {
+						expect( panelView.isVisible ).to.be.true;
+						expect( mentionsView.items ).to.have.length( 25 );
+					} );
+			} );
+
+			it( 'dropdown list length should be equal to the length of the feed provided', () => {
+				return createClassicTestEditor( {
+					dropdownLimit: Infinity,
+					feeds: [ simpleArrayFeed ] } )
+					.then( () => {
+						setData( model, '<paragraph>foo []</paragraph>' );
+
+						model.change( writer => {
+							writer.insertText( '@', doc.selection.getFirstPosition() );
+						} );
+					} )
+					.then( waitForDebounce )
+					.then( () => {
+						expect( panelView.isVisible ).to.be.true;
+						expect( mentionsView.items ).to.have.length( simpleArrayFeed.feed.length );
+					} );
+			} );
+
+			it( 'dropdown list length should be equal to the feeds dropdownLimit value', () => {
+				return createClassicTestEditor( {
+					dropdownLimit: 25,
+					feeds: [ limitedArrayFeed ] } )
+					.then( () => {
+						setData( model, '<paragraph>foo []</paragraph>' );
+
+						model.change( writer => {
+							writer.insertText( '@', doc.selection.getFirstPosition() );
+						} );
+					} )
+					.then( waitForDebounce )
+					.then( () => {
+						expect( panelView.isVisible ).to.be.true;
+						expect( mentionsView.items ).to.have.length( 5 );
+					} );
+			} );
+		} );
 	} );
 
 	describe( 'execute', () => {
@@ -2224,9 +2534,10 @@ describe( 'MentionUI', () => {
 			return waitForDebounce()
 				.then( () => {
 					mentionsView.items.get( 0 ).children.get( 0 ).fire( 'execute' );
-
-					expect( panelView.isVisible ).to.be.false;
-					expect( editor.model.markers.has( 'mention' ) ).to.be.false;
+					return waitForDebounce().then( () => {
+						expect( panelView.isVisible ).to.be.false;
+						expect( editor.model.markers.has( 'mention' ) ).to.be.false;
+					} );
 				} );
 		} );
 

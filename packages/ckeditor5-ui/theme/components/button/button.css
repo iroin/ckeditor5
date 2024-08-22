@@ -1,20 +1,26 @@
 /*
- * Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 @import "../../mixins/_unselectable.css";
-@import "../tooltip/mixins/_tooltip.css";
+@import "../../mixins/_dir.css";
 
 .ck.ck-button,
 a.ck.ck-button {
 	@mixin ck-unselectable;
-	@mixin ck-tooltip_enabled;
 
 	position: relative;
 	display: inline-flex;
 	align-items: center;
-	justify-content: left;
+
+	@mixin ck-dir ltr {
+		justify-content: left;
+	}
+
+	@mixin ck-dir rtl {
+		justify-content: right;
+	}
 
 	& .ck-button__label {
 		display: none;
@@ -29,14 +35,5 @@ a.ck.ck-button {
 	/* Center the icon horizontally in a button without text. */
 	&:not(.ck-button_with-text)  {
 		justify-content: center;
-	}
-
-	&:hover {
-		@mixin ck-tooltip_visible;
-	}
-
-	/* Get rid of the native focus outline around the tooltip when focused (but not :hover). */
-	&:focus:not(:hover) {
-		@mixin ck-tooltip_disabled;
 	}
 }

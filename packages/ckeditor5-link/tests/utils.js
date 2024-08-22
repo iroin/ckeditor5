@@ -1,15 +1,17 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import ViewDocument from '@ckeditor/ckeditor5-engine/src/view/document';
-import ViewDowncastWriter from '@ckeditor/ckeditor5-engine/src/view/downcastwriter';
-import AttributeElement from '@ckeditor/ckeditor5-engine/src/view/attributeelement';
-import ContainerElement from '@ckeditor/ckeditor5-engine/src/view/containerelement';
-import Text from '@ckeditor/ckeditor5-engine/src/view/text';
-import Schema from '@ckeditor/ckeditor5-engine/src/model/schema';
-import ModelElement from '@ckeditor/ckeditor5-engine/src/model/element';
+/* global window */
+
+import ViewDocument from '@ckeditor/ckeditor5-engine/src/view/document.js';
+import ViewDowncastWriter from '@ckeditor/ckeditor5-engine/src/view/downcastwriter.js';
+import AttributeElement from '@ckeditor/ckeditor5-engine/src/view/attributeelement.js';
+import ContainerElement from '@ckeditor/ckeditor5-engine/src/view/containerelement.js';
+import Text from '@ckeditor/ckeditor5-engine/src/view/text.js';
+import Schema from '@ckeditor/ckeditor5-engine/src/model/schema.js';
+import ModelElement from '@ckeditor/ckeditor5-engine/src/model/element.js';
 import {
 	createLinkElement,
 	isLinkElement,
@@ -17,8 +19,9 @@ import {
 	normalizeDecorators,
 	isLinkableElement,
 	isEmail,
-	addLinkProtocolIfApplicable
-} from '../src/utils';
+	addLinkProtocolIfApplicable,
+	openLink
+} from '../src/utils.js';
 
 describe( 'utils', () => {
 	describe( 'isLinkElement()', () => {
@@ -85,6 +88,27 @@ describe( 'utils', () => {
 			expect( ensureSafeUrl( url ) ).to.equal( url );
 		} );
 
+		it( 'returns the same absolute tel URL (if allowed in config)', () => {
+			const url = 'tel:+48123456789';
+			const allowedCustomProtocols = [ 'tel' ];
+
+			expect( ensureSafeUrl( url, allowedCustomProtocols ) ).to.equal( url );
+		} );
+
+		it( 'returns the same absolute sms URL (if allowed in config)', () => {
+			const url = 'sms:+48987654321';
+			const allowedCustomProtocols = [ 'sms' ];
+
+			expect( ensureSafeUrl( url, allowedCustomProtocols ) ).to.equal( url );
+		} );
+
+		it( 'returns the same absolute sftp URL (if allowed in config)', () => {
+			const url = 'sftp://xx.yy/zz';
+			const allowedCustomProtocols = [ 'sftp' ];
+
+			expect( ensureSafeUrl( url, allowedCustomProtocols ) ).to.equal( url );
+		} );
+
 		it( 'returns the same relative URL (starting with a dot)', () => {
 			const url = './xx/yyy';
 
@@ -115,6 +139,12 @@ describe( 'utils', () => {
 			expect( ensureSafeUrl( url ) ).to.equal( url );
 		} );
 
+		it( 'returns the same relative URL (starting with hash)', () => {
+			const url = '#thatsection1';
+
+			expect( ensureSafeUrl( url ) ).to.equal( url );
+		} );
+
 		it( 'returns the same URL even if it contains whitespaces', () => {
 			const url = '  ./xx/ yyy\t';
 
@@ -123,6 +153,12 @@ describe( 'utils', () => {
 
 		it( 'returns the same URL even if it contains non ASCII characters', () => {
 			const url = 'https://kłącze.yy/źdźbło';
+
+			expect( ensureSafeUrl( url ) ).to.equal( url );
+		} );
+
+		it( 'returns the same URL even if it starts with an IP address', () => {
+			const url = '192.178.10.123/subpath';
 
 			expect( ensureSafeUrl( url ) ).to.equal( url );
 		} );
@@ -142,6 +178,13 @@ describe( 'utils', () => {
 			const url = 'foo:alert(1)';
 
 			expect( ensureSafeUrl( url ) ).to.equal( '#' );
+		} );
+
+		it( 'returns the same URL when the URL contains a custom protocol defined in the allowedProtocols parameter', () => {
+			const url = 'foo:customurl.resource';
+			const allowedCustomProtocols = [ 'https', 'http', 'foo' ];
+
+			expect( ensureSafeUrl( url, allowedCustomProtocols ) ).to.equal( url );
 		} );
 
 		it( 'returns safe URL when a malicious URL contains spaces', () => {
@@ -301,6 +344,30 @@ describe( 'utils', () => {
 			expect( addLinkProtocolIfApplicable( 'http://www.ckeditor.com', 'http://' ) ).to.equal( 'http://www.ckeditor.com' );
 			expect( addLinkProtocolIfApplicable( 'mailto:foo@bar.com' ) ).to.equal( 'mailto:foo@bar.com' );
 			expect( addLinkProtocolIfApplicable( 'mailto:foo@bar.com', 'http://' ) ).to.equal( 'mailto:foo@bar.com' );
+		} );
+	} );
+
+	describe( 'openLink()', () => {
+		let stub;
+
+		beforeEach( () => {
+			stub = sinon.stub( window, 'open' );
+
+			stub.returns( undefined );
+		} );
+
+		afterEach( () => {
+			stub.restore();
+		} );
+
+		it( 'should open a new browser tab', () => {
+			const url = 'http://www.ckeditor.com';
+
+			openLink( url );
+
+			expect( stub.calledOnce ).to.be.true;
+			expect( stub.calledOn( window ) ).to.be.true;
+			expect( stub.calledWith( url, '_blank', 'noopener' ) ).to.be.true;
 		} );
 	} );
 } );

@@ -1,9 +1,9 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import mix from '../src/mix';
+import mix from '../src/mix.js';
 
 describe( 'utils', () => {
 	describe( 'mix', () => {
@@ -148,6 +148,47 @@ describe( 'utils', () => {
 
 			expect( bar.a() ).to.equal( 'foo' );
 			expect( bar.b() ).to.equal( 'b' );
+		} );
+
+		it( 'does not copy function built-in properties', () => {
+			class Foo {}
+
+			function mixin() {}
+
+			mixin.a = function() {
+				return 'a';
+			};
+
+			mix( Foo, mixin );
+
+			const foo = new Foo();
+
+			expect( foo.a() ).to.equal( 'a' );
+			expect( foo ).to.not.have.property( 'name' );
+			expect( foo ).to.not.have.property( 'prototype' );
+			expect( foo ).to.not.have.property( 'length' );
+		} );
+
+		it( 'does copy function built-in properties if the mixin is not a function at all', () => {
+			class Foo {}
+
+			const prototype = {};
+
+			const mixin = {
+				a() { return 'a'; },
+				name: 'mixin',
+				length: 0,
+				prototype
+			};
+
+			mix( Foo, mixin );
+
+			const foo = new Foo();
+
+			expect( foo.a() ).to.equal( 'a' );
+			expect( foo ).to.have.property( 'name' ).that.is.equal( 'mixin' );
+			expect( foo ).to.have.property( 'prototype' ).that.is.equal( prototype );
+			expect( foo ).to.have.property( 'length' ).that.is.equal( 0 );
 		} );
 	} );
 } );

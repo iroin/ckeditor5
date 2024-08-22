@@ -1,14 +1,14 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import ImageInlineEditing from '@ckeditor/ckeditor5-image/src/image/imageinlineediting';
-import ShiftEnter from '@ckeditor/ckeditor5-enter/src/shiftenter';
+import VirtualTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import ImageInlineEditing from '@ckeditor/ckeditor5-image/src/image/imageinlineediting.js';
+import ShiftEnter from '@ckeditor/ckeditor5-enter/src/shiftenter.js';
 
-import { getData } from '../../../src/dev-utils/model';
+import { getData } from '../../../src/dev-utils/model.js';
 
 // NOTE:
 // dev utils' setData() loses white spaces so don't use it for tests here!!!
@@ -107,16 +107,17 @@ describe( 'DomConverter – whitespace handling – integration', () => {
 		} );
 
 		// Controversial result. See https://github.com/ckeditor/ckeditor5-engine/issues/987.
-		it( 'nbsp between blocks is not ignored (between paragraphs)', () => {
+		// https://github.com/ckeditor/ckeditor5/pull/11744/files#r871377976.
+		it( 'nbsp between blocks is ignored (between paragraphs)', () => {
 			editor.setData( '<p>foo</p>&nbsp;<p>bar</p>' );
 
 			expect( getData( editor.model, { withoutSelection: true } ) )
-				.to.equal( '<paragraph>foo</paragraph><paragraph> </paragraph><paragraph>bar</paragraph>' );
+				.to.equal( '<paragraph>foo</paragraph><paragraph>bar</paragraph>' );
 
-			expect( editor.getData() ).to.equal( '<p>foo</p><p>&nbsp;</p><p>bar</p>' );
+			expect( editor.getData() ).to.equal( '<p>foo</p><p>bar</p>' );
 		} );
 
-		it( 'nbsp between blocks is not ignored (different blocks)', () => {
+		it( 'nbsp between blocks is ignored (different blocks)', () => {
 			editor.model.schema.register( 'block', { inheritAllFrom: '$block' } );
 			editor.conversion.elementToElement( { model: 'block', view: 'block' } );
 			editor.setData( '<block>foo</block>&nbsp;<p>bar</p>' );
@@ -124,14 +125,43 @@ describe( 'DomConverter – whitespace handling – integration', () => {
 			expect( getData( editor.model, { withoutSelection: true } ) )
 				.to.equal(
 					'<block>foo</block>' +
-					'<paragraph> </paragraph>' +
 					'<paragraph>bar</paragraph>'
 				);
 
 			expect( editor.getData() )
 				.to.equal(
 					'<block>foo</block>' +
-					'<p>&nbsp;</p>' +
+					'<p>bar</p>'
+				);
+		} );
+
+		it( 'whitespaces between custom elements at block level are ignored', () => {
+			editor.model.schema.register( 'custom-foo-element', {
+				allowWhere: [ '$text', '$block' ],
+				allowChildren: '$text',
+				isInline: true
+			} );
+			editor.conversion.elementToElement( { model: 'custom-foo-element', view: 'custom-foo-element' } );
+			editor.setData(
+				'<p>foo</p>' +
+				' <custom-foo-element>a</custom-foo-element>' +
+				' <custom-foo-element>b</custom-foo-element>' +
+				' <p>bar</p>'
+			);
+
+			expect( getData( editor.model, { withoutSelection: true } ) )
+				.to.equal(
+					'<paragraph>foo</paragraph>' +
+					'<custom-foo-element>a</custom-foo-element>' +
+					'<custom-foo-element>b</custom-foo-element>' +
+					'<paragraph>bar</paragraph>'
+				);
+
+			expect( editor.getData() )
+				.to.equal(
+					'<p>foo</p>' +
+					'<custom-foo-element>a</custom-foo-element>' +
+					'<custom-foo-element>b</custom-foo-element>' +
 					'<p>bar</p>'
 				);
 		} );
@@ -458,6 +488,342 @@ describe( 'DomConverter – whitespace handling – integration', () => {
 					} );
 				}
 			} );
+		} );
+
+		describe( 'around custom inline objects', () => {
+			beforeEach( () => {
+				editor.model.schema.register( 'inlineObject', { inheritAllFrom: '$inlineObject' } );
+
+				editor.conversion.for( 'upcast' ).elementToElement( {
+					view: {
+						name: 'span',
+						classes: 'foo'
+					},
+					model: 'inlineObject'
+				} );
+				editor.conversion.for( 'downcast' ).elementToElement( {
+					model: 'inlineObject',
+					view: ( modelElement, { writer } ) => {
+						const viewElement = writer.createContainerElement( 'span', { class: 'foo' } );
+
+						viewElement.getFillerOffset = () => null;
+
+						return viewElement;
+					}
+				} );
+
+				editor.data.htmlProcessor.domConverter.registerInlineObjectMatcher( {
+					name: 'span',
+					classes: 'foo'
+				} );
+			} );
+
+			it( 'white space with text before empty inline object is not ignored', () => {
+				editor.setData( '<p>foo <span class="foo"></span></p>' );
+
+				expect( getData( editor.model, { withoutSelection: true } ) )
+					.to.equal( '<paragraph>foo <inlineObject></inlineObject></paragraph>' );
+
+				expect( editor.getData() ).to.equal( '<p>foo <span class="foo"></span></p>' );
+			} );
+
+			it( 'white space with text after empty inline object is not ignored', () => {
+				editor.setData( '<p><span class="foo"></span> foo</p>' );
+
+				expect( getData( editor.model, { withoutSelection: true } ) )
+					.to.equal( '<paragraph><inlineObject></inlineObject> foo</paragraph>' );
+
+				expect( editor.getData() ).to.equal( '<p><span class="foo"></span> foo</p>' );
+			} );
+
+			it( 'white spaces with text around empty inline object are not ignored', () => {
+				editor.setData( '<p>foo <span class="foo"></span> bar</p>' );
+
+				expect( getData( editor.model, { withoutSelection: true } ) )
+					.to.equal( '<paragraph>foo <inlineObject></inlineObject> bar</paragraph>' );
+
+				expect( editor.getData() ).to.equal( '<p>foo <span class="foo"></span> bar</p>' );
+			} );
+
+			it( 'white space before empty inline object is ignored', () => {
+				editor.setData( '<p> <span class="foo"></span></p>' );
+
+				expect( getData( editor.model, { withoutSelection: true } ) )
+					.to.equal( '<paragraph><inlineObject></inlineObject></paragraph>' );
+
+				expect( editor.getData() ).to.equal( '<p><span class="foo"></span></p>' );
+			} );
+
+			it( 'white space after empty inline object is ignored', () => {
+				editor.setData( '<p><span class="foo"></span> </p>' );
+
+				expect( getData( editor.model, { withoutSelection: true } ) )
+					.to.equal( '<paragraph><inlineObject></inlineObject></paragraph>' );
+
+				expect( editor.getData() ).to.equal( '<p><span class="foo"></span></p>' );
+			} );
+
+			it( 'white spaces around empty inline object are ignored', () => {
+				editor.setData( '<p> <span class="foo"></span> </p>' );
+
+				expect( getData( editor.model, { withoutSelection: true } ) )
+					.to.equal( '<paragraph><inlineObject></inlineObject></paragraph>' );
+
+				expect( editor.getData() ).to.equal( '<p><span class="foo"></span></p>' );
+			} );
+
+			it( 'nbsp before empty inline object is not ignored', () => {
+				editor.setData( '<p>&nbsp;<span class="foo"></span></p>' );
+
+				expect( getData( editor.model, { withoutSelection: true } ) )
+					.to.equal( '<paragraph> <inlineObject></inlineObject></paragraph>' );
+
+				expect( editor.getData() ).to.equal( '<p>&nbsp;<span class="foo"></span></p>' );
+			} );
+
+			it( 'nbsp after empty inline object is not ignored', () => {
+				editor.setData( '<p><span class="foo"></span>&nbsp;</p>' );
+
+				expect( getData( editor.model, { withoutSelection: true } ) )
+					.to.equal( '<paragraph><inlineObject></inlineObject> </paragraph>' );
+
+				expect( editor.getData() ).to.equal( '<p><span class="foo"></span>&nbsp;</p>' );
+			} );
+
+			it( 'nbsp around empty inline object are not ignored', () => {
+				editor.setData( '<p>&nbsp;<span class="foo"></span>&nbsp;</p>' );
+
+				expect( getData( editor.model, { withoutSelection: true } ) )
+					.to.equal( '<paragraph> <inlineObject></inlineObject> </paragraph>' );
+
+				expect( editor.getData() ).to.equal( '<p>&nbsp;<span class="foo"></span>&nbsp;</p>' );
+			} );
+
+			it( 'text+nbsp before empty inline object is not ignored', () => {
+				editor.setData( '<p>foo&nbsp;<span class="foo"></span></p>' );
+
+				expect( getData( editor.model, { withoutSelection: true } ) )
+					.to.equal( '<paragraph>foo <inlineObject></inlineObject></paragraph>' );
+
+				expect( editor.getData() ).to.equal( '<p>foo <span class="foo"></span></p>' );
+			} );
+
+			it( 'nbsp+text after empty inline object is not ignored', () => {
+				editor.setData( '<p><span class="foo"></span>&nbsp;foo</p>' );
+
+				expect( getData( editor.model, { withoutSelection: true } ) )
+					.to.equal( '<paragraph><inlineObject></inlineObject> foo</paragraph>' );
+
+				expect( editor.getData() ).to.equal( '<p><span class="foo"></span> foo</p>' );
+			} );
+
+			it( 'text+nbsp or nbsp+text around empty inline object are not ignored', () => {
+				editor.setData( '<p>foo&nbsp;<span class="foo"></span>&nbsp;bar</p>' );
+
+				expect( getData( editor.model, { withoutSelection: true } ) )
+					.to.equal( '<paragraph>foo <inlineObject></inlineObject> bar</paragraph>' );
+
+				expect( editor.getData() ).to.equal( '<p>foo <span class="foo"></span> bar</p>' );
+			} );
+		} );
+
+		it( 'around dataPipeline:transparentRendering objects', () => {
+			editor.model.schema.register( 'inlineObject', { inheritAllFrom: '$inlineObject' } );
+
+			function converter( isData ) {
+				return ( modelElement, { writer } ) => {
+					const viewElement = writer.createContainerElement( 'span' );
+
+					if ( isData ) {
+						writer.setCustomProperty( 'dataPipeline:transparentRendering', true, viewElement );
+						writer.insert( writer.createPositionAt( viewElement, 0 ), writer.createText( 'XXX' ) );
+					}
+
+					return viewElement;
+				};
+			}
+
+			editor.conversion.for( 'editingDowncast' ).elementToElement( {
+				model: 'inlineObject',
+				view: converter( false )
+			} );
+
+			editor.conversion.for( 'dataDowncast' ).elementToElement( {
+				model: 'inlineObject',
+				view: converter( true )
+			} );
+
+			editor.model.change( writer => {
+				const p = editor.model.document.getRoot().getChild( 0 );
+
+				writer.insertText( 'Foo ', p, 'end' );
+				writer.insertElement( 'inlineObject', p, 'end' );
+				writer.insertText( ' bar', p, 'end' );
+			} );
+
+			expect( editor.getData() ).to.equal( '<p>Foo XXX bar</p>' );
+		} );
+
+		it( 'in preformatted blocks', () => {
+			editor.model.schema.register( 'pre', { inheritAllFrom: '$block' } );
+			editor.conversion.elementToElement( { model: 'pre', view: 'pre' } );
+
+			editor.setData( '<pre>    foo\n    bar\n    </pre>' );
+
+			expect( getData( editor.model, { withoutSelection: true } ) )
+				.to.equal( '<pre>    foo\n    bar\n    </pre>' );
+
+			expect( editor.getData() ).to.equal( '<pre>    foo\n    bar\n    </pre>' );
+		} );
+
+		describe( 'in elements that contain preformatted whitespace using the white-space CSS property', () => {
+			const preserveWhiteSpaceValues = [ 'pre', 'pre-wrap', 'break-spaces' ];
+			const collapseWhiteSpaceValues = [ 'normal', 'nowrap', 'pre-line', 'unset', 'revert' ];
+
+			it( 'which is the direct ancestor', () => {
+				for ( const preserveWhiteSpace of preserveWhiteSpaceValues ) {
+					editor.setData(
+						`<span style="white-space: ${ preserveWhiteSpace };">` +
+							'    foo    bar    ' +
+						'</span>'
+					);
+
+					expect( getData( editor.model, { withoutSelection: true } ) )
+						.to.equal( '<paragraph>    foo    bar    </paragraph>' );
+
+					expect( editor.getData() )
+						.to.equal( '<p>&nbsp; &nbsp; foo &nbsp; &nbsp;bar &nbsp; &nbsp;</p>' );
+				}
+			} );
+
+			it( 'which is the indirect ancestor', () => {
+				for ( const preserveWhiteSpace of preserveWhiteSpaceValues ) {
+					editor.setData(
+						`<span style="white-space: ${ preserveWhiteSpace };">` +
+							'<span><span>    foo    bar    </span></span>' +
+						'</span>'
+					);
+
+					expect( getData( editor.model, { withoutSelection: true } ) )
+						.to.equal( '<paragraph>    foo    bar    </paragraph>' );
+
+					expect( editor.getData() )
+						.to.equal( '<p>&nbsp; &nbsp; foo &nbsp; &nbsp;bar &nbsp; &nbsp;</p>' );
+				}
+			} );
+
+			it( 'in a block that overwrites the white-space of its parent', () => {
+				for ( const collapseWhiteSpace of collapseWhiteSpaceValues ) {
+					for ( const preserveWhiteSpace of preserveWhiteSpaceValues ) {
+						editor.setData(
+							`<span style="white-space: ${ collapseWhiteSpace };">` +
+								`<span style="white-space: ${ preserveWhiteSpace }">` +
+									'    foo    bar    ' +
+								'</span>' +
+							'</span>'
+						);
+
+						expect( getData( editor.model, { withoutSelection: true } ) )
+							.to.equal( '<paragraph>    foo    bar    </paragraph>' );
+
+						expect( editor.getData() )
+							.to.equal( '<p>&nbsp; &nbsp; foo &nbsp; &nbsp;bar &nbsp; &nbsp;</p>' );
+					}
+				}
+			} );
+
+			it( 'which contains a child that resets it back to not preformatted', () => {
+				for ( const preserveWhiteSpace of preserveWhiteSpaceValues ) {
+					for ( const collapseWhiteSpace of collapseWhiteSpaceValues ) {
+						editor.setData(
+							`<span style="white-space: ${ preserveWhiteSpace };">` +
+								`<span style="white-space: ${ collapseWhiteSpace }">` +
+									'    foo    bar    ' +
+								'</span>' +
+							'</span>'
+						);
+
+						expect( getData( editor.model, { withoutSelection: true } ) )
+							.to.equal( '<paragraph>foo bar</paragraph>' );
+
+						expect( editor.getData() )
+							.to.equal( '<p>foo bar</p>' );
+					}
+				}
+			} );
+
+			it( 'which contains a block containing white-space: inherit', () => {
+				for ( const preserveWhiteSpace of preserveWhiteSpaceValues ) {
+					editor.setData(
+						`<span style="white-space: ${ preserveWhiteSpace };">` +
+							'<span style="white-space: inherit">' +
+								'    foo    bar    ' +
+							'</span>' +
+						'</span>'
+					);
+
+					expect( getData( editor.model, { withoutSelection: true } ) )
+						.to.equal( '<paragraph>    foo    bar    </paragraph>' );
+
+					expect( editor.getData() )
+						.to.equal( '<p>&nbsp; &nbsp; foo &nbsp; &nbsp;bar &nbsp; &nbsp;</p>' );
+				}
+			} );
+
+			it( 'a surrounding <pre> will take precedence over an element that sets white-space to collapse', () => {
+				for ( const collapseWhiteSpace of collapseWhiteSpaceValues ) {
+					editor.setData(
+						'<pre>' +
+							`<span style="white-space: ${ collapseWhiteSpace };">` +
+								'    foo    bar    ' +
+							'</span>' +
+						'</pre>'
+					);
+
+					expect( getData( editor.model, { withoutSelection: true } ) )
+						.to.equal( '<paragraph>    foo    bar    </paragraph>' );
+
+					expect( editor.getData() )
+						.to.equal( '<p>&nbsp; &nbsp; foo &nbsp; &nbsp;bar &nbsp; &nbsp;</p>' );
+				}
+			} );
+		} );
+
+		it( 'in nested blocks', () => {
+			editor.model.schema.register( 'ul', { inheritAllFrom: '$block', allowIn: 'li' } );
+			editor.model.schema.register( 'li', { inheritAllFrom: '$block', allowIn: 'ul' } );
+			editor.conversion.elementToElement( { model: 'ul', view: 'ul' } );
+			editor.conversion.elementToElement( { model: 'li', view: 'li' } );
+
+			editor.setData( `
+				<ul>
+					<li>1
+						<ul>
+							<li>2</li>
+						</ul>
+					</li>
+				</ul>
+			` );
+
+			expect( getData( editor.model, { withoutSelection: true } ) ).to.equal(
+				'<ul>' +
+					'<li>1' +
+						'<ul>' +
+							'<li>2</li>' +
+						'</ul>' +
+					'</li>' +
+				'</ul>'
+			);
+
+			expect( editor.getData() ).to.equal(
+				'<ul>' +
+					'<li>1' +
+						'<ul>' +
+							'<li>2</li>' +
+						'</ul>' +
+					'</li>' +
+				'</ul>'
+			);
 		} );
 	} );
 

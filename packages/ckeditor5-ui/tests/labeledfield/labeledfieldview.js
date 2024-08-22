@@ -1,11 +1,12 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import View from '../../src/view';
-import LabeledFieldView from '../../src/labeledfield/labeledfieldview';
-import LabelView from '../../src/label/labelview';
+import View from '../../src/view.js';
+import LabeledFieldView from '../../src/labeledfield/labeledfieldview.js';
+import LabelView from '../../src/label/labelview.js';
+import ViewCollection from '../../src/viewcollection.js';
 
 describe( 'LabeledFieldView', () => {
 	const locale = {};
@@ -79,6 +80,13 @@ describe( 'LabeledFieldView', () => {
 			expect( labeledField.statusView.element.classList.contains( 'ck-labeled-field-view__status' ) ).to.be.true;
 		} );
 
+		it( 'should create a #fieldWrapperChildren collection with #fieldView and #labelView', () => {
+			expect( labeledField.fieldWrapperChildren ).to.be.instanceOf( ViewCollection );
+			expect( Array.from( labeledField.fieldWrapperChildren ) ).to.have.ordered.members( [
+				labeledField.fieldView, labeledField.labelView
+			] );
+		} );
+
 		it( 'should allow pairing #view and #labelView by unique id', () => {
 			expect( labeledField.labelView.for ).to.equal( fieldView.viewUid );
 		} );
@@ -99,12 +107,8 @@ describe( 'LabeledFieldView', () => {
 			expect( labeledField.element.firstChild.classList.contains( 'ck-labeled-field-view__input-wrapper' ) ).to.be.true;
 		} );
 
-		it( 'should have #fieldView', () => {
-			expect( labeledField.template.children[ 0 ].children[ 0 ] ).to.equal( fieldView );
-		} );
-
-		it( 'should have #labelView', () => {
-			expect( labeledField.template.children[ 0 ].children[ 1 ] ).to.equal( labeledField.labelView );
+		it( 'should use the #fieldWrapperChildren collection', () => {
+			expect( labeledField.template.children[ 0 ].children[ 0 ] ).to.equal( labeledField.fieldWrapperChildren );
 		} );
 
 		it( 'should have the #statusView container', () => {
@@ -206,6 +210,14 @@ describe( 'LabeledFieldView', () => {
 			labeledField.focus();
 
 			sinon.assert.calledOnce( spy );
+		} );
+
+		it( 'should pass down the focus direction parameter', () => {
+			const spy = sinon.spy( fieldView, 'focus' );
+
+			labeledField.focus( -1 );
+
+			sinon.assert.calledOnceWithExactly( spy, -1 );
 		} );
 	} );
 } );

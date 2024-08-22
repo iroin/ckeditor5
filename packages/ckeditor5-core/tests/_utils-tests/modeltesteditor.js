@@ -1,19 +1,18 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import Editor from '../../src/editor/editor';
-import EditingController from '@ckeditor/ckeditor5-engine/src/controller/editingcontroller';
-import ModelTestEditor from '../../tests/_utils/modeltesteditor';
+import Editor from '../../src/editor/editor.js';
+import EditingController from '@ckeditor/ckeditor5-engine/src/controller/editingcontroller.js';
+import ModelTestEditor from '../../tests/_utils/modeltesteditor.js';
 
-import HtmlDataProcessor from '@ckeditor/ckeditor5-engine/src/dataprocessor/htmldataprocessor';
-import DataApiMixin from '../../src/editor/utils/dataapimixin';
-import RootElement from '@ckeditor/ckeditor5-engine/src/model/rootelement';
+import HtmlDataProcessor from '@ckeditor/ckeditor5-engine/src/dataprocessor/htmldataprocessor.js';
+import RootElement from '@ckeditor/ckeditor5-engine/src/model/rootelement.js';
 
-import { getData, setData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
+import { getData, setData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
 
-import testUtils from '../../tests/_utils/utils';
+import testUtils from '../../tests/_utils/utils.js';
 
 describe( 'ModelTestEditor', () => {
 	testUtils.createSinonSandbox();
@@ -43,10 +42,6 @@ describe( 'ModelTestEditor', () => {
 			const editor = new ModelTestEditor();
 
 			expect( editor.model.document.getRoot( 'main' ) ).to.instanceof( RootElement );
-		} );
-
-		it( 'mixes DataApiMixin', () => {
-			expect( testUtils.isMixed( ModelTestEditor, DataApiMixin ) ).to.true;
 		} );
 	} );
 

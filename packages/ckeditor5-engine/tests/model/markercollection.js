@@ -1,15 +1,15 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import MarkerCollection from '../../src/model/markercollection';
-import Position from '../../src/model/position';
-import Range from '../../src/model/range';
-import LiveRange from '../../src/model/liverange';
-import Text from '../../src/model/text';
-import Model from '../../src/model/model';
-import { expectToThrowCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
+import MarkerCollection from '../../src/model/markercollection.js';
+import Position from '../../src/model/position.js';
+import Range from '../../src/model/range.js';
+import LiveRange from '../../src/model/liverange.js';
+import Text from '../../src/model/text.js';
+import Model from '../../src/model/model.js';
+import { expectToThrowCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils.js';
 
 describe( 'MarkerCollection', () => {
 	let markers, range, range2, doc, root;
@@ -53,7 +53,14 @@ describe( 'MarkerCollection', () => {
 			expect( marker.managedUsingOperations ).to.be.false;
 			expect( marker.affectsData ).to.be.false;
 			expect( marker.getRange().isEqual( range ) ).to.be.true;
-			sinon.assert.calledWithExactly( markers.fire, 'update:name', result, null, range );
+
+			expect( markers.fire.firstCall.args ).to.deep.equal( [
+				'update:name',
+				marker,
+				null,
+				range,
+				{ affectsData: false, managedUsingOperations: false, range: null }
+			] );
 		} );
 
 		it( 'should create a marker marked as managed by operations', () => {
@@ -80,7 +87,14 @@ describe( 'MarkerCollection', () => {
 			expect( result ).to.equal( marker );
 			expect( marker.getRange().isEqual( range2 ) ).to.be.true;
 
-			sinon.assert.calledWithExactly( markers.fire, 'update:name', marker, range, range2 );
+			expect( markers.fire.firstCall.args ).to.deep.equal( [
+				'update:name',
+				marker,
+				range,
+				range2,
+				{ affectsData: false, managedUsingOperations: false, range }
+			] );
+
 			sinon.assert.calledOnce( marker._detachLiveRange );
 			sinon.assert.calledOnce( marker._detachLiveRange );
 		} );
@@ -100,7 +114,14 @@ describe( 'MarkerCollection', () => {
 			expect( marker.managedUsingOperations ).to.be.true;
 			expect( marker.getRange().isEqual( range ) ).to.be.true;
 
-			sinon.assert.calledWithExactly( markers.fire, 'update:name', marker, range, range );
+			expect( markers.fire.firstCall.args ).to.deep.equal( [
+				'update:name',
+				marker,
+				range,
+				range,
+				{ affectsData: false, managedUsingOperations: false, range }
+			] );
+
 			sinon.assert.notCalled( marker._detachLiveRange );
 			sinon.assert.notCalled( marker._attachLiveRange );
 		} );
@@ -173,7 +194,14 @@ describe( 'MarkerCollection', () => {
 
 			expect( result ).to.be.true;
 			expect( markers.get( 'name' ) ).to.be.null;
-			sinon.assert.calledWithExactly( markers.fire, 'update:name', marker, range, null );
+
+			expect( markers.fire.firstCall.args ).to.deep.equal( [
+				'update:name',
+				marker,
+				range,
+				null,
+				{ affectsData: false, managedUsingOperations: false, range }
+			] );
 		} );
 
 		it( 'should destroy marker instance', () => {
@@ -207,8 +235,15 @@ describe( 'MarkerCollection', () => {
 			const result = markers._remove( marker );
 
 			expect( result ).to.be.true;
-			expect( markers.fire.calledWithExactly( 'update:name', marker, range, null ) ).to.be.true;
 			expect( markers.get( 'name' ) ).to.be.null;
+
+			expect( markers.fire.firstCall.args ).to.deep.equal( [
+				'update:name',
+				marker,
+				range,
+				null,
+				{ affectsData: false, managedUsingOperations: false, range }
+			] );
 		} );
 	} );
 
@@ -220,7 +255,13 @@ describe( 'MarkerCollection', () => {
 
 			markers._refresh( 'name' );
 
-			sinon.assert.calledWithExactly( markers.fire, 'update:name', marker, range, range, false, false );
+			expect( markers.fire.firstCall.args ).to.deep.equal( [
+				'update:name',
+				marker,
+				range,
+				range,
+				{ affectsData: false, managedUsingOperations: false, range }
+			] );
 		} );
 
 		it( 'should throw if marker does not exist', () => {

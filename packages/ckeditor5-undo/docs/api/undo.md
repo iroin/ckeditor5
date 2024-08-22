@@ -2,11 +2,11 @@
 category: api-reference
 ---
 
-# CKEditor 5 undo feature
+# CKEditor&nbsp;5 undo feature
 
 [![npm version](https://badge.fury.io/js/%40ckeditor%2Fckeditor5-undo.svg)](https://www.npmjs.com/package/@ckeditor/ckeditor5-undo)
 
-This package implements undo support for CKEditor 5.
+This package implements undo support for CKEditor&nbsp;5.
 
 ## Documentation
 
@@ -16,13 +16,15 @@ This plugin is usually enabled by the {@link module:essentials/essentials~Essent
 
 ## Installation
 
+This package is part of our open-source aggregate package.
+
 ```bash
-npm install --save @ckeditor/ckeditor5-undo
+npm install ckeditor5
 ```
 
 ## Contribute
 
-The source code of this package is available on GitHub in https://github.com/ckeditor/ckeditor5/tree/master/packages/ckeditor5-undo.
+The source code of this package is available on GitHub in [https://github.com/ckeditor/ckeditor5/tree/master/packages/ckeditor5-undo](https://github.com/ckeditor/ckeditor5/tree/master/packages/ckeditor5-undo).
 
 ## External links
 

@@ -1,35 +1,38 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* global document, console */
 
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
-import BalloonEditor from '@ckeditor/ckeditor5-editor-balloon/src/ballooneditor';
-import BalloonPanelView from '@ckeditor/ckeditor5-ui/src/panel/balloon/balloonpanelview';
-import Plugin from '@ckeditor/ckeditor5-core/src/plugin';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold';
-import BlockQuote from '@ckeditor/ckeditor5-block-quote/src/blockquote';
-import Widget from '../src/widget';
-import WidgetToolbarRepository from '../src/widgettoolbarrepository';
-import { isWidget, toWidget } from '../src/utils';
-import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview';
-import View from '@ckeditor/ckeditor5-ui/src/view';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+import BalloonEditor from '@ckeditor/ckeditor5-editor-balloon/src/ballooneditor.js';
+import BalloonPanelView from '@ckeditor/ckeditor5-ui/src/panel/balloon/balloonpanelview.js';
+import Plugin from '@ckeditor/ckeditor5-core/src/plugin.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import Bold from '@ckeditor/ckeditor5-basic-styles/src/bold.js';
+import BlockQuote from '@ckeditor/ckeditor5-block-quote/src/blockquote.js';
+import Widget from '../src/widget.js';
+import WidgetToolbarRepository from '../src/widgettoolbarrepository.js';
+import { isWidget, toWidget } from '../src/utils.js';
+import ButtonView from '@ckeditor/ckeditor5-ui/src/button/buttonview.js';
+import View from '@ckeditor/ckeditor5-ui/src/view.js';
+import EditorUI from '@ckeditor/ckeditor5-ui/src/editorui/editorui.js';
 
-import { setData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
-import { expectToThrowCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
+import { setData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
+import { expectToThrowCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils.js';
 
 describe( 'WidgetToolbarRepository', () => {
-	let editor, model, balloon, widgetToolbarRepository, editorElement;
+	let editor, model, balloon, widgetToolbarRepository, editorElement, addToolbarSpy;
 
 	testUtils.createSinonSandbox();
 
 	beforeEach( () => {
 		editorElement = document.createElement( 'div' );
 		document.body.appendChild( editorElement );
+
+		addToolbarSpy = sinon.spy( EditorUI.prototype, 'addToolbar' );
 
 		return ClassicTestEditor
 			.create( editorElement, {
@@ -76,6 +79,61 @@ describe( 'WidgetToolbarRepository', () => {
 
 			expect( widgetToolbarRepository._toolbarDefinitions.size ).to.equal( 1 );
 			expect( widgetToolbarRepository._toolbarDefinitions.get( 'fake' ) ).to.be.an( 'object' );
+		} );
+
+		describe( 'Focus handling and navigation across toolbars using keyboard', () => {
+			it( 'should register the toolbar as focusable toolbar in EditorUI with proper configuration', () => {
+				widgetToolbarRepository.register( 'fake', {
+					items: editor.config.get( 'fake.toolbar' ),
+					getRelatedElement: () => null
+				} );
+
+				sinon.assert.calledWithExactly(
+					addToolbarSpy.lastCall,
+					widgetToolbarRepository._toolbarDefinitions.get( 'fake' ).view,
+					sinon.match( {
+						isContextual: true,
+						beforeFocus: sinon.match.func
+					} )
+				);
+			} );
+
+			it( 'should show the toolbar when Alt+F10 is pressed if there is an element to attach to', () => {
+				widgetToolbarRepository.register( 'fake', {
+					items: editor.config.get( 'fake.toolbar' ),
+					getRelatedElement: () => editor.editing.view.document.getRoot()
+				} );
+
+				addToolbarSpy.lastCall.args[ 1 ].beforeFocus();
+
+				expect( balloon.visibleView ).to.equal( widgetToolbarRepository._toolbarDefinitions.get( 'fake' ).view );
+			} );
+
+			it( 'should not show the toolbar when Alt+F10 is pressed if not possible because there is no element to attach to', () => {
+				widgetToolbarRepository.register( 'fake', {
+					items: editor.config.get( 'fake.toolbar' ),
+					getRelatedElement: () => null
+				} );
+
+				addToolbarSpy.lastCall.args[ 1 ].beforeFocus();
+
+				expect( balloon.visibleView ).to.be.null;
+			} );
+
+			it( 'should provide the logic to hide the toolbar', () => {
+				widgetToolbarRepository.register( 'fake', {
+					items: editor.config.get( 'fake.toolbar' ),
+					getRelatedElement: () => editor.editing.view.document.getRoot()
+				} );
+
+				addToolbarSpy.lastCall.args[ 1 ].beforeFocus();
+
+				expect( balloon.visibleView ).to.equal( widgetToolbarRepository._toolbarDefinitions.get( 'fake' ).view );
+
+				addToolbarSpy.lastCall.args[ 1 ].afterBlur();
+
+				expect( balloon.visibleView ).to.be.null;
+			} );
 		} );
 
 		it( 'should throw when adding two times widget with the same id', () => {
@@ -135,6 +193,60 @@ describe( 'WidgetToolbarRepository', () => {
 
 			expect( consoleWarnStub.calledOnce ).to.equal( true );
 			expect( consoleWarnStub.firstCall.args[ 0 ] ).to.match( /^widget-toolbar-no-items/ );
+		} );
+
+		describe( 'lazy init', () => {
+			it( 'should not fill toolbar items immediately', () => {
+				widgetToolbarRepository.register( 'fake', {
+					items: editor.config.get( 'fake.toolbar' ),
+					getRelatedElement: () => null
+				} );
+
+				const toolbarView = widgetToolbarRepository._toolbarDefinitions.get( 'fake' ).view;
+
+				toolbarView.render();
+
+				expect( toolbarView.items.length ).to.equal( 0 );
+
+				toolbarView.destroy();
+			} );
+
+			it( 'should fill toolbar items on first show', () => {
+				widgetToolbarRepository.register( 'fake', {
+					items: editor.config.get( 'fake.toolbar' ),
+					getRelatedElement: () => editor.editing.view.document.getRoot()
+				} );
+
+				const toolbarDefinition = widgetToolbarRepository._toolbarDefinitions.get( 'fake' );
+
+				widgetToolbarRepository._showToolbar( toolbarDefinition, editor.editing.view.document.getRoot() );
+
+				expect( balloon.visibleView ).to.equal( toolbarDefinition.view );
+				expect( toolbarDefinition.view.items.length ).to.equal( 1 );
+			} );
+
+			it( 'should fill toolbar items on first show (and only on the first)', () => {
+				widgetToolbarRepository.register( 'fake', {
+					items: editor.config.get( 'fake.toolbar' ),
+					getRelatedElement: () => editor.editing.view.document.getRoot()
+				} );
+
+				const toolbarDefinition = widgetToolbarRepository._toolbarDefinitions.get( 'fake' );
+
+				widgetToolbarRepository._showToolbar( toolbarDefinition, editor.editing.view.document.getRoot() );
+
+				expect( balloon.visibleView ).to.equal( toolbarDefinition.view );
+				expect( toolbarDefinition.view.items.length ).to.equal( 1 );
+
+				widgetToolbarRepository._hideToolbar( toolbarDefinition );
+
+				expect( balloon.visibleView ).to.equal( null );
+
+				widgetToolbarRepository._showToolbar( toolbarDefinition, editor.editing.view.document.getRoot() );
+
+				expect( balloon.visibleView ).to.equal( toolbarDefinition.view );
+				expect( toolbarDefinition.view.items.length ).to.equal( 1 );
+			} );
 		} );
 	} );
 
@@ -402,7 +514,7 @@ describe( 'WidgetToolbarRepository', () => {
 			expect( balloon.visibleView ).to.equal( fakeChildWidgetToolbarView );
 
 			expect( updatePositionSpy.firstCall.args[ 0 ].position.target ).to.equal(
-				view.domConverter.viewToDom( fakeChildViewElement ) );
+				view.domConverter.mapViewToDom( fakeChildViewElement ) );
 		} );
 
 		it( 'should not update balloon position when toolbar is in not visible stack', () => {

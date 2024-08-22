@@ -1,13 +1,17 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import plainTextToHtml from '../../src/utils/plaintexttohtml';
+import plainTextToHtml from '../../src/utils/plaintexttohtml.js';
 
 describe( 'plainTextToHtml()', () => {
 	it( 'encodes < and >', () => {
 		expect( plainTextToHtml( 'x y <z>' ) ).to.equal( 'x y &lt;z&gt;' );
+	} );
+
+	it( 'encodes &', () => {
+		expect( plainTextToHtml( 'x=1&y=2&z=3' ) ).to.equal( 'x=1&amp;y=2&amp;z=3' );
 	} );
 
 	it( 'turns double line breaks into paragraphs (Linux/Mac EOL style)', () => {
@@ -28,6 +32,10 @@ describe( 'plainTextToHtml()', () => {
 
 	it( 'turns combination of different amount of line breaks to paragraphs', () => {
 		expect( plainTextToHtml( 'a\n\nb\nc\n\n\n\nd\ne' ) ).to.equal( '<p>a</p><p>b<br>c</p><p></p><p>d<br>e</p>' );
+	} );
+
+	it( 'turns tabs into four spaces', () => {
+		expect( plainTextToHtml( '\tx\t' ) ).to.equal( '&nbsp;&nbsp;&nbsp;&nbsp;x&nbsp;&nbsp;&nbsp;&nbsp;' );
 	} );
 
 	it( 'preserves trailing spaces', () => {

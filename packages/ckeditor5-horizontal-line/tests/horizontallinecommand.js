@@ -1,15 +1,15 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals document */
 
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
-import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import HorizontalLineEditing from '../src/horizontallineediting';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
+import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import HorizontalLineEditing from '../src/horizontallineediting.js';
 
 describe( 'HorizontalLineCommand', () => {
 	let editor, model, editorElement, command;
@@ -40,7 +40,7 @@ describe( 'HorizontalLineCommand', () => {
 
 	describe( 'isEnabled', () => {
 		it( 'should be true when the selection directly in the root', () => {
-			model.enqueueChange( 'transparent', () => {
+			model.enqueueChange( { isUndoable: false }, () => {
 				setModelData( model, '[]' );
 
 				command.refresh();
@@ -299,6 +299,73 @@ describe( 'HorizontalLineCommand', () => {
 			expect( getModelData( model ) ).to.equal(
 				'<paragraph>foo</paragraph><horizontalLine></horizontalLine><paragraph>[]bar</paragraph>'
 			);
+		} );
+
+		describe( 'inheriting attributes', () => {
+			beforeEach( () => {
+				const attributes = [ 'smart', 'pretty' ];
+
+				model.schema.extend( '$block', {
+					allowAttributes: attributes
+				} );
+
+				model.schema.extend( '$blockObject', {
+					allowAttributes: attributes
+				} );
+
+				for ( const attribute of attributes ) {
+					model.schema.setAttributeProperties( attribute, {
+						copyOnReplace: true
+					} );
+				}
+			} );
+
+			it( 'should copy $block attributes on a horizontal line element when inserting it in $block', () => {
+				setModelData( model, '<paragraph pretty="true" smart="true">[]</paragraph>' );
+
+				command.execute();
+
+				expect( getModelData( model ) ).to.equalMarkup(
+					'<horizontalLine pretty="true" smart="true"></horizontalLine>' +
+					'<paragraph pretty="true" smart="true">[]</paragraph>'
+				);
+			} );
+
+			it( 'should copy attributes from first selected element', () => {
+				setModelData( model, '<paragraph pretty="true">[foo</paragraph><paragraph smart="true">bar]</paragraph>' );
+
+				command.execute();
+
+				expect( getModelData( model ) ).to.equalMarkup(
+					'<horizontalLine pretty="true"></horizontalLine>' +
+					'<paragraph pretty="true">[]</paragraph>'
+				);
+			} );
+
+			it( 'should only copy $block attributes marked with copyOnReplace', () => {
+				setModelData( model, '<paragraph pretty="true" smart="true" nice="true">[]</paragraph>' );
+
+				command.execute();
+
+				expect( getModelData( model ) ).to.equalMarkup(
+					'<horizontalLine pretty="true" smart="true"></horizontalLine>' +
+					'<paragraph pretty="true" smart="true">[]</paragraph>'
+				);
+			} );
+
+			it( 'should copy attributes from object when it is selected during insertion', () => {
+				model.schema.register( 'object', { isObject: true, inheritAllFrom: '$blockObject' } );
+				editor.conversion.for( 'downcast' ).elementToElement( { model: 'object', view: 'object' } );
+
+				setModelData( model, '[<object pretty="true" smart="true"></object>]' );
+
+				command.execute();
+
+				expect( getModelData( model ) ).to.equalMarkup(
+					'<horizontalLine pretty="true" smart="true"></horizontalLine>' +
+					'<paragraph pretty="true" smart="true">[]</paragraph>'
+				);
+			} );
 		} );
 	} );
 } );

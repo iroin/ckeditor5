@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
@@ -12,7 +12,7 @@ const eslintStylishFormatter = require( 'eslint/lib/cli-engine/formatters/stylis
 const chalk = require( 'chalk' );
 
 // eslint-disable-next-line max-len
-const CODE_STYLE_URL = 'https://ckeditor.com/docs/ckeditor5/latest/framework/guides/contributing/code-style.html#ckeditor-5-custom-eslint-rules';
+const CODE_STYLE_URL = 'https://ckeditor.com/docs/ckeditor5/latest/framework/contributing/code-style.html#ckeditor-5-custom-eslint-rules';
 
 /**
  * Overwrite the default ESLint formatter. If CKEditor 5 related error occurred,
@@ -29,7 +29,7 @@ module.exports = results => {
 		}
 
 		return item.messages.some( message => {
-			return message.ruleId.startsWith( 'ckeditor5-rules' );
+			return message.ruleId?.startsWith( 'ckeditor5-rules' );
 		} );
 	} );
 

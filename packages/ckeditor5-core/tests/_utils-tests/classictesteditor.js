@@ -1,29 +1,27 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals document */
 
-import Editor from '../../src/editor/editor';
-import ClassicTestEditor from '../../tests/_utils/classictesteditor';
+import Editor from '../../src/editor/editor.js';
+import ClassicTestEditor from '../../tests/_utils/classictesteditor.js';
 
-import Plugin from '../../src/plugin';
-import HtmlDataProcessor from '@ckeditor/ckeditor5-engine/src/dataprocessor/htmldataprocessor';
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
+import Plugin from '../../src/plugin.js';
+import HtmlDataProcessor from '@ckeditor/ckeditor5-engine/src/dataprocessor/htmldataprocessor.js';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
 
-import EditorUI from '../../src/editor/editorui';
-import BoxedEditorUIView from '@ckeditor/ckeditor5-ui/src/editorui/boxed/boxededitoruiview';
-import InlineEditableUIView from '@ckeditor/ckeditor5-ui/src/editableui/inline/inlineeditableuiview';
+import EditorUI from '@ckeditor/ckeditor5-ui/src/editorui/editorui.js';
+import BoxedEditorUIView from '@ckeditor/ckeditor5-ui/src/editorui/boxed/boxededitoruiview.js';
+import InlineEditableUIView from '@ckeditor/ckeditor5-ui/src/editableui/inline/inlineeditableuiview.js';
 
-import DataApiMixin from '../../src/editor/utils/dataapimixin';
-import ElementApiMixin from '../../src/editor/utils/elementapimixin';
-import RootElement from '@ckeditor/ckeditor5-engine/src/model/rootelement';
+import RootElement from '@ckeditor/ckeditor5-engine/src/model/rootelement.js';
 
-import { getData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import testUtils from '../../tests/_utils/utils';
-import { assertCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
-import { removeEditorBodyOrphans } from '../_utils/cleanup';
+import { getData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import testUtils from '../../tests/_utils/utils.js';
+import { assertCKEditorError } from '@ckeditor/ckeditor5-utils/tests/_utils/utils.js';
+import { removeEditorBodyOrphans } from '../_utils/cleanup.js';
 
 describe( 'ClassicTestEditor', () => {
 	let editorElement;
@@ -73,12 +71,8 @@ describe( 'ClassicTestEditor', () => {
 			expect( editor.model.document.getRoot( 'main' ) ).to.instanceof( RootElement );
 		} );
 
-		it( 'mixes DataApiMixin', () => {
-			expect( testUtils.isMixed( ClassicTestEditor, DataApiMixin ) ).to.true;
-		} );
-
 		it( 'mixes ElementApiMixin', () => {
-			expect( testUtils.isMixed( ClassicTestEditor, ElementApiMixin ) ).to.true;
+			expect( ClassicTestEditor.prototype ).have.property( 'updateSourceElement' ).to.be.a( 'function' );
 		} );
 	} );
 
@@ -263,6 +257,18 @@ describe( 'ClassicTestEditor', () => {
 							expect( editor.sourceElement.style.display ).to.equal( '' );
 						} );
 				} );
+		} );
+
+		it( 'should call parent EditorUI#destroy() first before destroying the view', async () => {
+			const newEditor = await ClassicTestEditor.create( editorElement, { foo: 1 } );
+			const parentEditorUIPrototype = Object.getPrototypeOf( newEditor.ui.constructor.prototype );
+
+			const parentDestroySpy = testUtils.sinon.spy( parentEditorUIPrototype, 'destroy' );
+			const viewDestroySpy = testUtils.sinon.spy( newEditor.ui.view, 'destroy' );
+
+			await newEditor.destroy();
+
+			sinon.assert.callOrder( parentDestroySpy, viewDestroySpy );
 		} );
 	} );
 } );

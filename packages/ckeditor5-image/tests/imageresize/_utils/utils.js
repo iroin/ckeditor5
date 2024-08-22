@@ -1,9 +1,9 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-import ImageLoadObserver from '../../../src/image/imageloadobserver';
+import ImageLoadObserver from '../../../src/image/imageloadobserver.js';
 
 // A 100x50 black png image
 export const IMAGE_SRC_FIXTURE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAAAyCAQAAAAAPLY1AAAAQklEQVR42u3PQREAAAgDoK1/' +
@@ -19,7 +19,7 @@ export async function waitForAllImagesLoaded( editor ) {
 	for ( const curModel of root.getChildren() ) {
 		if ( curModel.is( 'element', 'imageBlock' ) ) {
 			const imageView = editor.editing.mapper.toViewElement( curModel );
-			images.add( editingView.domConverter.viewToDom( imageView ).querySelector( 'img' ) );
+			images.add( editingView.domConverter.mapViewToDom( imageView ).querySelector( 'img' ) );
 		}
 	}
 

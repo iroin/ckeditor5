@@ -1,30 +1,28 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* globals document */
 
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
 
-import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph';
-import Delete from '@ckeditor/ckeditor5-typing/src/delete';
-import Clipboard from '@ckeditor/ckeditor5-clipboard/src/clipboard';
-import HorizontalLine from '@ckeditor/ckeditor5-horizontal-line/src/horizontalline';
+import Paragraph from '@ckeditor/ckeditor5-paragraph/src/paragraph.js';
+import Delete from '@ckeditor/ckeditor5-typing/src/delete.js';
+import Clipboard from '@ckeditor/ckeditor5-clipboard/src/clipboard.js';
+import HorizontalLine from '@ckeditor/ckeditor5-horizontal-line/src/horizontalline.js';
 
-import TableEditing from '../src/tableediting';
-import TableSelection from '../src/tableselection';
-import TableClipboard from '../src/tableclipboard';
+import TableEditing from '../src/tableediting.js';
+import TableSelection from '../src/tableselection.js';
+import TableClipboard from '../src/tableclipboard.js';
 
-import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
+import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
 
-import { assertSelectedCells, modelTable } from './_utils/utils';
-import { assertEqualMarkup } from '@ckeditor/ckeditor5-utils/tests/_utils/utils';
-import DomEventData from '@ckeditor/ckeditor5-engine/src/view/observer/domeventdata';
-import { getCode } from '@ckeditor/ckeditor5-utils/src/keyboard';
-import Input from '@ckeditor/ckeditor5-typing/src/input';
-import ViewText from '@ckeditor/ckeditor5-engine/src/view/text';
-import UndoEditing from '@ckeditor/ckeditor5-undo/src/undoediting';
+import { assertSelectedCells, modelTable } from './_utils/utils.js';
+import DomEventData from '@ckeditor/ckeditor5-engine/src/view/observer/domeventdata.js';
+import Input from '@ckeditor/ckeditor5-typing/src/input.js';
+import UndoEditing from '@ckeditor/ckeditor5-undo/src/undoediting.js';
+import ClipboardPipeline from '@ckeditor/ckeditor5-clipboard/src/clipboardpipeline.js';
 
 describe( 'TableSelection - integration', () => {
 	let editor, model, tableSelection, modelRoot, element, viewDocument;
@@ -54,7 +52,7 @@ describe( 'TableSelection - integration', () => {
 			} );
 			viewDocument.fire( 'delete', domEventData );
 
-			assertEqualMarkup( getModelData( model ), modelTable( [
+			expect( getModelData( model ) ).to.equalMarkup( modelTable( [
 				[ '', '', '13' ],
 				[ '', '[]', '23' ],
 				[ '31', '32', '33' ]
@@ -76,7 +74,7 @@ describe( 'TableSelection - integration', () => {
 			} );
 			viewDocument.fire( 'delete', domEventData );
 
-			assertEqualMarkup( getModelData( model ), modelTable( [
+			expect( getModelData( model ) ).to.equalMarkup( modelTable( [
 				[ '[]', '', '13' ],
 				[ '', '', '23' ],
 				[ '31', '32', '33' ]
@@ -99,7 +97,7 @@ describe( 'TableSelection - integration', () => {
 			} );
 			viewDocument.fire( 'delete', domEventData );
 
-			assertEqualMarkup( getModelData( model ), modelTable( [
+			expect( getModelData( model ) ).to.equalMarkup( modelTable( [
 				[ '1[]', '12', '13' ],
 				[ '21', '22', '23' ],
 				[ '31', '32', '33' ]
@@ -113,27 +111,21 @@ describe( 'TableSelection - integration', () => {
 		} );
 
 		it( 'should clear contents of the selected table cells and put selection in last cell on user input', () => {
+			const view = editor.editing.view;
+			const viewCell = editor.editing.mapper.toViewElement( modelRoot.getNodeByPath( [ 0, 1, 1 ] ) );
+
 			tableSelection.setCellSelection(
 				modelRoot.getNodeByPath( [ 0, 0, 0 ] ),
 				modelRoot.getNodeByPath( [ 0, 1, 1 ] )
 			);
 
-			viewDocument.fire( 'keydown', { keyCode: getCode( 'x' ) } );
+			viewDocument.fire( 'insertText', {
+				text: 'x',
+				selection: view.createSelection( view.createPositionAt( viewCell.getChild( 0 ), 0 ) ),
+				preventDefault: sinon.spy()
+			} );
 
-			// Mutate at the place where the document selection was put; it's more realistic
-			// than mutating at some arbitrary position.
-			const placeOfMutation = viewDocument.selection.getFirstRange().start.parent;
-
-			viewDocument.fire( 'mutations', [
-				{
-					type: 'children',
-					oldChildren: [],
-					newChildren: [ new ViewText( viewDocument, 'x' ) ],
-					node: placeOfMutation
-				}
-			] );
-
-			assertEqualMarkup( getModelData( model ), modelTable( [
+			expect( getModelData( model ) ).to.equalMarkup( modelTable( [
 				[ '', '', '13' ],
 				[ '', 'x[]', '23' ],
 				[ '31', '32', '33' ]
@@ -141,22 +133,16 @@ describe( 'TableSelection - integration', () => {
 		} );
 
 		it( 'should not interfere with default key handler if no table selection', () => {
-			viewDocument.fire( 'keydown', { keyCode: getCode( 'x' ) } );
+			const view = editor.editing.view;
+			const viewCell = editor.editing.mapper.toViewElement( modelRoot.getNodeByPath( [ 0, 0, 0 ] ) );
 
-			// Mutate at the place where the document selection was put; it's more realistic
-			// than mutating at some arbitrary position.
-			const placeOfMutation = viewDocument.selection.getFirstRange().start.parent;
+			viewDocument.fire( 'insertText', {
+				text: 'x',
+				selection: view.createSelection( view.createPositionAt( viewCell.getChild( 0 ), 0 ) ),
+				preventDefault: sinon.spy()
+			} );
 
-			viewDocument.fire( 'mutations', [
-				{
-					type: 'children',
-					oldChildren: [],
-					newChildren: [ new ViewText( viewDocument, 'x' ) ],
-					node: placeOfMutation
-				}
-			] );
-
-			assertEqualMarkup( getModelData( model ), modelTable( [
+			expect( getModelData( model ) ).to.equalMarkup( modelTable( [
 				[ 'x[]11', '12', '13' ],
 				[ '21', '22', '23' ],
 				[ '31', '32', '33' ]
@@ -184,7 +170,7 @@ describe( 'TableSelection - integration', () => {
 				stop: sinon.spy()
 			} );
 
-			assertEqualMarkup( getModelData( model ), modelTable( [
+			expect( getModelData( model ) ).to.equalMarkup( modelTable( [
 				[ 'foo[]', '', '13' ],
 				[ '', '', '23' ],
 				[ '31', '32', '33' ]
@@ -199,8 +185,8 @@ describe( 'TableSelection - integration', () => {
 
 			editor.execute( 'horizontalLine' );
 
-			assertEqualMarkup(
-				getModelData( model ),
+			expect(
+				getModelData( model ) ).to.equalMarkup(
 				'<table>' +
 					'<tableRow>' +
 						'<tableCell><horizontalLine></horizontalLine><paragraph>[]</paragraph></tableCell>' +
@@ -238,8 +224,8 @@ describe( 'TableSelection - integration', () => {
 				writer.remove( modelRoot.getNodeByPath( [ 0, 1 ] ) );
 			} );
 
-			assertEqualMarkup(
-				getModelData( model ),
+			expect(
+				getModelData( model ) ).to.equalMarkup(
 				'<table>' +
 					'<tableRow>' +
 						'<tableCell><paragraph>11</paragraph></tableCell>' +
@@ -274,14 +260,14 @@ describe( 'TableSelection - integration', () => {
 
 			editor.execute( 'mergeTableCells' );
 
-			assertEqualMarkup( getModelData( model ), modelTable( [
+			expect( getModelData( model ) ).to.equalMarkup( modelTable( [
 				[ { colspan: 2, contents: '<paragraph>[00</paragraph><paragraph>01]</paragraph>' } ],
 				[ '10', '11' ]
 			] ) );
 
 			editor.execute( 'undo' );
 
-			assertEqualMarkup( getModelData( model, { withoutSelection: true } ), modelTable( [
+			expect( getModelData( model, { withoutSelection: true } ) ).to.equalMarkup( modelTable( [
 				[ '00', '01' ],
 				[ '10', '11' ]
 			] ) );
@@ -298,7 +284,7 @@ describe( 'TableSelection - integration', () => {
 		document.body.appendChild( element );
 
 		editor = await ClassicTestEditor.create( element, {
-			plugins: [ TableEditing, TableSelection, TableClipboard, Paragraph, ...plugins ]
+			plugins: [ TableEditing, TableSelection, TableClipboard, Paragraph, ClipboardPipeline, ...plugins ]
 		} );
 
 		model = editor.model;

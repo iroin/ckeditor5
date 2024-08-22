@@ -1,14 +1,14 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* global document, Event */
 
-import FocusTracker from '../src/focustracker';
-import global from '../src/dom/global';
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
-import { expectToThrowCKEditorError } from './_utils/utils';
+import FocusTracker from '../src/focustracker.js';
+import global from '../src/dom/global.js';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
+import { expectToThrowCKEditorError } from './_utils/utils.js';
 
 describe( 'FocusTracker', () => {
 	let focusTracker, container, containerFirstInput, containerSecondInput;
@@ -28,7 +28,7 @@ describe( 'FocusTracker', () => {
 		focusTracker = new FocusTracker();
 	} );
 
-	describe( 'constructor', () => {
+	describe( 'constructor()', () => {
 		describe( 'isFocused', () => {
 			it( 'should be false at default', () => {
 				expect( focusTracker.isFocused ).to.false;
@@ -62,7 +62,7 @@ describe( 'FocusTracker', () => {
 		} );
 	} );
 
-	describe( 'add', () => {
+	describe( 'add()', () => {
 		it( 'should throw an error when element has been already added', () => {
 			focusTracker.add( containerFirstInput );
 
@@ -160,7 +160,7 @@ describe( 'FocusTracker', () => {
 		} );
 	} );
 
-	describe( 'remove', () => {
+	describe( 'remove()', () => {
 		it( 'should do nothing when element was not added', () => {
 			expect( () => {
 				focusTracker.remove( container );
@@ -200,6 +200,41 @@ describe( 'FocusTracker', () => {
 
 			expect( focusTracker.isFocused ).to.false;
 			expect( focusTracker.focusedElement ).to.be.null;
+		} );
+	} );
+
+	describe( 'elements', () => {
+		it( 'should return an array with elements currently added to the focus tracker', () => {
+			expect( focusTracker.elements ).to.deep.equal( [] );
+
+			const elementA = document.createElement( 'div' );
+			focusTracker.add( elementA );
+
+			expect( focusTracker.elements ).to.deep.equal( [ elementA ] );
+
+			const elementB = document.createElement( 'div' );
+			focusTracker.add( elementB );
+
+			expect( focusTracker.elements ).to.deep.equal( [ elementA, elementB ] );
+
+			focusTracker.remove( elementA );
+
+			expect( focusTracker.elements ).to.deep.equal( [ elementB ] );
+
+			focusTracker.remove( elementB );
+
+			expect( focusTracker.elements ).to.deep.equal( [] );
+		} );
+
+		it( 'changing returned value should not have an effect on focus tracker', () => {
+			const elements = focusTracker.elements;
+
+			expect( focusTracker.elements ).to.deep.equal( [] );
+
+			const elementA = document.createElement( 'div' );
+			elements.push( elementA );
+
+			expect( focusTracker.elements ).to.deep.equal( [] );
 		} );
 	} );
 

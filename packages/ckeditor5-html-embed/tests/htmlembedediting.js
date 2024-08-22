@@ -1,18 +1,18 @@
 /**
- * @license Copyright (c) 2003-2021, CKSource - Frederico Knabben. All rights reserved.
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
 /* global console, document, Event */
 
-import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils';
-import HtmlEmbedEditing from '../src/htmlembedediting';
-import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor';
-import UpdateHtmlEmbedCommand from '../src/updatehtmlembedcommand';
-import InsertHtmlEmbedCommand from '../src/inserthtmlembedcommand';
-import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model';
-import { isWidget } from '@ckeditor/ckeditor5-widget/src/utils';
-import Clipboard from '@ckeditor/ckeditor5-clipboard/src/clipboard';
+import testUtils from '@ckeditor/ckeditor5-core/tests/_utils/utils.js';
+import HtmlEmbedEditing from '../src/htmlembedediting.js';
+import ClassicTestEditor from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+import HtmlEmbedCommand from '../src/htmlembedcommand.js';
+import { getData as getModelData, setData as setModelData } from '@ckeditor/ckeditor5-engine/src/dev-utils/model.js';
+import { isWidget } from '@ckeditor/ckeditor5-widget/src/utils.js';
+import Clipboard from '@ckeditor/ckeditor5-clipboard/src/clipboard.js';
+import { ButtonView } from '@ckeditor/ckeditor5-ui';
 
 describe( 'HtmlEmbedEditing', () => {
 	let element, editor, model, view, viewDocument;
@@ -60,49 +60,54 @@ describe( 'HtmlEmbedEditing', () => {
 		expect( model.schema.checkChild( [ '$root', '$block' ], 'rawHtml' ) ).to.be.false;
 	} );
 
-	describe( 'commands', () => {
-		it( 'should register updateHtmlEmbed command', () => {
-			expect( editor.commands.get( 'updateHtmlEmbed' ) ).to.be.instanceOf( UpdateHtmlEmbedCommand );
+	it( 'inherits attributes from $blockObject', () => {
+		model.schema.extend( '$blockObject', {
+			allowAttributes: 'foo'
 		} );
 
-		it( 'should register insertHtmlEmbed command', () => {
-			expect( editor.commands.get( 'insertHtmlEmbed' ) ).to.be.instanceOf( InsertHtmlEmbedCommand );
-		} );
+		expect( model.schema.checkAttribute( 'rawHtml', 'foo' ) ).to.be.true;
+	} );
+
+	it( 'should register the htmlEmbed command', () => {
+		expect( editor.commands.get( 'htmlEmbed' ) ).to.be.instanceOf( HtmlEmbedCommand );
 	} );
 
 	describe( 'config', () => {
-		let htmlEmbed;
+		let htmlEmbedConfig;
 
 		beforeEach( () => {
-			htmlEmbed = editor.config.get( 'htmlEmbed' );
+			htmlEmbedConfig = editor.config.get( 'htmlEmbed' );
 		} );
 
 		describe( 'htmlEmbed.showPreviews', () => {
 			it( 'should be set to `false` by default', () => {
-				expect( htmlEmbed.showPreviews ).to.equal( false );
+				expect( htmlEmbedConfig.showPreviews ).to.equal( false );
 			} );
 		} );
 
-		describe( 'htmlEmbed.sanitizeHtml', () => {
+		describe( 'config.sanitizeHtml', () => {
+			let sanitizeHtml;
+
 			beforeEach( () => {
 				sinon.stub( console, 'warn' );
+				sanitizeHtml = editor.config.get( 'sanitizeHtml' );
 			} );
 
-			it( 'should return an object with cleaned html and a note whether something has changed', () => {
-				expect( htmlEmbed.sanitizeHtml( 'foo' ) ).to.deep.equal( {
+			it( 'should return an input string (without any modifications)', () => {
+				expect( sanitizeHtml( 'foo' ) ).to.deep.equal( {
 					html: 'foo',
 					hasChanged: false
 				} );
 			} );
 
-			it( 'should return an input string (without any modifications)', () => {
+			it( 'should return an object with cleaned html and a note whether something has changed', () => {
 				const unsafeHtml = '<img src="data:/xxx,<script>void</script>" onload="void;">';
 
-				expect( htmlEmbed.sanitizeHtml( unsafeHtml ).html ).to.deep.equal( unsafeHtml );
+				expect( sanitizeHtml( unsafeHtml ).html ).to.deep.equal( unsafeHtml );
 			} );
 
 			it( 'should display a warning when using the default sanitizer', () => {
-				htmlEmbed.sanitizeHtml( 'foo' );
+				sanitizeHtml( 'foo' );
 
 				expect( console.warn.callCount ).to.equal( 1 );
 				expect( console.warn.firstCall.args[ 0 ] ).to.equal( 'html-embed-provide-sanitize-function' );
@@ -366,22 +371,6 @@ describe( 'HtmlEmbedEditing', () => {
 				expect( domContentWrapper.querySelectorAll( '.raw-html-embed__cancel-button' ) ).to.have.lengthOf( 1 );
 			} );
 
-			it( 'disable save button when update command is disabled', () => {
-				setModelData( model, '<rawHtml value="foo"></rawHtml>' );
-				const updateHtmlEmbedCommand = editor.commands.get( 'updateHtmlEmbed' );
-				updateHtmlEmbedCommand.isEnabled = false;
-
-				const widget = viewDocument.getRoot().getChild( 0 );
-				const contentWrapper = widget.getChild( 1 );
-				const domContentWrapper = editor.editing.view.domConverter.mapViewToDom( contentWrapper );
-
-				widget.getCustomProperty( 'rawHtmlApi' ).makeEditable();
-
-				const button = domContentWrapper.querySelector( '.raw-html-embed__save-button' );
-
-				expect( button.classList.contains( 'ck-disabled' ) ).to.be.true;
-			} );
-
 			it( 'updates the model state after clicking the "save changes" button', () => {
 				setModelData( model, '<rawHtml value="foo"></rawHtml>' );
 				const widget = viewDocument.getRoot().getChild( 0 );
@@ -439,6 +428,35 @@ describe( 'HtmlEmbedEditing', () => {
 				expect( domContentWrapper.querySelectorAll( '.raw-html-embed__edit-button' ) ).to.have.lengthOf( 1 );
 			} );
 
+			it( 'destroys unused buttons when the editing view is re-rendered to prevent memory leaks', () => {
+				setModelData( model, '<rawHtml value="foo"></rawHtml>' );
+				const widget = viewDocument.getRoot().getChild( 0 );
+				const contentWrapper = widget.getChild( 1 );
+				const domContentWrapper = editor.editing.view.domConverter.mapViewToDom( contentWrapper );
+
+				const buttonDestroySpy = testUtils.sinon.spy( ButtonView.prototype, 'destroy' );
+				const buttonRenderSpy = testUtils.sinon.spy( ButtonView.prototype, 'render' );
+
+				domContentWrapper.querySelector( '.raw-html-embed__edit-button' ).click();
+
+				// The edit button was destroyed.
+				sinon.assert.calledOn( buttonDestroySpy.firstCall, sinon.match.instanceOf( ButtonView ) );
+				sinon.assert.callCount( buttonDestroySpy, 1 );
+
+				// Save and cancel button were created.
+				sinon.assert.calledOn( buttonRenderSpy.firstCall, sinon.match.instanceOf( ButtonView ) );
+				sinon.assert.calledOn( buttonRenderSpy.secondCall, sinon.match.instanceOf( ButtonView ) );
+				sinon.assert.callCount( buttonRenderSpy, 2 );
+
+				buttonDestroySpy.resetHistory();
+				domContentWrapper.querySelector( '.raw-html-embed__cancel-button' ).click();
+
+				// Save and cancel button were destroyed.
+				sinon.assert.calledOn( buttonDestroySpy.firstCall, sinon.match.instanceOf( ButtonView ) );
+				sinon.assert.calledOn( buttonDestroySpy.secondCall, sinon.match.instanceOf( ButtonView ) );
+				sinon.assert.callCount( buttonDestroySpy, 2 );
+			} );
+
 			it( 'does not lose editor focus after saving changes', () => {
 				setModelData( model, '<rawHtml value="foo"></rawHtml>' );
 				const widget = viewDocument.getRoot().getChild( 0 );
@@ -460,7 +478,7 @@ describe( 'HtmlEmbedEditing', () => {
 				const contentWrapper = widget.getChild( 1 );
 				const domContentWrapper = editor.editing.view.domConverter.mapViewToDom( contentWrapper );
 
-				const executeStub = sinon.stub( editor.commands.get( 'updateHtmlEmbed' ), 'execute' );
+				const executeStub = sinon.stub( editor.commands.get( 'htmlEmbed' ), 'execute' );
 
 				widget.getCustomProperty( 'rawHtmlApi' ).makeEditable();
 				domContentWrapper.querySelector( '.raw-html-embed__save-button' ).click();
@@ -755,7 +773,7 @@ describe( 'HtmlEmbedEditing', () => {
 					const logWarn = sinon.stub( console, 'warn' );
 
 					setModelData( model, '[<rawHtml value=""></rawHtml>]' );
-					editor.execute( 'updateHtmlEmbed', '<script>console.warn( \'Should be called.\' )</script>' );
+					editor.execute( 'htmlEmbed', '<script>console.warn( \'Should be called.\' )</script>' );
 
 					logWarn.restore();
 
@@ -823,6 +841,84 @@ describe( 'HtmlEmbedEditing', () => {
 
 					return domContentWrapper.querySelector( 'div.raw-html-embed__preview-content' );
 				}
+			} );
+		} );
+
+		describe( 'integration with command and editor states', () => {
+			it( 'should disable the edit button when the editor goes read-only', () => {
+				setModelData( model, '<rawHtml value="foo"></rawHtml>' );
+
+				const widget = viewDocument.getRoot().getChild( 0 );
+				const contentWrapper = widget.getChild( 1 );
+				const domContentWrapper = editor.editing.view.domConverter.mapViewToDom( contentWrapper );
+				const editButton = domContentWrapper.querySelector( '.raw-html-embed__edit-button' );
+
+				editor.enableReadOnlyMode( 'unit-test' );
+				expect( editButton.classList.contains( 'ck-disabled' ) ).to.be.true;
+
+				editor.disableReadOnlyMode( 'unit-test' );
+				expect( editButton.classList.contains( 'ck-disabled' ) ).to.be.false;
+			} );
+
+			it( 'should disable the edit button when the command gets disabled', () => {
+				setModelData( model, '<rawHtml value="foo"></rawHtml>' );
+
+				const widget = viewDocument.getRoot().getChild( 0 );
+				const contentWrapper = widget.getChild( 1 );
+				const domContentWrapper = editor.editing.view.domConverter.mapViewToDom( contentWrapper );
+				const htmlEmbedCommand = editor.commands.get( 'htmlEmbed' );
+				const editButton = domContentWrapper.querySelector( '.raw-html-embed__edit-button' );
+
+				htmlEmbedCommand.forceDisabled();
+				expect( editButton.classList.contains( 'ck-disabled' ) ).to.be.true;
+
+				htmlEmbedCommand.clearForceDisabled();
+				expect( editButton.classList.contains( 'ck-disabled' ) ).to.be.false;
+			} );
+
+			it( 'should disable the save button (but not the cancel button) when the editor goes read-only', () => {
+				setModelData( model, '<rawHtml value="foo"></rawHtml>' );
+
+				const widget = viewDocument.getRoot().getChild( 0 );
+				const contentWrapper = widget.getChild( 1 );
+				const domContentWrapper = editor.editing.view.domConverter.mapViewToDom( contentWrapper );
+
+				// Go to edit mode.
+				domContentWrapper.querySelector( '.raw-html-embed__edit-button' ).click();
+
+				const saveButton = domContentWrapper.querySelector( '.raw-html-embed__save-button' );
+				const cancelButton = domContentWrapper.querySelector( '.raw-html-embed__cancel-button' );
+
+				editor.enableReadOnlyMode( 'unit-test' );
+				expect( saveButton.classList.contains( 'ck-disabled' ) ).to.be.true;
+				expect( cancelButton.classList.contains( 'ck-disabled' ) ).to.be.false;
+
+				editor.disableReadOnlyMode( 'unit-test' );
+				expect( saveButton.classList.contains( 'ck-disabled' ) ).to.be.false;
+				expect( cancelButton.classList.contains( 'ck-disabled' ) ).to.be.false;
+			} );
+
+			it( 'should disable the save button (but not the cancel button) when the command gets disabled', () => {
+				setModelData( model, '<rawHtml value="foo"></rawHtml>' );
+
+				const widget = viewDocument.getRoot().getChild( 0 );
+				const contentWrapper = widget.getChild( 1 );
+				const domContentWrapper = editor.editing.view.domConverter.mapViewToDom( contentWrapper );
+				const htmlEmbedCommand = editor.commands.get( 'htmlEmbed' );
+
+				// Go to edit mode.
+				domContentWrapper.querySelector( '.raw-html-embed__edit-button' ).click();
+
+				const saveButton = domContentWrapper.querySelector( '.raw-html-embed__save-button' );
+				const cancelButton = domContentWrapper.querySelector( '.raw-html-embed__cancel-button' );
+
+				htmlEmbedCommand.forceDisabled();
+				expect( saveButton.classList.contains( 'ck-disabled' ) ).to.be.true;
+				expect( cancelButton.classList.contains( 'ck-disabled' ) ).to.be.false;
+
+				htmlEmbedCommand.clearForceDisabled();
+				expect( saveButton.classList.contains( 'ck-disabled' ) ).to.be.false;
+				expect( cancelButton.classList.contains( 'ck-disabled' ) ).to.be.false;
 			} );
 		} );
 	} );
