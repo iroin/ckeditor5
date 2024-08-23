@@ -1,8 +1,8 @@
 {
-  "name": "ckeditor5",
+  "name": "@crowdarchitects/ckeditor5",
   "version": "43.0.0",
   "description": "The development environment of CKEditor 5 - the best browser-based rich text editor.",
-  "private": true,
+  "private": false,
   "keywords": [
     "ckeditor",
     "ckeditor5",
