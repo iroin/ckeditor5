@@ -14,7 +14,17 @@ import { CKBox } from '@ckeditor/ckeditor5-ckbox';
 import { CKFinder } from '@ckeditor/ckeditor5-ckfinder';
 import { EasyImage } from '@ckeditor/ckeditor5-easy-image';
 import { Heading } from '@ckeditor/ckeditor5-heading';
-import { Image, ImageCaption, ImageStyle, ImageToolbar, ImageInsert, ImageUpload, PictureEditing } from '@ckeditor/ckeditor5-image';
+import {
+	Image,
+	ImageCaption,
+	ImageStyle,
+	ImageToolbar,
+	ImageInsert,
+	ImageUpload,
+	PictureEditing,
+	ImageResizeEditing,
+	ImageResizeHandles
+} from '@ckeditor/ckeditor5-image';
 import { Indent } from '@ckeditor/ckeditor5-indent';
 import { Link, LinkImage } from '@ckeditor/ckeditor5-link';
 import { List } from '@ckeditor/ckeditor5-list';
@@ -28,13 +38,16 @@ import { GeneralHtmlSupport } from '@ckeditor/ckeditor5-html-support';
 import { Font } from '@ckeditor/ckeditor5-font';
 import { Mention } from '@ckeditor/ckeditor5-mention';
 import { SourceEditing } from '@ckeditor/ckeditor5-source-editing';
+import { Alignment } from '@ckeditor/ckeditor5-alignment';
 import type { Editor } from '@ckeditor/ckeditor5-core';
+import coreTranslations from 'ckeditor5/dist/translations/fr.js';
 
 export default class IroinClassicEditor extends ClassicEditorBase {
 	public static override builtinPlugins = [
 		Essentials,
 		CKFinderUploadAdapter,
 		Autoformat,
+		Alignment,
 		Bold,
 		Italic,
 		BlockQuote,
@@ -51,6 +64,8 @@ export default class IroinClassicEditor extends ClassicEditorBase {
 		ImageToolbar,
 		ImageInsert,
 		ImageUpload,
+		ImageResizeEditing,
+		ImageResizeHandles,
 		Indent,
 		Link,
 		LinkImage,
@@ -79,6 +94,7 @@ export default class IroinClassicEditor extends ClassicEditorBase {
 				'|',
 				'bold',
 				'italic',
+				'alignment',
 				'link',
 				'bulletedList',
 				'numberedList',
@@ -166,6 +182,11 @@ export default class IroinClassicEditor extends ClassicEditorBase {
 					value: null
 				},
 				{
+					name: 'resizeImage:custom',
+					label: 'Custom',
+					value: 'custom'
+				},
+				{
 					name: 'resizeImage:50',
 					label: '50%',
 					value: '50'
@@ -195,7 +216,10 @@ export default class IroinClassicEditor extends ClassicEditorBase {
 			]
 		},
 		// This value must be kept in sync with the language defined in webpack.config.js.
-		language: 'de'
+		language: 'de',
+		translations: [
+			coreTranslations
+		]
 	};
 }
 

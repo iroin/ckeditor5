@@ -9,7 +9,7 @@ CKEditor&nbsp;5 [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg
 
 # Publish
 1. Change Node Version to 18 (sudo n)
-2. Go to ckeditor5-build-classic
+2. Go to iroin-ckeditor5-build-classic
 2. Bump package.json Version
 3. Run `npm i && npm run build`
 4. Run npm publish
