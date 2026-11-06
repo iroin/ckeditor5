@@ -65,6 +65,38 @@ ClassicEditor
 
 **Note:** If you are planning to integrate CKEditor&nbsp;5 deep into your application, it is actually more convenient and recommended to install and import the source modules directly (like it happens in `ckeditor.js`). Read more in the [Advanced setup guide](https://ckeditor.com/docs/ckeditor5/latest/getting-started/legacy/advanced/alternative-setups/integrating-from-source-webpack.html).
 
+## Bild-Upload (IROIN)
+
+Der Build enthält den `IroinUploadAdapter`. Sobald `iroinUpload.uploadUrl` gesetzt ist, können Nutzer Bilder hochladen (Toolbar-Button, Drag & Drop, Einfügen aus der Zwischenablage). Die Datei wird als `multipart/form-data` per `POST` an den Server geschickt. Ohne Konfiguration funktioniert weiterhin nur das Einfügen per URL.
+
+```js
+ClassicEditor.create( document.querySelector( '#editor' ), {
+	iroinUpload: {
+		// Pflicht: Endpunkt für den Upload.
+		uploadUrl: '/api/files',
+
+		// Optional: Name des Formularfelds mit der Datei (Standard: 'file').
+		fieldName: 'file',
+
+		// Optional: Header als Objekt oder (async) Funktion. Die Funktion wird bei jedem Upload neu
+		// aufgerufen, so wird immer der aktuelle (ggf. erneuerte) Token verwendet.
+		headers: async () => ( { Authorization: `Bearer ${ await getAccessToken() }` } ),
+
+		// Optional: Cookies mitsenden (Standard: false).
+		withCredentials: false,
+
+		// Optional: Bild-URL aus der JSON-Antwort ermitteln (Standard: response => response.url).
+		// Darf auch ein Objekt zurückgeben, z. B. { default: '…', 800: '…' } für responsive Bilder.
+		getUrlFromResponse: response => response.data.url
+	}
+} );
+```
+
+Erwartete Server-Antwort (JSON):
+
+* Erfolg (Status < 400): ein Objekt, aus dem `getUrlFromResponse` die URL liest, standardmäßig `{ "url": "https://…/bild.jpg" }`.
+* Fehler (Status ≥ 400 oder `error`-Feld): `{ "error": { "message": "…" } }`. Die Meldung wird dem Nutzer angezeigt. Ohne Meldung erscheint ein generischer Text.
+
 ## License
 
 Licensed under the terms of [GNU General Public License Version 2 or later](http://www.gnu.org/licenses/gpl.html). For full details about the license, please check the `LICENSE.md` file or [https://ckeditor.com/legal/ckeditor-oss-license](https://ckeditor.com/legal/ckeditor-oss-license).

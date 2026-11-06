@@ -6,13 +6,9 @@
 // The editor creator to use.
 import { ClassicEditor as ClassicEditorBase } from '@ckeditor/ckeditor5-editor-classic';
 import { Essentials } from '@ckeditor/ckeditor5-essentials';
-import { CKFinderUploadAdapter } from '@ckeditor/ckeditor5-adapter-ckfinder';
 import { Autoformat } from '@ckeditor/ckeditor5-autoformat';
 import { Bold, Italic, Underline } from '@ckeditor/ckeditor5-basic-styles';
 import { BlockQuote } from '@ckeditor/ckeditor5-block-quote';
-import { CKBox } from '@ckeditor/ckeditor5-ckbox';
-import { CKFinder } from '@ckeditor/ckeditor5-ckfinder';
-import { EasyImage } from '@ckeditor/ckeditor5-easy-image';
 import { Heading } from '@ckeditor/ckeditor5-heading';
 import {
 	Image,
@@ -33,7 +29,6 @@ import { Paragraph } from '@ckeditor/ckeditor5-paragraph';
 import { PasteFromOffice } from '@ckeditor/ckeditor5-paste-from-office';
 import { Table, TableToolbar } from '@ckeditor/ckeditor5-table';
 import { TextTransformation } from '@ckeditor/ckeditor5-typing';
-import { CloudServices } from '@ckeditor/ckeditor5-cloud-services';
 import { GeneralHtmlSupport } from '@ckeditor/ckeditor5-html-support';
 import { Font } from '@ckeditor/ckeditor5-font';
 import { Mention } from '@ckeditor/ckeditor5-mention';
@@ -41,22 +36,22 @@ import { SourceEditing } from '@ckeditor/ckeditor5-source-editing';
 import { Alignment } from '@ckeditor/ckeditor5-alignment';
 import type { Editor } from '@ckeditor/ckeditor5-core';
 import coreTranslations from 'ckeditor5/dist/translations/fr.js';
+import IroinUploadAdapter from './iroinuploadadapter.js';
+import './augmentation.js';
+
+export { IroinUploadAdapter };
+export type { IroinUploadConfig, IroinUploadHeaders } from './iroinuploadadapter.js';
 
 export default class IroinClassicEditor extends ClassicEditorBase {
 	public static override builtinPlugins = [
 		Essentials,
-		CKFinderUploadAdapter,
 		Autoformat,
 		Alignment,
 		Bold,
 		Italic,
 		BlockQuote,
-		CKBox,
-		CKFinder,
-		CloudServices,
 		Font,
 		GeneralHtmlSupport,
-		EasyImage,
 		Heading,
 		Image,
 		ImageCaption,
@@ -64,6 +59,7 @@ export default class IroinClassicEditor extends ClassicEditorBase {
 		ImageToolbar,
 		ImageInsert,
 		ImageUpload,
+		IroinUploadAdapter,
 		ImageResizeEditing,
 		ImageResizeHandles,
 		Indent,
@@ -102,7 +98,6 @@ export default class IroinClassicEditor extends ClassicEditorBase {
 				'indent',
 				'outdent',
 				'|',
-				'imageUpload',
 				'insertImage',
 				'blockQuote',
 				'insertTable',
